@@ -1,5 +1,12 @@
 ---
-const { caption, type = "image", code } = Astro.props;
+interface Props {
+  caption?: string;
+  type?: "image" | "mermaid";
+  code?: string;
+  adaptColors?: boolean;
+}
+
+const { caption, type = "image", code, adaptColors = false } = Astro.props;
 const id = `diagram-${Math.random().toString(36).substring(2, 11)}`;
 // Embed Mermaid text as JSON inside the markup — not in define:vars. Large or multiline
 // sources break or bloat the hoisted module script; a broken module leaves "Loading…" forever.
@@ -15,6 +22,7 @@ const mermaidSourceJson =
 <div
   class="diagram"
   data-diagram-type={type}
+  data-adapt-colors={adaptColors && type === "image" ? true : undefined}
   {...(type === "mermaid" ? { "data-pagefind-ignore": true } : {})}
 >
   <div class="diagram-content">
@@ -97,6 +105,25 @@ const mermaidSourceJson =
     max-height: calc(700px - 2rem);
     margin: 0 auto;
     object-fit: contain;
+  }
+
+  /* The zoom plugin portals a clone outside .diagram but marks the source image. */
+  .diagram[data-adapt-colors] img,
+  body:has(.diagram[data-adapt-colors] .starlight-image-zoom-source) .starlight-image-zoom-image {
+    /* Darken mid-gray labels slightly so #777 on white exceeds 4.5:1. */
+    filter: contrast(1.1);
+  }
+
+  @media screen {
+    :root[data-theme="dark"] .diagram[data-adapt-colors] {
+      background-color: #1a1a1a;
+    }
+
+    :root[data-theme="dark"] .diagram[data-adapt-colors] img,
+    :root[data-theme="dark"] body:has(.diagram[data-adapt-colors] .starlight-image-zoom-source) .starlight-image-zoom-image {
+      /* Map white to #1a1a1a and retain light labels and red-toned accents. */
+      filter: contrast(1.1) invert(0.9) hue-rotate(180deg);
+    }
   }
 
   .caption.caption {

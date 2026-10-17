@@ -1,65 +1,102 @@
 ---
-title: Getting started as a developer
-description: Learn what you can build with Adobe Commerce Storefront, how its parts fit together, and where to begin your first storefront project.
+title: How your storefront works
+description: Learn how Adobe Commerce storefront content, blocks, drop-ins, and services work together and where to find the code for your changes.
 ---
 
 import Callouts from '@components/Callouts.astro';
 import Diagram from '@components/Diagram.astro';
+import TableWrapper from '@components/TableWrapper.astro';
 import Term from '@components/Term.astro';
 
-With Adobe Commerce Storefront, you start with a codebase that includes product discovery, cart, checkout, and account features. You can adapt those features, change the storefront's design, or build new shopping experiences instead of implementing every flow from scratch. Available features depend on your [backend](/get-started/backends/) and [licensing](/licensing/).
+With Adobe Commerce Storefront, you start with shopping features such as product discovery, cart, checkout, and accounts. Understanding how these features connect to page content and Commerce services helps you find the code involved in a change.
+
+Available features depend on your [backend](/get-started/backends/) and [licensing](/licensing/). If your team already has a storefront project, you can [go directly to local setup](/get-started/run-locally/).
 
 ## Your role as a storefront developer
 
 Your codebase comes from the <Term term="Commerce boilerplate">Adobe Commerce boilerplate</Term>. You customize its code and shopping features, while content authors create and edit pages.
 
-<Diagram caption="Your storefront starts with the Adobe Commerce boilerplate's existing shopping features. You extend or create features, and authors create and edit pages for shoppers.">
+The boilerplate is a GitHub repository template. Your project starts as a copy of that template, and you work in your own repository. Standard shopping features are already included, so you customize their existing code rather than installing a separate cart or checkout package.
+
+<Diagram adaptColors caption="Your storefront starts with the Adobe Commerce boilerplate's existing shopping features. You extend or create features, and authors create and edit pages for shoppers.">
   ![Foundation for Commerce Storefront](images/developer-get-started.png)
 </Diagram>
 
 ## How your storefront reaches shoppers
 
-You keep your code in a GitHub repository, while authors manage page content in <Term>DA.live</Term>.
+In the workflow shown below, you keep your code in a GitHub repository, while authors manage page content in <Term>DA.live</Term>.
 
 <Term>Edge Delivery Services</Term> delivers that content and code to shoppers. Your storefront runs in the shopper's browser and combines the content with live shopping data from your Commerce services.
 
-<Diagram caption="Your storefront runs in the shopper's browser, using content and code delivered by Edge Delivery Services and live data from Commerce APIs.">
+<Diagram adaptColors caption="Your storefront runs in the shopper's browser, using content and code delivered by Edge Delivery Services and live data from Commerce APIs.">
   ![Content and code delivered to the storefront, with Commerce API requests and responses and a shopping experience for shoppers](images/storefront-tools.png)
 </Diagram>
 
 ## What your storefront pages are built from
 
-Blocks bring content and shopping features together on a page. Content blocks add text, images, and layout, while <Term>Commerce blocks</Term> add shopping features.
+Blocks are named parts of a page. Content blocks add text, images, and layout, while <Term>Commerce blocks</Term> add shopping features.
 
 Commerce blocks can use <Term term="Drop-in components">drop-in components</Term> for ready-made shopping interfaces, such as cart and checkout, that connect to your Commerce services. The Storefront SDK is a software development kit with shared user interface components and tools that Commerce blocks can also use.
 
-<Diagram caption="Storefront pages combine shopping features from Commerce blocks with content and layout from content blocks. Commerce blocks can use drop-in components and the Storefront SDK.">
+<Diagram adaptColors caption="Storefront pages combine shopping features from Commerce blocks with content and layout from content blocks. Commerce blocks can use drop-in components and the Storefront SDK.">
   ![SDK components and drop-ins support Commerce blocks, which combine with content blocks to form storefront pages](images/storefront-page-parts.png)
 </Diagram>
 
-## Create and preview your first storefront
+Use these names when you explore the project or ask your team for help:
 
-Your first goal is a working local preview connected to your Commerce catalog.
+<TableWrapper>
 
-Before you begin, check [Prerequisites](/get-started/before-you-start/) for the accounts and tools you need. Review [Backend options](/get-started/backends/) and [Licensing requirements](/licensing/) to confirm the Commerce services and drop-ins available to your project.
+| Name | What it means |
+| --- | --- |
+| Document | Page content that authors edit in an authoring tool, such as DA.live |
+| Edge Delivery Services | Adobe's service for delivering page content and storefront code |
+| Content block | A part of a page that displays content, such as a hero or a row of cards |
+| Commerce block | A part of a page that connects a shopping experience to the storefront |
+| Drop-in component | A package of ready-made shopping interfaces and behavior, such as cart or checkout |
+| Container | A part of a drop-in that a block can render, such as a cart item list |
+| Storefront SDK | Shared user interface components and development tools |
+| Commerce APIs | Application programming interfaces that the storefront calls to read or update shopping data |
 
-Next, follow [Create a storefront](/get-started/create-storefront/) to create your project and add starter content. Then [run your storefront locally](/boilerplate/#running-locally).
+</TableWrapper>
 
-Before you customize the storefront, confirm that your preview displays products from the catalog you configured.
+## Find your code
 
-## Plan your first storefront change
+Your repository contains the code you change. Page content and Commerce data have their own sources, so cloning the repository is only part of local setup.
 
-Once you've confirmed the catalog, explore the project and decide what you want to customize:
+<TableWrapper>
+
+| File or directory | What you work on |
+| --- | --- |
+| `blocks/` | JavaScript and CSS for individual blocks |
+| `styles/styles.css` | Shared styles and design tokens, which are named values for colors, spacing, and other design choices |
+| `scripts/initializers/` | Setup for drop-ins, including their endpoints and labels |
+| `scripts/commerce.js` | Shared Commerce integration code, including loading storefront configuration |
+| `config.json` (if present) | Local connection settings for projects that use a local file. See [Storefront configuration](/setup/configuration/commerce-configuration/) before changing them. |
+
+</TableWrapper>
+
+For example, the cart block in `blocks/commerce-cart/commerce-cart.js` imports the cart initializer and renders containers from the cart drop-in. One is `CartSummaryList`, which displays cart items. The block decides where to place those containers, while the drop-in supplies their shopping interface and behavior.
+
+This gives you a starting point for code changes: inspect the block for page integration, its initializer for drop-in setup, or the shared stylesheet for a design change.
+
+For a closer look at a block's responsibilities, see [Blocks and drop-ins](/blocks/blocks-and-dropins/). For a page's loading sequence and communication between shopping features, use [Architecture](/get-started/architecture/) as a reference.
+
+## Start developing
+
+Choose the task that matches what you need to do. If you want a suggested introduction to local development, use these topics in order.
 
 <Callouts columnCount={1}>
-- [Explore your storefront project](/boilerplate/): Find the code, styles, and configuration you can change.
-- [Understand blocks and drop-ins](/blocks/blocks-and-dropins/): Learn how the storefront's shopping features fit together.
-- [Choose how to customize](/dropins/all/extend-or-create/): Decide whether to extend an existing feature or build a custom one.
+1. [Run your storefront locally](/get-started/run-locally/): Get the project, start a preview, and check page content and Commerce data.
+1. [Make your first change](/get-started/first-change/): Change a design token and verify the result in your browser.
+1. [Install the AI tools](/ai/): Connect your editor or coding agent to project guidance and documentation.
+1. [Make a change with AI](/ai/develop-with-ai/): Plan, make, and review a small change with your agent.
 </Callouts>
+
+For a new storefront project, [Prerequisites](/get-started/before-you-start/), [Backend options](/get-started/backends/), and [Create a storefront](/get-started/create-storefront/) cover repository, content, and Commerce connection setup.
 
 ## More help on this topic
 
-- When you're ready to make a change, use [Developer how-tos](/how-tos/#for-developers) for guidance on product pages, cart, checkout, accounts, and search.
-- For a closer look at page delivery and Commerce data, see [Architecture](/get-started/architecture/).
+- For another customization task, use [Developer how-tos](/how-tos/#for-developers).
+- For deeper code changes, see [Customize blocks](/blocks/customize-blocks/) and [Choose how to customize](/dropins/all/extend-or-create/).
 - For shopping component details, use the [B2C drop-in reference](/dropins/) for business-to-consumer storefronts or the [B2B drop-in reference](/dropins-b2b/) for business-to-business storefronts.
 - For shared user interface components and tools, use the [Storefront SDK](/sdk/) reference.

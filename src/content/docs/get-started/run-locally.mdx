@@ -1,0 +1,183 @@
+---
+title: Run your storefront locally
+description: Learn how to run an Adobe Commerce storefront on your computer, connect its page content and Commerce data, and check that your local preview works.
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import Link from '@components/Link.astro';
+import TableWrapper from '@components/TableWrapper.astro';
+
+Run your storefront on your computer so you can preview code changes before sharing them. You will finish with a local preview that displays your project's page content and Commerce catalog.
+
+This procedure uses an existing storefront project based on the Adobe Commerce boilerplate. You do not need to create another repository or configure a new backend when you join an existing project.
+
+## Get the project details
+
+Gather these details from the person who maintains your storefront so you can check the same content and catalog locally:
+
+<TableWrapper>
+
+| What you need             | What to confirm                                                                                      |
+| ------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Repository URL and access | You can open the repository on GitHub and clone it.                                                  |
+| Content preview URL       | You can open the team's working preview, such as `https://main--your-storefront--your-org.aem.page`. |
+| A content page path       | The page displays text and layout you can recognize in the local preview.                            |
+| A product page path       | The page displays a known product from the expected catalog.                                         |
+| Storefront configuration  | The project has the approved connection settings for your development environment.                   |
+| Development access        | You have any permissions or network access needed to load content and call Commerce services.        |
+
+</TableWrapper>
+
+Use the exact preview URL your team provides, not the example above. A page URL has an origin, which is the address before the page path. For example, `https://main--your-storefront--your-org.aem.page` is the origin, and `/about` is a page path.
+
+Keep both parts. You will use the origin to start the server and the page paths to check the local preview.
+
+Open the content and product pages on that remote preview before starting local setup. If either fails there, ask the project owner to resolve the shared environment first. A local server does not repair missing content or an unavailable catalog.
+
+If a storefront project does not exist yet, [Create a storefront](/get-started/create-storefront/) covers repository, content, and Commerce connection setup. [Project prerequisites](/get-started/before-you-start/) and [Backend options](/get-started/backends/) explain the required access and services. If someone else manages project setup, share the checklist above with them.
+
+## Prepare your computer
+
+Install Git, a code editor, and the Node.js version your project uses. For a new setup based on the current storefront template, use <Link href="https://nodejs.org/en/download" text="Node.js 24 LTS" />. LTS means long-term support. Node.js includes npm, the package manager used in the commands below.
+
+In your terminal, check the tools:
+
+```bash
+git --version
+node --version
+npm --version
+```
+
+Each command should print a version. If a command is not found, finish installing that tool and open a new terminal before continuing.
+
+The project's dependencies include the Adobe Experience Manager command-line interface, called the AEM CLI. You do not need to install it globally for this procedure.
+
+## Understand the local preview
+
+Your local server serves code from the repository on your computer and fetches page content from your team's preview site. The storefront still calls remote Commerce services for shopping data, so this is not an offline installation. Starting the preview server does not start a Commerce backend on your machine.
+
+You still need a reachable content source and a working Commerce environment. Use development data and your team's approved configuration. Do not add passwords or private API credentials to storefront code.
+
+Because shopping requests still reach those remote services, signing in, changing a cart, or placing an order can affect shared data. Confirm that you are using an approved development environment before testing those actions. The checks below only require viewing pages.
+
+The storefront reads its connection settings from the `/config.json` URL on the local server. That URL can work even when no configuration file exists in your repository: the local server can retrieve it from the remote preview. Ask your team how configuration is supplied before creating or replacing a local file. See [Storefront configuration](/setup/configuration/commerce-configuration/) for the supported approaches.
+
+## Start the storefront
+
+The commands below run from the storefront repository, not from this documentation repository.
+
+<Steps>
+
+1. Clone your team's repository.
+
+   Cloning creates a local copy of the project. In a terminal, replace the example URL with the repository URL your team provided:
+
+   ```bash
+   git clone https://github.com/your-org/your-storefront.git
+   ```
+
+   If you already have a local clone, use it instead of cloning again.
+
+1. Change to the project directory.
+
+   ```bash
+   cd your-storefront
+   ```
+
+   Replace `your-storefront` with the directory that Git created. This directory contains the project's `package.json` file.
+
+1. Install the project dependencies.
+
+   ```bash
+   npm install
+   ```
+
+   Wait for installation to finish successfully. This installs the dependencies already declared by the project, including its shopping packages. You do not need to install cart or checkout separately.
+
+1. Prepare the installed drop-in assets.
+
+   ```bash
+   # The current template disables automatic install scripts.
+   npm run install:dropins
+   ```
+
+   The current template sets `ignore-scripts=true` in `.npmrc`, which prevents `npm install` from running this preparation automatically. Keep this security setting enabled when running the explicit preparation command.
+
+   This command applies the project's GraphQL query changes and copies the installed drop-in files into `scripts/__dropins__/`, where the browser loads them. GraphQL is the language the drop-ins use to request shopping data. Wait for the command to finish without errors.
+
+   If your project has different setup scripts, follow its documented commands with the project owner rather than adding a missing script yourself.
+
+1. Start the development server with your team's content preview URL.
+
+   ```bash
+   # Replace the example URL with your team's content preview origin.
+   npm start -- --url https://main--your-storefront--your-org.aem.page --no-stop-other
+   ```
+
+   The standard storefront `start` script runs `aem up`. The `--` passes the following options through npm to that command. Use the origin only, without the content or product page path.
+
+   The `--no-stop-other` option prevents the CLI from stopping another AEM development server. If the requested port is busy, use a different port as described below.
+
+1. Open the local address printed by the server.
+
+   The default is `http://localhost:3000`. Keep the terminal running while you develop.
+
+</Steps>
+
+The URL option selects the page content source. It does not configure or replace your Commerce connection.
+
+## Check the result
+
+Check page content and Commerce data separately so you can tell which connection needs attention if a page fails:
+
+<Steps>
+
+1. Open your known content page at the local address.
+
+   For example, a content page at `/about` becomes `http://localhost:3000/about`. Confirm that the expected text and layout appear.
+
+1. Open your known product page at the same local address.
+
+   Confirm that the product name and other catalog details match the environment your team provided. A visible header confirms that some page content loaded, but it does not confirm the Commerce connection.
+
+1. Open the storefront directory in your code editor.
+
+   Confirm you can find `blocks/`, `styles/styles.css`, and `package.json`.
+
+</Steps>
+
+You are ready to customize when page content and Commerce data both load locally. You have not published any code changes by starting the server.
+
+## Troubleshoot local setup
+
+<TableWrapper>
+
+| What you see                                         | What to check next                                                                                                                                                                                                                                                                                                |
+| ---------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Clone fails or the repository is not found           | Confirm the repository URL, your GitHub access, and the authentication method your team uses.                                                                                                                                                                                                                     |
+| Dependency installation fails                        | Read the first error in the terminal. Confirm your project's Node.js version and any required package access before retrying.                                                                                                                                                                                     |
+| Drop-in preparation fails                            | Read the first error from `npm run install:dropins`. Confirm that dependency installation completed and that the command matches your project's setup instructions. Do not disable the lifecycle-script security setting to work around the error.                                                                |
+| The server cannot use port `3000`                    | Choose a different port, for example, `npm start -- --url https://main--your-storefront--your-org.aem.page --no-stop-other --port 3001`. Open the address it prints. Stop an existing server only if you own it.                                                                                                  |
+| The local page is missing or shows the wrong content | Open the same path on the team's preview site. Confirm the content preview URL passed to the server and ask the content owner to check the page if it is also missing remotely.                                                                                                                                   |
+| Content loads but product data does not              | Open the browser's developer tools and reload the page. In the **Network** panel, check for failed `/config.json`, JavaScript, or Commerce requests. A missing module can indicate incomplete drop-in preparation. Confirm the response and expected environment with the project owner before changing settings. |
+| Configuration changes do not appear                  | The storefront caches configuration in the browser session. Follow [Testing configuration changes](/setup/configuration/commerce-configuration/#testing-configuration-changes) rather than repeatedly replacing the file.                                                                                         |
+
+</TableWrapper>
+
+If the team preview also fails, resolve that shared content or Commerce issue before treating it as a local code problem.
+
+## Continue development
+
+To stop the local server, press **Ctrl+C** in the terminal where it is running. When you return to the project, open a terminal in the project directory and run the same start command. You only need to reinstall dependencies when the project requires it, not before every preview.
+
+To practice editing and checking local code, try [Make your first change](/get-started/first-change/).
+
+## More help on this topic
+
+- [How your storefront works](/get-started/) explains the project vocabulary and file locations.
+- <Link
+    href="https://www.aem.live/developer/cli-reference#up"
+    text="AEM CLI development server options"
+  />
+  describes content URLs, ports, and automatic reloading.
+- [Create a storefront](/get-started/create-storefront/) covers a new repository, content source, and Commerce connection.

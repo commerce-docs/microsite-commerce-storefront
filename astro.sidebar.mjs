@@ -24,17 +24,17 @@ export function generateSidebar() {
           label: 'Getting started',
           collapsed: false,
           items: [
-            { label: 'Overview', link: '/get-started/' },
-            { label: 'Prerequisites', link: '/get-started/before-you-start/' },
-            { label: 'Backend options', link: '/get-started/backends/' },
-            { label: 'Create a storefront', link: '/get-started/create-storefront/' },
+            { label: 'How your storefront works', link: '/get-started/' },
+            { label: 'Run your storefront locally', link: '/get-started/run-locally/' },
+            { label: 'Make your first change', link: '/get-started/first-change/' },
+            { label: 'Install the AI tools', link: '/ai/' },
+            { label: 'Make a change with AI', link: '/ai/develop-with-ai/' },
           ],
         },
         {
-          label: 'AI tools',
-          collapsed: false,
+          label: 'AI tools reference',
+          collapsed: true,
           items: [
-            { label: 'Install the AI tools', link: '/ai/' },
             { label: 'Boilerplate skills', link: '/ai/boilerplate-skills/' },
             { label: 'Dropins AI tools', link: '/ai/dropins-ai-tools/' },
             { label: 'Wayfinder', link: '/ai/wayfinder/' },
@@ -54,6 +54,15 @@ export function generateSidebar() {
               link: '/get-started/architecture/commerce-services-and-backends/',
             },
             { label: 'Event bus', link: '/dropins/all/events/' },
+          ],
+        },
+        {
+          label: 'Project setup',
+          collapsed: true,
+          items: [
+            { label: 'Prerequisites', link: '/get-started/before-you-start/' },
+            { label: 'Backend options', link: '/get-started/backends/' },
+            { label: 'Create a storefront', link: '/get-started/create-storefront/' },
           ],
         },
         {

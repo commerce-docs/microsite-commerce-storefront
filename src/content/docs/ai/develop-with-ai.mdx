@@ -1,0 +1,164 @@
+---
+title: Make a change with AI
+description: Learn how to plan, review, and verify a small Adobe Commerce storefront styling change with an AI coding agent and your running local preview.
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import Aside from '@components/Aside.astro';
+import Link from '@components/Link.astro';
+
+Use your AI coding agent to give a content link a darker hover color in your local storefront. You'll review the proposed edit and check the result in your local browser preview.
+
+Before you begin:
+
+- Keep your local storefront preview running. For setup instructions, see [Run your storefront locally](/get-started/run-locally/).
+- Use an AI coding agent with the [AI tools installed and verified](/ai/#verify-your-development-tools).
+- Choose a content link styled by `--color-brand-500` in `styles/styles.css`. This example starts with the token set to `#0057b8`. [Make your first change](/get-started/first-change/) explains how to find and change that token.
+
+A design token is a named value that styles share. Here, `--color-brand-500` sets the link's normal color, while `--color-brand-600` sets its hover color. Your agent will check these relationships in your project before changing anything.
+
+Because this hover token is shared, changing it can also affect hover and keyboard-focus colors on some content buttons. The agent's plan needs to account for those effects as well as the link's color.
+
+The prompts below pair the blue normal color, `#0057b8`, with a darker hover color, `#004494`. If your project uses another normal color, update the prompts to match it and ask for a suitable hover color. If the hover token already uses the proposed color, choose a different approved test value so you have a visible change to check.
+
+## Preserve the starting work
+
+Record the current changes so you can distinguish the agent's edit from your earlier work. In a second terminal in your storefront directory, run:
+
+```bash
+git status --short
+git diff HEAD -- styles/styles.css
+npx stylelint styles/styles.css
+```
+
+Keep the output for comparison after the agent's edit. Record the current `--color-brand-500` value so you can confirm that the agent leaves it unchanged. If Stylelint reports an error, resolve it before continuing so you have a passing result to compare against.
+
+Also record the original `--color-brand-600` value. You will need it to undo only the hover-color edit later.
+
+## Ask for a plan
+
+Start by asking the agent to inspect the project without editing it. A plan lets you review which styles would change before you approve any edits.
+
+<Steps>
+
+1. Open your storefront project in the editor or agent you configured.
+
+1. Send this planning request.
+
+   ```text
+   Read and follow this project's installed instructions and skills.
+   The normal link color uses --color-brand-500: #0057b8 in styles/styles.css.
+   Plan a matching hover color for ordinary content links.
+
+   Inspect the existing --color-brand-600 definition and the CSS rules that
+   use it. Use the dropins server's search_docs tool for relevant guidance.
+   Propose #004494 for the hover color and explain what else would change.
+
+   Report the actual local file and line references, the documentation tool
+   used, and the files you intend to edit.
+
+   Keep the change limited to the existing token in styles/styles.css.
+   Do not add selectors, change packages or Commerce configuration, or
+   overwrite unrelated work. Do not edit files until I approve the plan.
+   Report any missing tools or evidence rather than guessing.
+   ```
+
+1. Check the proposed file, token, and affected styles.
+
+   The agent should identify where your project defines the token and which styles use it. Its plan should explain the effect on other elements, including any button hover and keyboard-focus styles that use the token. It should not propose installing a shopping component or changing a backend.
+
+</Steps>
+
+For an unmodified template, the plan should identify the existing `--color-brand-600` value of `#383838` in `styles/styles.css` and propose `#004494` as its replacement. It should explain that normal links keep `--color-brand-500`, while hovered links and applicable button states use `--color-brand-600`.
+
+Your project may differ from the template, so check that the plan includes local file references that support its conclusions.
+
+If the response invents a file or cannot show where the color is used, stop and resolve that gap. A plausible explanation is not a substitute for reading the project.
+
+The local `search_docs` lookup does not require Adobe I/O sign-in. If the agent instead attempts an authenticated remote search, check [remote documentation search setup](/ai/#enable-remote-documentation-search-optional). Do not accept a web-search result or an invented citation as evidence that a configured tool worked.
+
+## Approve the change
+
+Let the agent make the edit only after the plan matches the task.
+
+<Steps>
+
+1. Ask the agent to apply the approved token change.
+
+   ```text
+   Apply the approved --color-brand-600 change in styles/styles.css.
+   Keep other declarations and existing work unchanged.
+   Run npx stylelint styles/styles.css from the project root.
+   Report the exact command, its actual result, and anything you could not
+   verify. Do not install packages, commit, or publish.
+   ```
+
+1. Review the actual change in your editor's source-control view.
+
+   Compare the changed lines with the output you saved before the agent ran. The new edit should change the hover token to `#004494`, leaving the rest of the stylesheet and the normal link color unchanged.
+
+1. Confirm the stylesheet check yourself.
+
+   From a terminal in the storefront directory, run:
+
+   ```bash
+   npx stylelint styles/styles.css
+   ```
+
+   Compare the result with the starting check you recorded. If the new edit causes an error, fix that error and rerun the check without rewriting unrelated styles. The check's actual result, not the agent's summary, determines whether it passes.
+
+</Steps>
+
+## Verify in the browser
+
+The stylesheet check looks for rule and formatting errors, but it cannot tell you whether the color appears in the intended place. To check the visible result, open the content page containing the link you chose for this exercise.
+
+<Steps>
+
+1. Check the link without hovering.
+
+   It should still use the original normal color: `#0057b8`, or the color you recorded if you adapted the example.
+
+1. Hover the link.
+
+   It should use the darker blue, `#004494`, rather than the previous color. In the browser's developer tools, inspect the link while its hover state is active. The computed color should be equivalent to `rgb(0, 68, 148)`. Use your chosen test value if it differs.
+
+1. Move through the page with the **Tab** key.
+
+   Keep the pointer away from the link while checking keyboard focus. Focus should remain visible, and you should still be able to activate links. Keyboard focus does not by itself activate a link's `:hover` rule.
+
+1. Check the content buttons identified in the agent's plan.
+
+   Check both hover and keyboard-focus styles, including any `:focus-visible` rules that use the changed token. Confirm that the color changes match the effects in the approved plan and that keyboard focus remains visible.
+
+1. Review the color against the page background.
+
+   Keep links distinguishable from surrounding text and follow your team's accessibility checks before adopting a color for production.
+
+</Steps>
+
+You have completed the task when the browser shows the intended normal and hover colors, the changes stay within the approved scope, and the stylesheet check passes. Keep the change local or submit it through your team's review process. Do not let the agent publish it automatically.
+
+To undo only this exercise, restore the original `--color-brand-600` value you recorded. Leave `--color-brand-500` and any earlier work unchanged.
+
+## Use the same loop for your next task
+
+For your next task, give the agent a concrete outcome and clear limits. Use the same sequence: inspect the existing implementation, review a plan, approve the edit, and check the result. Review the code and test its behavior yourself, even if the agent reports a passing check.
+
+For a larger shopping-feature change, use [Developer how-tos](/how-tos/#for-developers) to choose a supported task. Have the agent verify the relevant APIs against source rather than copying an unrelated example.
+
+<Aside type="caution">
+  Only give your agent the access your task needs. Do not paste private credentials, production
+  customer data, or secrets into prompts or storefront files. Review proposed commands before
+  allowing actions that change shared services.
+</Aside>
+
+## More help on this topic
+
+- [Boilerplate skills](/ai/boilerplate-skills/) describes the project workflows available to your agent.
+- [AI tools for drop-ins](/ai/dropins-ai-tools/) connects the agent to drop-in source information.
+- <Link
+    href="https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/styles/styles.css"
+    text="Default storefront stylesheet"
+  />
+  shows the shared tokens and link and button rules.
