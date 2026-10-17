@@ -1,67 +1,102 @@
 ---
-title: Getting started as a developer
-description: Learn what Adobe Commerce Storefront is on Edge Delivery Services, how the boilerplate and drop-ins fit together, and where to go next from first preview through launch.
+title: How your storefront works
+description: Learn how Adobe Commerce storefront content, blocks, drop-ins, and services work together and where to find the code for your changes.
 ---
 
-import Aside from '@components/Aside.astro';
 import Callouts from '@components/Callouts.astro';
+import Diagram from '@components/Diagram.astro';
+import TableWrapper from '@components/TableWrapper.astro';
 import Term from '@components/Term.astro';
 
-Adobe Commerce Storefront lets you build a fast online store on Adobe Commerce, with full control over your brand's layout and shopping experience. If you already have accounts and a backend ready, you can have a working preview in less than a day.
+With Adobe Commerce Storefront, you start with shopping features such as product discovery, cart, checkout, and accounts. To find the code behind a change, follow how these features connect to page content and Commerce services.
 
-That speed comes from <Term>Edge Delivery Services</Term>, Adobe's global delivery network, which turns merchant-authored documents into HTML and serves pages from servers near shoppers around the world. Merchants keep editing in a document-style workflow while you own the storefront code, so content changes and code changes stay out of each other's way.
+Available features depend on your [backend](/get-started/backends/) and [licensing](/licensing/). If your team already has a storefront project, you can [go directly to local setup](/get-started/run-locally/).
 
-Within that setup, your job is to connect Commerce data to the page. You start from the <Term term="Commerce boilerplate">Adobe Commerce boilerplate</Term>, a Git repository with a working storefront already in place. It includes <Term term="Drop-in components">drop-in components</Term> for cart, checkout, product details, search, and accounts, so you customize existing screens instead of building each one from scratch. Drop-in components mount inside <Term term="Commerce blocks">blocks</Term>, the individual files in the boilerplate that connect content to code: each block imports a drop-in and renders its UI on the page. Drop-ins call the Adobe Commerce <Term>GraphQL</Term> API directly from the shopper's browser, so cart and catalog data stay current without any server-side code from you.
+## Your role as a storefront developer
 
-<Aside type="note" title="About drop-in licensing">
-Drop-in components are included with an Adobe Commerce as a Cloud Service or Adobe Commerce Optimizer license. If you use Adobe Commerce on Cloud, you need a separate Adobe Commerce Optimizer license to use drop-ins. Read [Backend options](/get-started/backends/) to see which prerequisites apply to your backend, and [Licensing requirements](/licensing/) to confirm what your license covers.
-</Aside>
+You customize the code and shopping features supplied by the <Term term="Commerce boilerplate">Adobe Commerce boilerplate</Term>, while content authors create and edit pages.
 
-## Get your first preview running
+The boilerplate is a GitHub repository template, so your project starts as a copy that you develop in your own repository. With standard shopping features already included, you customize their existing code rather than installing a separate cart or checkout package.
 
-You can start with [Create a storefront](/get-started/create-storefront/) if your team already has accounts and a chosen backend. Otherwise, prepare your project and create your storefront in this order:
+<Diagram adaptColors caption="Your storefront starts with the Adobe Commerce boilerplate's existing shopping features. You extend or create features, and authors create and edit pages for shoppers.">
+  ![Foundation for Commerce Storefront](images/developer-get-started.png)
+</Diagram>
+
+## How your storefront reaches shoppers
+
+In the workflow shown below, you keep your code in a GitHub repository, while authors manage page content in <Term>DA.live</Term>.
+
+From these two sources, <Term>Edge Delivery Services</Term> delivers content and code to shoppers. In the shopper's browser, your storefront combines that content with live shopping data from your Commerce services.
+
+<Diagram adaptColors caption="Your storefront runs in the shopper's browser, using content and code delivered by Edge Delivery Services and live data from Commerce APIs.">
+  ![Content and code delivered to the storefront, with Commerce API requests and responses and a shopping experience for shoppers](images/storefront-tools.png)
+</Diagram>
+
+## What your storefront pages are built from
+
+Each page is made of blocks, named parts that add content or shopping features. Content blocks add text, images, and layout, while <Term>Commerce blocks</Term> add shopping features.
+
+Commerce blocks can use <Term term="Drop-in components">drop-in components</Term> for ready-made shopping interfaces, such as cart and checkout, that connect to your Commerce services. In addition to drop-ins, these blocks can use the Storefront SDK, a software development kit with shared user interface components and tools.
+
+<Diagram adaptColors caption="Storefront pages combine shopping features from Commerce blocks with content and layout from content blocks. Commerce blocks can use drop-in components and the Storefront SDK.">
+  ![SDK components and drop-ins support Commerce blocks, which combine with content blocks to form storefront pages](images/storefront-page-parts.png)
+</Diagram>
+
+Use these names when you explore the project or ask your team for help:
+
+<TableWrapper>
+
+| Name | What it means |
+| --- | --- |
+| Document | Page content that authors edit in an authoring tool, such as DA.live |
+| Edge Delivery Services | Adobe's service for delivering page content and storefront code |
+| Content block | A part of a page that displays content, such as a hero or a row of cards |
+| Commerce block | A part of a page that connects a shopping experience to the storefront |
+| Drop-in component | A package of ready-made shopping interfaces and behavior, such as cart or checkout |
+| Container | A part of a drop-in that a block can render, such as a cart item list |
+| Storefront SDK | Shared user interface components and development tools |
+| Commerce APIs | Application programming interfaces that the storefront calls to read or update shopping data |
+
+</TableWrapper>
+
+## Find your code
+
+Your repository holds the code you change, but page content and Commerce data have their own sources. That means cloning the repository is only part of local setup.
+
+<TableWrapper>
+
+| File or directory | What you work on |
+| --- | --- |
+| `blocks/` | JavaScript and CSS for individual blocks |
+| `styles/styles.css` | Shared styles and design tokens, which are named values for colors, spacing, and other design choices |
+| `scripts/initializers/` | Setup for drop-ins, including their endpoints and labels |
+| `scripts/commerce.js` | Shared Commerce integration code, including loading storefront configuration |
+| `config.json` (if present) | Local connection settings for projects that use a local file. See [Storefront configuration](/setup/configuration/commerce-configuration/) before changing them. |
+
+</TableWrapper>
+
+For example, `blocks/commerce-cart/commerce-cart.js` imports the cart initializer and renders containers from the cart drop-in. One of these containers, `CartSummaryList`, displays cart items. The block controls their placement on the page, while the drop-in supplies their shopping interface and behavior.
+
+Use this division of responsibilities to choose where to start: the block for page integration, its initializer for drop-in setup, or the shared stylesheet for a design change.
+
+For a closer look at a block's responsibilities, see [Blocks and drop-ins](/blocks/blocks-and-dropins/). To trace a page's loading sequence or communication between shopping features, use [Architecture](/get-started/architecture/) as a reference.
+
+## Start developing
+
+Choose the task that matches what you need to do, or follow these topics in order for an introduction to local development.
 
 <Callouts columnCount={1}>
-1. [Prerequisites](/get-started/before-you-start/) — Gather your tools, accounts, and Commerce access before you open <Term>Site Creator</Term>.
-1. [Backend options](/get-started/backends/) — Identify your Commerce backend (Adobe Commerce on Cloud, Adobe Commerce as a Cloud Service, or Adobe Commerce Optimizer) and confirm what you need before you create a site. On Commerce on Cloud or on-premises, this includes installing the [Compatibility Package](/setup/configuration/storefront-compatibility/) so drop-ins can use your APIs.
-1. [Create a storefront](/get-started/create-storefront/) — Provision your repo and preview URL with Site Creator in <Term>DA.live</Term>. This is where your first working preview comes from.
+1. [Run your storefront locally](/get-started/run-locally/): Get the project, start a preview, and check page content and Commerce data.
+1. [Make your first change](/get-started/first-change/): Change a design token and verify the result in your browser.
+1. [Install the AI tools](/ai/): Connect your editor or coding agent to project guidance and documentation.
+1. [Make a change with AI](/ai/develop-with-ai/): Plan, make, and review a small change with your agent.
 </Callouts>
 
-For local development, follow [Run your storefront locally](/boilerplate/#running-locally) in the Boilerplate section. Use your local preview to test changes before preparing the site for production.
+If you're setting up a new project instead, [Prerequisites](/get-started/before-you-start/), [Backend options](/get-started/backends/), and [Create a storefront](/get-started/create-storefront/) cover repository, content, and Commerce connection setup.
 
-<Aside type="tip" title="When something goes wrong">
-Open [Architecture](/get-started/architecture/). It shows whether the problem is in content authoring, Edge Delivery Services, or Commerce, so you know where to look instead of searching only under `blocks/`.
-</Aside>
+## More help on this topic
 
-## Pick what you need next
-
-Once your preview is running, choose a topic for the work you want to do next, from customization to production setup.
-
-<Callouts columnCount={2}>
-- [Set up AI tools](/ai/) — Prepare your AI editor or coding agent for storefront development.
-- [Explore your storefront project](/boilerplate/) — Understand the project structure and find guidance for local development and updates.
-- [Understand drop-ins](/dropins/all/introduction/) — Learn what drop-in components are, how the initializer import pattern works, and how to add one to a page.
-- [Understand blocks](/blocks/blocks-and-dropins/) — See how a block's file imports a drop-in and mounts its UI on the page.
-- [Choose how to customize](/dropins/all/extend-or-create/) — Build a feature fast from an existing drop-in's pieces, extend a drop-in, or create one when nothing shipped covers what you need.
-- [Style your storefront](/dropins/all/styling/) — Restyle drop-ins to match your brand.
-- [Localize your storefront](/dropins/all/labeling/) — Support multiple languages and locales.
-- [Customize layout](/dropins/all/slots/) — Move UI around with slots and layouts.
-- [Work with events](/dropins/all/events/) — Wire up analytics and respond to drop-in activity with custom code.
-- [Configure your storefront](/setup/configuration/commerce-configuration/) — Connect the storefront to Commerce endpoints and services.
-- [Configure content delivery](/setup/configuration/content-delivery-network/) — Review content delivery configuration for your production domain.
-- [Get to know SEO](/setup/seo/) — Learn how Edge Delivery Services SEO and generative engine optimization (GEO) apply to Commerce storefront indexing, metadata, and launch checks.
-- [Understand the architecture](/get-started/architecture/) — See the mental model for how pages load, and how blocks, drop-ins, and Commerce services connect.
-- [Prepare for launch](/setup/launch/launch-checklist/) — Finish these steps before you treat the site as production-ready.
-</Callouts>
-
-If you already know your task, use the sidebar for the full catalog. If you are building a B2B storefront, the steps in Get your first preview running above still apply. B2B-specific drop-ins and configuration live under B2B Drop-Ins, in the API Reference section of the sidebar, once your preview is running.
-
-## Reference and how-tos
-
-Beyond this page, the docs split into three kinds of content: drop-in reference pages, guidance for extending them, and task-specific how-tos.
-
-Adobe's drop-in pages include full technical details: API methods, props, slots, events, and version notes. Open the matching page under B2C or B2B Drop-Ins in the API Reference section of the sidebar.
-
-You'll typically pair that reference with task guidance. Most storefront projects extend those shipped drop-ins: restyling them, moving slots, changing labels, or adjusting behavior. Start at [the drop-ins overview](/dropins/all/introduction/), then check Drop-ins, Styling, and Localization in the sidebar, along with each drop-in's own reference pages. The Drop-In SDK is for writing a new drop-in package from scratch or working directly with the framework, not for typical customization of Adobe's packages. Find it under API Reference in the sidebar.
-
-For step-by-step instructions on federated search, cart, checkout, and user account flows, browse [Storefront how-tos](/how-tos/). Find these topics in the top-level How-tos section of the sidebar.
+- For another customization task, use [Developer how-tos](/how-tos/#for-developers).
+- For deeper code changes, see [Customize blocks](/blocks/customize-blocks/) and [Choose how to customize](/dropins/all/extend-or-create/).
+- For shopping component details, use the [B2C drop-in reference](/dropins/) for business-to-consumer storefronts or the [B2B drop-in reference](/dropins-b2b/) for business-to-business storefronts.
+- For shared user interface components and tools, use the [Storefront SDK](/sdk/) reference.
