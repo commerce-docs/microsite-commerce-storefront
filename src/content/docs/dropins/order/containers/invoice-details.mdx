@@ -1,0 +1,154 @@
+---
+title: InvoiceDetails container
+description: Display an invoice for a customer's order and download a PDF with optional host-provided branding.
+---
+
+import OptionsTable from '@components/OptionsTable.astro';
+import Aside from '@components/Aside.astro';
+import Diagram from '@components/Diagram.astro';
+
+The `InvoiceDetails` container displays one invoice associated with an order. It shows the invoice and order numbers, order date, payment method, billing and shipping addresses, products, invoiced quantities, and invoice totals.
+
+<Diagram caption="InvoiceDetails container">
+  ![An invoice details view with addresses, invoiced products, totals, and a Download PDF
+  button.](@images/dropins/order/invoice-details.png)
+</Diagram>
+
+<Aside type="note">
+  Use a release of `@dropins/storefront-order` that exports `InvoiceDetails` and supports the PDF
+  options described here. Invoice retrieval uses the authenticated customer's orders; an invoice
+  reference alone does not provide access to another customer's invoice.
+</Aside>
+
+## Configurations
+
+The `InvoiceDetails` container provides the following configuration options:
+
+<div className="invoice-details-options">
+  <OptionsTable
+    compact
+    options={[
+      ['Options', 'Type', 'Req?', 'Description'],
+      ['invoiceRef', 'string', 'Yes', 'The invoice number or ID to find within the current order.'],
+      ['className', 'string', 'No', 'Adds a CSS class to the container wrapper.'],
+      [
+        'orderData',
+        'OrderDataModel',
+        'No',
+        'Supplies the initial order context. The container uses its number to fetch invoices and also listens for order/data events.',
+      ],
+      [
+        'routeInvoicesList',
+        '() => string',
+        'No',
+        'Returns the destination for the Back to Order Details link. Use your order details or invoice-list route.',
+      ],
+      [
+        'onDownloadPdf',
+        '() => void',
+        'No',
+        'Replaces the built-in PDF download. Omit this callback to use browser-generated PDFs.',
+      ],
+      [
+        'getInvoicePdfBranding',
+        '() => InvoicePdfBranding\n| undefined\n| Promise<InvoicePdfBranding | undefined>',
+        'No',
+        'Supplies branding to the built-in PDF generator. This callback is not used when onDownloadPdf replaces the download.',
+      ],
+    ]}
+  />
+</div>
+
+<style>{`
+  .invoice-details-options td:nth-child(2) {
+    white-space: pre-line;
+  }
+`}</style>
+
+## Order context and states
+
+Provide `orderData` or receive an [`order/data`](/dropins/order/events/#orderdata-emits-and-listens) event from the existing Order initializer. The container fetches invoices for that order and matches `invoiceRef` against the invoice number or ID.
+
+The container shows a loader during retrieval, a not-found alert if the invoice is absent from the order, and a separate error alert if retrieval fails.
+
+## Example
+
+This example reads both references from the URL, loads the order, and uses the built-in PDF download. The host application must authenticate the customer before fetching the order. Replace the paths with your storefront routes.
+
+```javascript
+import '../../scripts/initializers/order.js';
+import { getOrderDetailsById } from '@dropins/storefront-order/api.js';
+import { InvoiceDetails } from '@dropins/storefront-order/containers/InvoiceDetails.js';
+import { render as orderRenderer } from '@dropins/storefront-order/render.js';
+
+export default async function decorate(block) {
+  const { searchParams } = new URL(window.location.href);
+  const orderRef = searchParams.get('orderRef');
+  const invoiceRef = searchParams.get('invoiceRef');
+  if (!orderRef || !invoiceRef) {
+    throw new Error('Order and invoice references are required.');
+  }
+
+  const orderData = await getOrderDetailsById({
+    orderId: orderRef,
+    queryType: 'orderData',
+  });
+
+  await orderRenderer.render(InvoiceDetails, {
+    orderData,
+    invoiceRef,
+    routeInvoicesList: () => {
+      const query = new URLSearchParams({ orderRef });
+      return `/order-details?${query}`;
+    },
+  })(block);
+}
+```
+
+## PDF download and branding
+
+The built-in download creates a portrait A4 PDF in the browser and loads the renderer when the customer requests it. The filename is `invoice-<invoice-number>.pdf`, with unsupported filename characters replaced by hyphens. The container does not store PDFs on the server.
+
+To add branding, supply `getInvoicePdfBranding` in the render options. Return an object with any of these fields:
+
+<OptionsTable
+  compact
+  options={[
+    ['Options', 'Type', 'Req?', 'Description'],
+    [
+      'logoDataUrl',
+      'string',
+      'No',
+      'A raster logo encoded as an image data URL, such as image/png or image/jpeg.',
+    ],
+    ['storeName', 'string', 'No', 'The store name to display in the PDF header.'],
+    ['addressLines', 'string[]', 'No', 'Store address lines to display in the PDF header.'],
+  ]}
+/>
+
+Add the callback to the render options in the previous example:
+
+```javascript
+await orderRenderer.render(InvoiceDetails, {
+  orderData,
+  invoiceRef,
+  getInvoicePdfBranding: () => ({
+    storeName: 'Example Store',
+    addressLines: ['100 Main Street', 'Austin, TX 78701'],
+  }),
+})(block);
+```
+
+This branding is supplied by the host application. The renderer does not fetch the PDF logo or address configured in Adobe Commerce Admin. If your host loads an image from a different origin to create a data URL, that origin must allow the image request.
+
+To use a backend document service instead, supply `onDownloadPdf` and implement the download in that callback. Do not pass an empty callback: it disables the built-in download.
+
+## Current data limitations
+
+- The current invoice query does not retrieve invoice status.
+- The detail view and PDF calculate each line subtotal as sale price multiplied by invoiced quantity. The invoice's aggregate subtotal and grand total come from the backend; computed line amounts can differ from stored row totals for partial invoices because of rounding.
+- Discounts appear separately in invoice totals. Item-level discount data is available in the model, but is not displayed as an additional line discount column.
+- The PDF does not estimate item tax from order prices. It shows zero in the Tax column when aggregate invoice tax is zero, and an unavailable marker when aggregate tax is nonzero but item tax is unavailable. Aggregate tax appears in totals.
+- The UI supports the [Order dictionary](/dropins/order/dictionary/). Built-in PDF headings use fixed English labels, and the default download uses the renderer's `en-US` locale.
+
+For a list of invoices within the order, see [`OrderInvoices`](/dropins/order/containers/order-invoices/).
