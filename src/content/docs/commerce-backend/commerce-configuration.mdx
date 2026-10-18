@@ -12,28 +12,79 @@ import Term from '@components/Term.astro';
 import Link from '@components/Link.astro';
 import { Tabs, TabItem, Steps, Aside } from '@astrojs/starlight/components';
 
-In this section, you'll learn how Commerce blocks in your storefront connect to a Commerce backend using values from either the <Link href="https://www.aem.live/docs/admin.html#schema/PublicConfig" text="public config" /> for your site or a config.json file in your code repo.
+Connect your storefront to the intended Commerce environment and confirm that the browser loads the right settings. The <Term>storefront configuration</Term> contains the API addresses, store or catalog context, and other values that Commerce blocks and drop-ins use.
 
-The configuration is organized into several key sections:
-- **Endpoints** - GraphQL endpoints for Commerce and Catalog Services
-- **Headers** - HTTP headers required for API authentication and store context
-- **Analytics** - Store and environment metadata for tracking and reporting
-- **Plugins** - Configuration for various Edge Delivery Services plugins and features
-- **Multistore** - Settings for multiple store views and internationalization
+For a new project, follow the connection task below. If Site Creator or your team already configured the project, start with [Confirm the loaded configuration](#confirm-the-loaded-configuration) instead of replacing working settings.
 
-When implementing your own project, you must update the configuration values with:
-- The Adobe Commerce and Catalog Service GraphQL endpoint that you configured as part of the [content delivery network (CDN) setup](/setup/configuration/content-delivery-network/).
-- The header values specific to your Adobe Commerce Catalog Services environment.
+## Connect your storefront to Commerce
 
-To generate a `config.json` file for your Commerce backend, use the config generator tool to set up your storefront using the boilerplate code. This file contains the environment values for a Commerce backend including GraphQL endpoints and headers.
+Before changing settings, confirm your backend requirements in [Backend options](/get-started/backends/). Work with the Commerce administrator or integration owner to gather:
 
-If you set up your site using the <Link href="https://da.live/app/adobe-commerce/storefront-tools/tools/site-creator/site-creator" text="Site Creator Tool" />, the `config.json` file is created and added to the GitHub repository created for the boilerplate code. You can review and update the default values in the `config.json` file after the process completes.
+- The approved development environment and the site or local preview where you will test it.
+- The GraphQL API address for catalog requests.
+- The API address for cart, checkout, and account operations, when those features are required.
+- The store or catalog header values that identify the correct data.
+- A known product and its expected price and currency.
 
-:::note
-**Need help configuring your Commerce backend?** Use the <Link href="https://da.live/app/adobe-commerce/storefront-tools/tools/config-generator/config-generator" text="Config Generator tool" /> to automatically generate the appropriate configuration structure for your Adobe Commerce, Adobe Commerce as a Cloud Service, or Adobe Commerce Optimizer backend. The tool will detect your backend type and generate the correct configuration, though you should validate and confirm the results.
-:::
+Adobe Commerce as a Cloud Service supports catalog and transactional operations. With Adobe Commerce Optimizer, the existing commerce platform still handles transactions. The generator output does not replace a required third-party cart or checkout integration.
 
-This page covers your <Term>storefront configuration</Term>, when to replace sample <Term>default values</Term>, and how helper APIs such as <Term>getConfigValue function</Term> and <Term>getHeaders function</Term> read resolved values.
+<Aside type="caution" title="Keep secret credentials out of storefront settings">
+The storefront loads these settings in the shopper's browser. Do not include passwords, private API keys, or secret integration credentials in browser-delivered configuration.
+</Aside>
+
+Generate and save a configuration using the values approved for your project:
+
+<Steps>
+
+1. Open the <Link href="https://da.live/app/adobe-commerce/storefront-tools/tools/config-generator/config-generator" text="config generator tool" />.
+
+1. Enter the approved GraphQL API URL in **GraphQL API Endpoint**.
+
+1. Select **Generate**.
+
+   The tool returns a JSON configuration for the detected environment. Generation alone does not prove that all required connections work.
+
+1. Compare the generated values with the approved connection details.
+
+   Use [Endpoints](#endpoints) and [Headers](#headers) to check the backend-specific fields. Replace sample <Term>default values</Term> and any remaining placeholders.
+
+1. Select **Copy**.
+
+1. Save the approved configuration in your project's configuration source.
+
+   For shared site configuration, follow <Link href="https://www.aem.live/docs/config-service-setup" text="Setting up the configuration service" /> and its <Link href="https://www.aem.live/docs/admin.html#schema/PublicConfig" text="public configuration reference" />. For local or feature-branch testing, use a `config.json` file at the storefront repository root. Coordinate changes to a shared site with its owner.
+
+</Steps>
+
+A repository `config.json` takes precedence over the site's public configuration. Keep local overrides out of the production branch, and use the Configuration Service for production settings.
+
+## Confirm the loaded configuration
+
+Check the same local or preview origin where you will test the storefront. An origin is the address before the page path. The browser can retain an older configuration in session storage even after the source changes.
+
+<Steps>
+
+1. Open `/config.json` on that origin in your browser.
+
+   The response should contain JSON with the intended endpoints and store or catalog values. If it is missing or incorrect, check the configuration source and code branch before continuing.
+
+1. Open **Application** > **Session Storage** in your browser's developer tools.
+
+   Select the storage for the storefront origin. These panel names apply to Chrome and Edge.
+
+1. Delete only the `config` entry.
+
+1. Reload the storefront page.
+
+1. Inspect the recreated `config` entry in session storage.
+
+   Confirm that the loaded endpoints and store or catalog context match the approved settings. If values are still old, compare them with the `/config.json` response and investigate the source or delivery cache.
+
+</Steps>
+
+Matching settings confirm that configuration loaded, not that every shopping feature works. Continue with [Verify your storefront setup](/get-started/verify-setup/) to test content, product data, and the required shopping features.
+
+The reference sections below retain the settings for endpoints, headers, analytics, plugins, and multistore projects. They also describe helper APIs such as <Term>getConfigValue function</Term> and <Term>getHeaders function</Term>.
 
 ## Configuration Caching
 
@@ -41,7 +92,7 @@ The storefront configuration is cached at multiple levels to optimize performanc
 
 - **CDN Caching**: The EDS CDN caches the configuration file with a `max-age=7200` (2 hours) cache control header. This means configuration changes can take up to 2 hours to be reflected on the CDN after deployment.
 
-- **Browser Caching**: When the configuration is loaded in the browser, it is stored in <Link href="https://developer.mozilla.org/en-US/docs/Web/API/Window/sessionStorage" text="session storage" />, which persists until the browser session is cleared.
+- **Browser Caching**: The storefront stores configuration in <Link href="https://developer.mozilla.org/en-US/docs/Web/API/Window/sessionStorage" text="session storage" /> with a two-hour expiry. On a later configuration load, it fetches the configuration again if the cached entry is missing or expired. To test a change sooner, follow [Confirm the loaded configuration](#confirm-the-loaded-configuration).
 
 **For developers**: After making configuration changes, it can take up to two hours for the CDN cache to expire. Clear your browser's session storage to see updates. Verify the current cache configuration by accessing `<site.com>/config.json` directly and checking the `last-modified` header.
 
@@ -612,7 +663,7 @@ To verify the changes after creating or updating your configuration (either in p
 <Steps>
 
 1. **Deploy or save your changes:**
-   - For repository-based: Commit and push `config.json`
+   - For local or feature-branch testing: Save `config.json` locally or push it only to the intended development branch. Keep it out of the production branch.
    - For public config: Update via the Configuration Service API
 
 2. **Clear session storage:**

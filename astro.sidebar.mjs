@@ -25,6 +25,7 @@ export function generateSidebar() {
           collapsed: false,
           items: [
             { label: 'Overview', link: '/get-started/' },
+            { label: 'Create a storefront', link: '/get-started/create-storefront/' },
             { label: 'Run your storefront locally', link: '/get-started/run-locally/' },
             { label: 'Make your first change', link: '/get-started/first-change/' },
             { label: 'Install the AI tools', link: '/ai/' },
@@ -62,7 +63,8 @@ export function generateSidebar() {
           items: [
             { label: 'Prerequisites', link: '/get-started/before-you-start/' },
             { label: 'Backend options', link: '/get-started/backends/' },
-            { label: 'Create a storefront', link: '/get-started/create-storefront/' },
+            { label: 'Storefront configuration', link: '/setup/configuration/commerce-configuration/' },
+            { label: 'Verify your storefront setup', link: '/get-started/verify-setup/' },
           ],
         },
         {
@@ -133,7 +135,6 @@ export function generateSidebar() {
           collapsed: true,
           items: [
             { label: 'Overview', link: '/setup/configuration/' },
-            { label: 'Storefront configuration', link: '/setup/configuration/commerce-configuration/' },
             {
               label: 'Compatibility Package',
               collapsed: true,

@@ -24,51 +24,47 @@ If you still run Luma while you move content and marketing to Edge Delivery, use
 
 ## How the pieces connect
 
-Commerce blocks, drop-ins, the boilerplate, your backend, and shared Commerce Services all work together on the page.
-
-The storefront uses <Term>GraphQL</Term> for both reads and writes.
-
-Commerce Services include <Term>Catalog Service</Term>, <Term>Live Search</Term>, Product Recommendations, and core GraphQL on your instance for carts, checkout, accounts, and other flows not covered by the hosted catalog layer.
-
-All backend options connect to these services. To compare them, see [Backend options](/get-started/backends/).
+Commerce blocks use drop-ins and storefront API clients to connect page features to catalog services and shopping operations.
 
 <Diagram type="mermaid" code={`
-graph TB
-    EDS["<b>Edge Delivery Services</b><br/>Hosting & CDN"]
-    AEMBlocks["<b>Content blocks</b><br/>Cards, columns, headers"]
-    CommerceBlocks["<b>Commerce blocks</b><br/>Author in DA.live"]
-    EDS --> AEMBlocks
-    EDS --> CommerceBlocks
-    CommerceBlocks --> B2CGroup["<b>B2C Drop-ins</b><br/>Cart, Checkout, Account, and more"]
-    CommerceBlocks --> B2BGroup["<b>B2B Drop-ins</b><br/>Company, Quote, PO, and more"]
-    B2CGroup --> Boilerplate["<b>Commerce boilerplate</b><br/>Storefront configuration + API clients"]
-    B2BGroup --> Boilerplate
-    Boilerplate --> BackendChoice{Backend}
-    BackendChoice --> CloudService["<b>Adobe Commerce as a Cloud Service</b><br/>Fully managed"]
-    BackendChoice --> Optimizer["<b>Adobe Commerce Optimizer</b><br/>Fully managed SaaS"]
-    BackendChoice --> PaaS["<b>Commerce on Cloud or on-premises</b><br/>Your Adobe Commerce instance"]
-    subgraph Services["Commerce Services"]
-        direction TB
-        CS["<b>Catalog Service</b>"]
-        LS["<b>Live Search</b>"]
-        PR["<b>Product Recommendations</b>"]
-        GraphQL["<b>Core GraphQL</b>"]
-    end
-    CloudService -.-> Services
-    Optimizer -.-> Services
-    PaaS -.-> Services
-    style Services fill:#FFF9C4,stroke:#827717,stroke-width:2px
-    classDef storefront fill:#e8f5e9,stroke:#4caf50
-    classDef cloudService fill:#f3e5f5,stroke:#9c27b0
-    classDef optimizer fill:#fff3e0,stroke:#ff9800
-    classDef paas fill:#fce4ec,stroke:#e91e63
-    classDef commerceSvcBlock fill:#EDE7F6,stroke:#7E57C2
-    class EDS,AEMBlocks,CommerceBlocks,Boilerplate storefront
-    class CloudService cloudService
-    class Optimizer optimizer
-    class PaaS paas
-    class CS,LS,PR,GraphQL commerceSvcBlock
-`} caption="Commerce blocks load drop-ins through the boilerplate, which connects to your backend — Commerce on Cloud or on-premises, Adobe Commerce as a Cloud Service, or Adobe Commerce Optimizer — and shared Commerce Services. See [Backend options](/get-started/backends/) for prerequisites and differences between backend types." />
+flowchart TB
+  EDS["<b>Edge Delivery Services</b><br/>Hosting & CDN"]
+  AEMBlocks["<b>Content blocks</b><br/>Cards, columns, headers"]
+  CommerceBlocks["<b>Commerce blocks</b><br/>Author in DA.live"]
+  EDS --> AEMBlocks
+  EDS --> CommerceBlocks
+  CommerceBlocks --> B2CGroup["<b>B2C Drop-ins</b><br/>Cart, Checkout, Account, and more"]
+  CommerceBlocks --> B2BGroup["<b>B2B Drop-ins</b><br/>Company, Quote, PO, and more"]
+  B2CGroup --> Boilerplate["Storefront configuration and API clients"]
+  B2BGroup --> Boilerplate
+  Catalog["Catalog and product discovery requests"]
+  Transactions["Cart, checkout, account, and order requests"]
+  CloudService["Adobe Commerce as a Cloud Service"]
+  Optimizer["Adobe Commerce Optimizer"]
+  PaaS["Adobe Commerce on Cloud or on-premises<br/>Used with Adobe Commerce Optimizer"]
+  ThirdParty["Third-party commerce platform<br/>Used with Adobe Commerce Optimizer"]
+  Boilerplate --> Catalog
+  Boilerplate --> Transactions
+  Catalog --> CloudService
+  Catalog --> Optimizer
+  Transactions --> CloudService
+  Transactions --> PaaS
+  Transactions -.->|"Project-specific integration"| ThirdParty
+  classDef storefront fill:#e8f5e9,stroke:#4caf50
+  classDef cloudService fill:#f3e5f5,stroke:#9c27b0
+  classDef optimizer fill:#fff3e0,stroke:#ff9800
+  classDef paas fill:#fce4ec,stroke:#e91e63
+  classDef commerceSvcBlock fill:#EDE7F6,stroke:#7E57C2
+  class EDS,AEMBlocks,CommerceBlocks,Boilerplate storefront
+  class CloudService cloudService
+  class Optimizer optimizer
+  class PaaS,ThirdParty paas
+  class Catalog,Transactions commerceSvcBlock
+`} caption="Catalog requests and shopping operations have different destinations. These paths show alternative backend configurations, not services that every project must use." />
+
+The Adobe Commerce storefront integration uses <Term>GraphQL</Term>, a language for requesting and updating data. Hosted services such as <Term>Catalog Service</Term>, <Term>Live Search</Term>, and Product Recommendations supply product discovery. Core Commerce GraphQL is a separate API for carts, checkout, customer accounts, and orders.
+
+Adobe Commerce as a Cloud Service supports both kinds of requests. With Adobe Commerce Optimizer, shopping operations stay with an existing commerce platform. Connecting catalog services does not automatically adapt cart and checkout to a third-party platform. To compare backend configurations and their requirements, see [Backend options](/get-started/backends/).
 
 <Aside type="note" title="API Mesh (advanced)">
 <Link href="https://developer.adobe.com/graphql-mesh-gateway/" text="API Mesh for Adobe Developer App Builder" /> is an option when your project needs to combine multiple backend sources behind a single GraphQL endpoint. Most new storefronts do not need it. You can add it later if the requirement arises.
@@ -86,7 +82,7 @@ Not all of these are required for every project. What you need depends on your b
 
 The Services Connector links your Commerce instance to the hosted catalog and search services in this section: Catalog Service, Live Search, and Product Recommendations. On Commerce on Cloud or on-premises, you configure that link once in the Commerce Admin using production and sandbox API keys from your Commerce license owner. All three services share the same key pair and data space after you save that configuration.
 
-On Adobe Commerce as a Cloud Service and Adobe Commerce Optimizer, Adobe sets up the hosted side of those services for you as part of the managed model in [Backend options](/get-started/backends/). You do not repeat the same manual Commerce Services Connector steps that administrators on Commerce on Cloud or on-premises use in the Admin. The Experience League topic in the quick reference table below still explains how API keys and data spaces work if you need the full background for PaaS or for troubleshooting.
+Adobe Commerce as a Cloud Service includes these hosted services, although they still need project configuration. Adobe Commerce Optimizer uses a different data-ingestion model. The <Link href="https://experienceleague.adobe.com/en/docs/commerce/aco-optimizer-connector/overview" text="Adobe Commerce Optimizer Connector" /> synchronizes catalog and pricing data from an Adobe Commerce on Cloud or on-premises deployment into Adobe Commerce Optimizer. It does not replace the platform that handles cart and checkout.
 
 ### Catalog Service
 
@@ -104,9 +100,9 @@ Without the classic PHP theme, Product Recommendations needs the same storefront
 
 ### Core GraphQL
 
-Core GraphQL is the GraphQL API on your Adobe Commerce backend (the address you set in the boilerplate for drop-ins). Cart, checkout, account, orders, and many other reads and writes still go here. Hosted services such as Catalog Service sit beside that API and speed up specific product reads. They do not remove core GraphQL from your architecture.
+Core Commerce GraphQL is the API on an Adobe Commerce backend for carts, checkout, customer accounts, orders, and other reads and writes. Hosted catalog services do not replace these operations. When Adobe Commerce Optimizer supplies the catalog experience, the existing commerce platform still handles transactions. A third-party platform uses its own APIs and requires project-specific integration.
 
-Adobe Commerce as a Cloud Service can offer one combined GraphQL layer that merges core Commerce fields with the hosted service fields storefronts need. When you run Adobe Commerce yourself, whether on Adobe-managed cloud infrastructure or on your own servers (on-premises), you use the long-standing core and service schemas described in Adobe's web API documentation. For a full overview, see the <Link href="https://developer.adobe.com/commerce/webapi/graphql/" text="GraphQL overview" /> on developer.adobe.com.
+The storefront starter code uses separate core and catalog API clients. They can share an endpoint address, but their API responsibilities remain different. See [Storefront configuration](/setup/configuration/commerce-configuration/) for connection settings and the <Link href="https://developer.adobe.com/commerce/webapi/graphql/" text="GraphQL overview" /> for Adobe Commerce operations.
 
 ### Data Connection
 
@@ -131,7 +127,9 @@ flowchart TB
 
 ### Storefront Compatibility package
 
-The Storefront Compatibility package extends the default Commerce GraphQL schema with additional support that drop-ins require. Without it on the Commerce deployment that serves those flows, the drop-ins cannot talk to your backend as they expect. See [Compatibility Package](/setup/configuration/storefront-compatibility/) for who installs it on each backend. On Adobe Commerce as a Cloud Service and Adobe Commerce Optimizer, Adobe manages this package for you as part of the fully managed model in [Backend options](/get-started/backends/). On Commerce on Cloud or on-premises (PaaS) with Adobe Commerce Optimizer, install it with Composer on your Commerce server before you finish storefront settings in your GitHub project.
+The Storefront Compatibility package extends the default Commerce GraphQL schema with additional support that drop-ins require. Without it on the Commerce deployment that serves those flows, the drop-ins cannot talk to your backend as they expect. See [Compatibility Package](/setup/configuration/storefront-compatibility/) for who installs it on each backend.
+
+Adobe manages the Storefront Compatibility package on Adobe Commerce as a Cloud Service. For Adobe Commerce on Cloud or on-premises with Adobe Commerce Optimizer, install it on the Adobe Commerce deployment.
 
 ## Quick reference
 
@@ -139,17 +137,17 @@ The Storefront Compatibility package extends the default Commerce GraphQL schema
 
 | Service | One-line job | Where to find it |
 |---|---|---|
-| Services Connector | On Commerce on Cloud or on-premises, connects Catalog Service, Live Search, and Product Recommendations using Admin API keys. On Adobe Commerce as a Cloud Service and Adobe Commerce Optimizer, Adobe sets up the hosted side for you (see [Backend options](/get-started/backends/)). | <Link href="https://experienceleague.adobe.com/en/docs/commerce-merchant-services/user-guides/integration-services/saas" text="Commerce Services Connector" /> |
+| Services Connector | Connects an Adobe Commerce instance to Catalog Service, Live Search, and Product Recommendations. Adobe Commerce as a Cloud Service includes these services. Adobe Commerce Optimizer uses a different data-ingestion model. | <Link href="https://experienceleague.adobe.com/en/docs/commerce-merchant-services/user-guides/integration-services/saas" text="Commerce Services Connector" /> |
+| Adobe Commerce Optimizer Connector | Synchronizes catalog and pricing data from Adobe Commerce on Cloud or on-premises into Adobe Commerce Optimizer. Cart and checkout remain with the connected commerce platform. | <Link href="https://experienceleague.adobe.com/en/docs/commerce/aco-optimizer-connector/overview" text="Adobe Commerce Optimizer Connector" /> |
 | Catalog Service | Fast read-only catalog data for product pages, list pages, search, and navigation; required by the Product Details drop-in. | <Link href="https://experienceleague.adobe.com/en/docs/commerce/catalog-service/guide-overview" text="Catalog Service page" /> |
 | Live Search | AI-powered search that powers the Product Discovery drop-in. It needs storefront event collection when you do not use the classic PHP theme. | <Link href="https://experienceleague.adobe.com/en/docs/commerce/live-search/overview" text="Live Search page" /> |
 | Product Recommendations | Optional (recommended). Adobe Sensei units in the Commerce Admin. It needs storefront event collection when you do not use the classic PHP theme. | <Link href="https://experienceleague.adobe.com/en/docs/commerce/product-recommendations/getting-started/headless" text="Integration without classic theme" /> <br/> <Link href="/how-tos/add-product-recommendations/" text="Drop-in setup" /> |
-| Core GraphQL | Required. GraphQL API on your Commerce instance for cart, checkout, account, orders, and other flows; hosted catalog services do not replace it. | <Link href="https://developer.adobe.com/commerce/webapi/graphql/" text="GraphQL overview" /> |
+| Core GraphQL | Handles cart, checkout, account, and order operations on Adobe Commerce backends. Third-party platforms require integration with their own transactional APIs. | <Link href="https://developer.adobe.com/commerce/webapi/graphql/" text="GraphQL overview" /> |
 | Data Connection | Optional. Sends storefront and order event data to Adobe Experience Platform for personalization. Applies to Adobe Commerce on cloud infrastructure or on-premises, not Adobe Commerce as a Cloud Service. | <Link href="https://experienceleague.adobe.com/en/docs/commerce/data-connection/overview" text="Data Connection page" /> |
-| <Term>Storefront Compatibility package</Term> | Required for drop-ins. Manual install on Commerce on Cloud or on-premises with Adobe Commerce Optimizer. Managed automatically on Adobe Commerce as a Cloud Service and Adobe Commerce Optimizer. | [Overview](/setup/configuration/storefront-compatibility/) · [Manual installation](/setup/configuration/storefront-compatibility/install/) |
+| <Term>Storefront Compatibility package</Term> | Extends Adobe Commerce APIs for drop-ins. Adobe manages it on Adobe Commerce as a Cloud Service. Install it on the Adobe Commerce deployment for Adobe Commerce on Cloud or on-premises with Adobe Commerce Optimizer. | [Overview](/setup/configuration/storefront-compatibility/) · [Manual installation](/setup/configuration/storefront-compatibility/install/) |
 
 </TableWrapper>
 
 <Aside type="tip" title="Adobe Commerce Services on Experience League">
 For a complete list of merchandising services for your Adobe Commerce storefront, see the <Link href="https://experienceleague.adobe.com/en/docs/commerce-merchant-services/user-guides/home" text="Adobe Commerce Services home page" /> on Experience League. The table above links to the services you will use most often with this storefront.
 </Aside>
-
