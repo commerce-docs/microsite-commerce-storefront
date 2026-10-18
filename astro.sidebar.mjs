@@ -24,7 +24,7 @@ export function generateSidebar() {
           label: 'Getting started',
           collapsed: false,
           items: [
-            { label: 'How your storefront works', link: '/get-started/' },
+            { label: 'Overview', link: '/get-started/' },
             { label: 'Run your storefront locally', link: '/get-started/run-locally/' },
             { label: 'Make your first change', link: '/get-started/first-change/' },
             { label: 'Install the AI tools', link: '/ai/' },
