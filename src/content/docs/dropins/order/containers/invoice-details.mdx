@@ -7,17 +7,20 @@ import OptionsTable from '@components/OptionsTable.astro';
 import Aside from '@components/Aside.astro';
 import Diagram from '@components/Diagram.astro';
 
-The `InvoiceDetails` container displays one invoice associated with an order. It shows the invoice and order numbers, order date, payment method, billing and shipping addresses, products, invoiced quantities, and invoice totals.
+The `InvoiceDetails` container displays one invoice associated with an order. It shows the invoice and order numbers, invoice status, order date, payment method, billing and shipping addresses, products, invoiced quantities, item tax, and invoice totals.
 
 <Diagram caption="InvoiceDetails container">
-  ![An invoice details view with addresses, invoiced products, totals, and a Download PDF
+  ![An invoice details view showing invoice status, item tax, addresses, totals, and a Download PDF
   button.](@images/dropins/order/invoice-details.png)
 </Diagram>
 
 <Aside type="note">
   Use a release of `@dropins/storefront-order` that exports `InvoiceDetails` and supports the PDF
   options described here. Invoice retrieval uses the authenticated customer's orders; an invoice
-  reference alone does not provide access to another customer's invoice.
+  reference alone does not provide access to another customer's invoice. The invoice query also
+  requires a Storefront Compatibility endpoint with the status and invoice-item tax fields: SCP
+  4.7.21, 4.8.33, or 4.9.8, or a later compatible patch on that release line. Deploy the compatible
+  backend schema before using this drop-in version; an older schema rejects the query.
 </Aside>
 
 ## Configurations
@@ -70,6 +73,8 @@ The `InvoiceDetails` container provides the following configuration options:
 Provide `orderData` or receive an [`order/data`](/dropins/order/events/#orderdata-emits-and-listens) event from the existing Order initializer. The container fetches invoices for that order and matches `invoiceRef` against the invoice number or ID.
 
 The container shows a loader during retrieval, a not-found alert if the invoice is absent from the order, and a separate error alert if retrieval fails.
+
+The status is read from the selected invoice, not inferred from the parent order. Each item's tax is read from its GraphQL `tax_amount`: zero is displayed as zero, while `null` is shown as unavailable. The detail view does not estimate item tax from order prices.
 
 ## Example
 
@@ -145,10 +150,9 @@ To use a backend document service instead, supply `onDownloadPdf` and implement 
 
 ## Current data limitations
 
-- The current invoice query does not retrieve invoice status.
 - The detail view and PDF calculate each line subtotal as sale price multiplied by invoiced quantity. The invoice's aggregate subtotal and grand total come from the backend; computed line amounts can differ from stored row totals for partial invoices because of rounding.
 - Discounts appear separately in invoice totals. Item-level discount data is available in the model, but is not displayed as an additional line discount column.
-- The PDF does not estimate item tax from order prices. It shows zero in the Tax column when aggregate invoice tax is zero, and an unavailable marker when aggregate tax is nonzero but item tax is unavailable. Aggregate tax appears in totals.
+- Aggregate invoice taxes continue to provide the tax total.
 - The UI supports the [Order dictionary](/dropins/order/dictionary/). Built-in PDF headings use fixed English labels, and the default download uses the renderer's `en-US` locale.
 
 For a list of invoices within the order, see [`OrderInvoices`](/dropins/order/containers/order-invoices/).
