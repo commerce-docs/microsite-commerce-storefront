@@ -10,13 +10,22 @@ import TableWrapper from '@components/TableWrapper.astro';
 
 The `SharedRequisitionList` container handles the recipient side of requisition list sharing. When a shopper opens a shared link with a `requisition_id` token, render this container to show a read-only preview. The shopper imports the list only after they choose the import action.
 
+The container supports two kinds of links:
+
+- **Company share links** (default): the recipient signs in as a company user and can import the list into their account.
+- **Public share links**: set `isPublic` to `true`. Guests and signed-in customers can preview the list and add items to a cart. They cannot import the list.
+
 ## Configuration
 
 <TableWrapper nowrap={[0]}>
 
 | Parameter | Type | Req? | Description |
 |---|---|---|---|
-| `token` | `string` | Yes | The share token from the URL query parameter (for example, `?requisition_id=<token>`). The container loads preview data with [`getSharedRequisitionList`](/dropins-b2b/requisition-list/functions/#getsharedrequisitionlist) on mount and calls [`importSharedRequisitionList`](/dropins-b2b/requisition-list/functions/#importsharedrequisitionlist) only when the recipient confirms import. |
+| `token` | `string` | Yes | The share token from the URL query parameter (for example, `?requisition_id=<token>`). The container loads preview data with [`getSharedRequisitionList`](/dropins-b2b/requisition-list/functions/#getsharedrequisitionlist) on mount and calls [`importSharedRequisitionList`](/dropins-b2b/requisition-list/functions/#importsharedrequisitionlist) only when the recipient confirms import. When `isPublic` is `true`, the container loads the preview with [`getPublicRequisitionList`](/dropins-b2b/requisition-list/functions/#getpublicrequisitionlist) instead, and the token is the owner's public share token. |
+| `isPublic` | `boolean` | No | Set to `true` to render a public share preview. The container shows the owner's name, the product name and image for each item, item checkboxes, and pagination. It offers **Add All to Cart** and **Add Selected to Cart** actions instead of the import action. Defaults to `false`. |
+| `getCartId` | `() => string \| Promise<string>` | No | Returns the ID of the cart that receives the items. Required for public previews to enable the add-to-cart buttons. Return the guest or customer cart ID, creating a cart first if none exists. If you omit it, the buttons stay disabled. The container then calls [`addPublicRequisitionListItemsToCart`](/dropins-b2b/requisition-list/functions/#addpublicrequisitionlistitemstocart) with this ID. |
+| `onCartUpdated` | `() => void \| Promise<void>` | No | Called after the add-to-cart request finishes. Use it to refresh the mini cart or other cart UI. |
+| `routeProduct` | `(urlKey: string, sku: string) => string` | No | Builds the product detail page (PDP) URL for an item. The `sku` is the resolved variant SKU shown in the SKU column, so configurable items link to the correct variant. The product name and image render as links only when this callback and the item's `url_key` are both available. Otherwise they render as plain text and an image. |
 | `routeRequisitionList` | `(uid: string, listName: string) => string \| void` | No | Called with the imported list UID and name after a successful import. Use this callback to navigate to the list detail page. If you omit it, the container shows an inline success alert instead. Pass a stable reference (module-level function or `useCallback` with no dependencies) because the container captures this callback at mount time. |
 
 </TableWrapper>
@@ -67,3 +76,41 @@ await provider.render(SharedRequisitionList, {
   },
 })(block);
 ```
+
+### Render a public share preview
+
+To let guests and customers preview a public list and add items to a cart, create a page at the path set in `requisition_list_public_share_storefront_path`. Pass `isPublic: true` and a `getCartId` callback. The following example uses the Cart drop-in to reuse the shopper's cart or create a guest cart.
+
+```js
+import { render as provider } from '@dropins/storefront-requisition-list/render.js';
+import { SharedRequisitionList } from '@dropins/storefront-requisition-list/containers/SharedRequisitionList.js';
+import * as cart from '@dropins/storefront-cart/api.js';
+
+const params = new URLSearchParams(window.location.search);
+const token = params.get('requisition_id') ?? '';
+
+await provider.render(SharedRequisitionList, {
+  token,
+  isPublic: true,
+  getCartId: async () => {
+    const data = await cart.getCartData();
+    if (data?.id) return data.id;
+    const guestCart = await cart.createGuestCart();
+    return guestCart?.id;
+  },
+  onCartUpdated: () => console.log('Items added to cart'),
+  routeProduct: (urlKey, sku) =>
+    `/products/${encodeURIComponent(urlKey)}/${encodeURIComponent(sku)}`,
+})(block);
+```
+
+The important lines are:
+
+- `isPublic: true` switches the container from the company flow to the public flow.
+- `getCartId` refreshes the shopper's cart and returns its ID. If the shopper has no cart, `createGuestCart` creates one and returns its ID as a string.
+- `onCartUpdated` refreshes the cart data so that the mini cart and other cart UI reflect the added items.
+- `routeProduct` turns each item's `url_key` and variant SKU into a product page link. Change the path to match your storefront routes.
+
+<Aside type="note">
+The public preview works only when the list owner has marked the list public and `requisition_list_public_sharing_enabled` is `true`. If the token is invalid or the list was made private, the container shows an error message instead of the list.
+</Aside>
