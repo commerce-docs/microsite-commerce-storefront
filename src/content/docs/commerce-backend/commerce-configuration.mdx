@@ -6,11 +6,9 @@ slug: setup/configuration/commerce-configuration
 
 import OptionsTable from '@components/OptionsTable.astro';
 import Callouts from '@components/Callouts.astro';
-import Tasks from '@components/Tasks.astro';
-import Task from '@components/Task.astro';
 import Term from '@components/Term.astro';
 import Link from '@components/Link.astro';
-import { Tabs, TabItem, Steps, Aside } from '@astrojs/starlight/components';
+import { Tabs, TabItem, Steps, Aside, Code } from '@astrojs/starlight/components';
 
 Connect your storefront to the intended Commerce environment and confirm that the browser loads the right settings. The <Term>storefront configuration</Term> contains the API addresses, store or catalog context, and other values that Commerce blocks and drop-ins use.
 
@@ -56,7 +54,7 @@ Generate and save a configuration using the values approved for your project:
 
 </Steps>
 
-A repository `config.json` takes precedence over the site's public configuration. Keep local overrides out of the production branch, and use the Configuration Service for production settings.
+A repository `config.json` takes precedence over the site's public configuration. Use the Configuration Service for normal production setup. Keep local and test overrides out of the production branch. An intentional repository-based production configuration is an [advanced exception](#production-repository-override-advanced).
 
 ## Confirm the loaded configuration
 
@@ -88,13 +86,13 @@ The reference sections below retain the settings for endpoints, headers, analyti
 
 ## Configuration Caching
 
-The storefront configuration is cached at multiple levels to optimize performance:
+Storefront configuration can be cached separately in network responses and browser session storage.
 
-- **CDN Caching**: The EDS CDN caches the configuration file with a `max-age=7200` (2 hours) cache control header. This means configuration changes can take up to 2 hours to be reflected on the CDN after deployment.
+- Response caching: Browsers and CDNs can reuse an earlier configuration response. Refresh behavior depends on the response's `Cache-Control` header and the site's cache settings.
 
-- **Browser Caching**: The storefront stores configuration in <Link href="https://developer.mozilla.org/en-US/docs/Web/API/Window/sessionStorage" text="session storage" /> with a two-hour expiry. On a later configuration load, it fetches the configuration again if the cached entry is missing or expired. To test a change sooner, follow [Confirm the loaded configuration](#confirm-the-loaded-configuration).
+- Browser session storage: The storefront stores configuration in <Link href="https://developer.mozilla.org/en-US/docs/Web/API/Window/sessionStorage" text="session storage" /> with a two-hour expiry. On a later configuration load, it fetches the configuration again if the cached entry is missing or expired. To test a change sooner, follow [Confirm the loaded configuration](#confirm-the-loaded-configuration).
 
-**For developers**: After making configuration changes, it can take up to two hours for the CDN cache to expire. Clear your browser's session storage to see updates. Verify the current cache configuration by accessing `<site.com>/config.json` directly and checking the `last-modified` header.
+Deleting the `config` entry clears only session storage. It does not clear cached network responses in the browser or CDN. If `/config.json` still returns old values, check the configuration source, code branch, and cache settings with the site owner.
 
 ## Configuration Sections
 
@@ -567,124 +565,68 @@ This example shows the configuration for Adobe Commerce Optimizer (ACO), which u
 
 </Tabs>
 
-## Local Development
+## Local development
 
-Understanding how storefront configuration resolution works is essential for effective local development and branch-based testing. This section explains how the browser retrieves configuration and how to manage it across different environments.
+Use local or feature-branch overrides to test a different Commerce environment without changing the shared site settings. Generate and save new values with [Connect your storefront to Commerce](#connect-your-storefront-to-commerce). The guidance here explains where those overrides apply.
 
-### How Configuration Resolution Works
+### How configuration resolution works
 
-When your storefront loads in the browser, the following sequence occurs:
+The browser requests `/config.json` from the storefront origin:
 
-1. **Browser requests** `https://[site]/config.json`
-2. **EDS CDN checks** if a `config.json` file exists in the code repository root
-3. **If found** - The `config.json` file from the repository is served
-4. **If not found** - The CDN falls back to the `public` config from the EDS site config (Config Service)
+- A `config.json` file served from the repository root takes precedence.
+- Without that file, Edge Delivery Services serves the site's public configuration from the Configuration Service.
 
-:::caution[Do not commit config.json to main]
-A `config.json` file in your repository **always** takes precedence over the Config Service. This means if `config.json` is committed to your `main` branch, your Config Service values will be silently ignored in production.
-
-`config.json` is intended for **local development and branch-based testing only**. For production, use the Config Service and ensure `config.json` is absent from the `main` branch.
-:::
+<Aside type="caution" title="Keep test overrides out of production">
+A local or test configuration committed to the production branch overrides the shared settings for that storefront. For normal production setup, use the Configuration Service and keep the repository override out of that branch, typically `main`.
+</Aside>
 
 ### Getting a starter configuration
 
-To get a configuration for your Commerce storefront, use one of these approaches:
+- For a new connection, follow the generator and save steps in [Connect your storefront to Commerce](#connect-your-storefront-to-commerce).
+- For an existing project, review its approved settings before generating a replacement.
+- For an example of the JSON structure, inspect the <Link href="https://main--aem-boilerplate-commerce--hlxsites.aem.live/config.json" text="reference storefront configuration" />. Its environment and values are not a substitute for your own backend settings.
 
-1. **Config Service (recommended for production)**: Use the Config Service to store and manage your production configuration. To get started, see the <Link href="https://www.aem.live/docs/config-service-setup" text="Config Service setup guide" />. Your configuration is stored at `https://admin.hlx.page/config/{ORG}/sites/{SITE}/public.json` and served automatically — no `config.json` in the repository is needed.
+### Local development configuration
 
-2. **Generate a local starter config**: Use the <Link href="https://da.live/app/adobe-commerce/storefront-tools/tools/config-generator/config-generator" text="config generator tool" /> to generate a configuration for your Commerce backend automatically. Use this as the basis for your Config Service upload or for local development. Note that the generated config contains placeholders that you need to replace with actual values.
+Save a development-only `config.json` at the storefront repository root when testing a local override. Use the approved endpoints, headers, analytics settings, and other values for that environment.
 
-3. **Copy the demo configuration**: Download and customize the live configuration for the boilerplate from <Link href="https://main--aem-boilerplate-commerce--hlxsites.aem.live/config.json" text="https://main--aem-boilerplate-commerce--hlxsites.aem.live/config.json" />. This provides a working example with all required fields — useful as a reference for local development.
+For a personal override, use the project's agreed ignore rules to keep an untracked file out of commits. Ignore rules do not stop Git from tracking a file that was already committed. Review the repository changes before committing so a local environment does not become the shared configuration.
 
-**Important**: Always update the configuration values to match your specific Commerce backend. For production, push your configuration to the Config Service rather than committing `config.json` to your `main` branch.
+From the storefront repository root, you can exclude a personal `config.json` without changing the shared `.gitignore`:
 
-### Local Development Configuration
+```bash
+# Add the root configuration file to this checkout's local Git exclusions.
+printf '\n/config.json\n' >> "$(git rev-parse --git-path info/exclude)"
+git check-ignore -v config.json
+```
 
-To work with your own Commerce backend locally:
+The last command should show the `/config.json` rule and the local exclude file that contains it. This applies only to an untracked personal override, not a configuration that the team intentionally tracks.
 
-<Steps>
+### Branch-based configuration
 
-1. **Get your configuration from the config generator tool:**
-   - Visit the <Link href="https://da.live/app/adobe-commerce/storefront-tools/tools/config-generator/config-generator" text="config generator tool" /> and enter your API url.
-   - Copy the configuration to your clipboard and paste it into your `config.json` file in your code repo.
+Choose the configuration source that matches the environment you intend to change.
 
-2. **Edit config.json** with your Commerce backend values:
-   - Update `commerce-endpoint` (required).
-   - Add/update `commerce-core-endpoint` if necessary.
-   - Update `headers`.
-   - Update `analytics` values for your store.
-   - Update any other values as needed, such as `commerce-assets-enabled`, etc.
+#### Feature-branch override
 
-3. **Add config.json to .gitignore** (optional):
-   ```bash
-   echo "config.json" >> .gitignore
-   ```
-   This prevents you from accidentally committing your local configuration.
+A `config.json` committed only to a feature or test branch overrides public configuration on that branch's preview. Open the intended branch preview URL when checking it. Do not merge the test override into the production branch.
 
-4. **Clear session storage and reload:**
-   - Open browser DevTools (F12)
-   - Go to **Application** > **Session Storage**
-   - Delete the `config` entry
-   - Reload the page
+#### Shared public configuration
 
-5. **Verify the configuration loaded:**
-   - Check `http://localhost:3000/config.json` in your browser
-   - Or check **Application** > **Session Storage** > `config` entry in DevTools
+Use the <Link href="https://www.aem.live/docs/config-service-setup" text="Configuration Service" /> for normal production setup. Its public configuration is available through `https://admin.hlx.page/config/{ORG}/sites/{SITE}/public.json`, where `{ORG}` and `{SITE}` are your Edge Delivery organization and site names. This updates shared settings without a code deployment.
 
-</Steps>
+Keep a repository `config.json` out of the production branch so these public values can be served.
 
-### Branch-Based Configuration
+#### Production repository override (advanced)
 
-You can commit `config.json` to any branch to provide branch-specific configuration. Understanding the behavior based on which branch you commit to is crucial:
+A team can intentionally manage production configuration in the repository instead. A root `config.json` on the production branch takes precedence over public configuration, so changes to the Configuration Service will not replace it.
 
-**Committing to a feature/test branch:**
-- Commit `config.json` to your branch (for example, `feature/new-backend`).
-- When deployed, `https://[branch]--[site]--[org].aem.page/config.json` serves the configuration for your branch.
-- The `main` branch and other branches are unaffected.
-- Public config is NOT used for this branch.
+Use this exception only when the project owner has chosen repository-based production configuration. Review the file as production settings, not as a temporary development override.
 
-**Committing to main branch:**
-- If you commit `config.json` to `main`, it is ALWAYS served.
-- Public config from EDS site config will NEVER be used (unless you delete `config.json` from main).
-- All branches without their own `config.json` inherit the configuration from main.
-- Use this approach only if you want repository-based configuration for production.
+### Testing configuration changes
 
-**Using public config (Recommended for production):**
-- Do NOT commit `config.json` to `main`.
-- Configure the `public` property in your EDS site config via the <Link href="https://www.aem.live/docs/config-service-setup" text="Configuration Service" />.
-- Access at `https://admin.hlx.page/config/{ORG}/sites/{SITE}/public.json`.
-- Update configuration without code deployments.
-- Any branch with a committed `config.json` uses it (on that branch) instead of this public config.
+Save or deploy the change to its intended source, then follow [Confirm the loaded configuration](#confirm-the-loaded-configuration). That procedure checks both the delivered `/config.json` response and the configuration retained by the browser.
 
-### Testing Configuration Changes
-
-To verify the changes after creating or updating your configuration (either in public config or `config.json`), follow these steps:
-
-<Steps>
-
-1. **Deploy or save your changes:**
-   - For local or feature-branch testing: Save `config.json` locally or push it only to the intended development branch. Keep it out of the production branch.
-   - For public config: Update via the Configuration Service API
-
-2. **Clear session storage:**
-   - Open browser DevTools (F12)
-   - Navigate to **Application** tab > **Session Storage**
-   - Find and delete the `config` entry for your domain
-
-3. **Reload the page:**
-   - Hard refresh (Ctrl+Shift+R or Cmd+Shift+R)
-   - Or reload after clearing session storage
-
-4. **Verify the configuration:**
-   - In DevTools, go to **Application** > **Session Storage**
-   - Check the `config` entry contains your updated values
-   - Or access `https://[your-site]/config.json` directly in the browser
-
-</Steps>
-
-:::tip[Quick Verification]
-Always verify your configuration loaded correctly by checking the session storage `config` entry after reload. This ensures your storefront is using the expected configuration values.
-:::
+If the values remain old, use [Configuration caching](#configuration-caching) to distinguish delivery caching from session storage. Reloading or deleting the session-storage entry does not by itself invalidate a cached network response.
 
 ## Production Configuration Templates
 
@@ -850,153 +792,121 @@ sitemaps:
 
 The sitemap reads from the generated `sitemap.json` (created by `default-query.yaml`) and outputs an XML sitemap.
 
-## Step-by-step
+<a id="step-by-step"></a>
 
-A mock PDP / Catalog Service block demonstrates how to utilize the config utilities and values. This example shows how to access the configuration sections detailed above.
+## Read configuration in custom code
 
-<Tasks>
+Use the SDK configuration helpers when you build custom block code beyond the included shopping features. The current storefront initializes configuration before loading its block decorators. These helpers read the values already selected for the current page; they do not fetch or initialize configuration themselves.
 
-<Task>
+The example below is a new diagnostic block for local development, not a replacement for an included Commerce block. Follow [Create commerce blocks](/blocks/create-commerce-blocks/) to add its files and a matching block to a content page.
 
-### Import the configuration functions.
+### Import the configuration functions
 
-First, import the `getConfigValue` and `getHeaders` functions from the `scripts/configs.js` file in your boilerplate.
+Import `getConfigValue` and `getHeaders` from the SDK. Do not create a `scripts/configs.js` file or reinitialize configuration in each block.
 
-```javascript
-import { getConfigValue, getHeaders } from '../../scripts/configs.js';
-```
+<Code lang="javascript" title="blocks/config-check/config-check.js (new example block)" code={`import { getConfigValue, getHeaders } from '@dropins/tools/lib/aem/configs.js';
 
-</Task>
+export default function decorate(block) {
+  // Storefront startup has already resolved the configuration for this page.
+  const catalogEndpoint = getConfigValue('commerce-endpoint');
+  if (typeof catalogEndpoint !== 'string' || !catalogEndpoint) {
+    throw new Error('The commerce-endpoint configuration value is missing.');
+  }
 
-<Task>
+  const coreEndpoint = getConfigValue('commerce-core-endpoint') || catalogEndpoint;
+  const catalogHeaders = getHeaders('cs');
 
-### Access endpoint configuration.
-
-Use the `getConfigValue` function to retrieve endpoint URLs from the configuration. This function takes a dot-notation path that matches the keys in your `config.json`.
-
-```javascript
-export default async function decorate(block) {
-  // Get the catalog service endpoint from the endpoints section
-  const catalogEndpoint = await getConfigValue('commerce-endpoint');
-  const coreEndpoint = await getConfigValue('commerce-core-endpoint');
-
-  console.log('Catalog Service endpoint:', catalogEndpoint);
-  console.log('Core Commerce endpoint:', coreEndpoint);
-}
-```
-
-</Task>
-
-<Task>
-
-### Access header configuration.
-
-Use the `getHeaders` function to retrieve headers for specific scopes. This function automatically formats the headers for use in HTTP requests.
-
-```javascript
-export default async function decorate(block) {
-  // Get headers for Catalog Service requests
-  const csHeaders = await getHeaders('cs');
-
-  // Get headers for all requests
-  const allHeaders = await getHeaders('all');
-
-  console.log('CS headers:', csHeaders);
-  console.log('All headers:', allHeaders);
-}
-```
-
-</Task>
-
-<Task>
-
-### Access analytics and other configuration.
-
-Use `getConfigValue` to access any configuration value using dot notation, including analytics data and plugin settings.
-
-```javascript
-export default async function decorate(block) {
-  // Get analytics configuration
-  const storeUrl = await getConfigValue('analytics.store-url');
-  const currency = await getConfigValue('analytics.base-currency-code');
-  const environment = await getConfigValue('analytics.environment');
-
-  // Get plugin configuration
-  const rootCategory = await getConfigValue('plugins.picker.rootCategory');
-
-  console.log('Store URL:', storeUrl, 'Currency:', currency, 'Environment:', environment);
-  console.log('Root category:', rootCategory);
-}
-```
-
-</Task>
-
-<Task>
-
-### Make API requests with configuration.
-
-To make authenticated API requests to your Commerce backend, combine the endpoint and header configuration.
-
-```javascript
-export default async function decorate(block) {
-  // Get the catalog service endpoint
-  const endpoint = await getConfigValue('commerce-endpoint');
-
-  // Get the catalog service required headers
-  const headers = await getHeaders('cs');
-
-  // Make the API request
-  const response = await fetch(endpoint, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...headers
-    },
-    body: JSON.stringify({
-      query: `query { products { items { name } } }`
-    })
+  console.table({
+    catalogEndpoint,
+    coreEndpoint,
+    analyticsCurrency: getConfigValue('analytics.base-currency-code'),
+    rootCategory: getConfigValue('plugins.picker.rootCategory'),
   });
 
-  const data = await response.json();
-  // Process the response data
+  // Inspect header names without printing their values.
+  console.info('Configured catalog header names:', Object.keys(catalogHeaders));
+
+  const message = document.createElement('p');
+  message.textContent = 'Storefront configuration is available. Check the browser console for its values.';
+  block.replaceChildren(message);
 }
-```
+`} />
 
-</Task>
+Open the local page containing the new block. It should display the message and print a table in the browser console. Compare the endpoint values with the approved environment. Optional analytics or plugin values can be `undefined` when the project does not configure them.
 
-<Task>
+This example confirms that custom code can read configuration. It does not prove that a Commerce request succeeds. Use [Verify your storefront setup](/get-started/verify-setup/) to test the actual content, catalog, and shopping features.
 
-### Configure a drop-in initializer.
+If the SDK reports that configuration is not initialized, confirm that the page uses the storefront's normal startup flow. Do not hide the error by adding a second configuration loader.
 
-Most Commerce blocks read configuration through a drop-in's initializer in `scripts/initializers/`, rather than calling `getConfigValue` directly. The initializer connects the resolved endpoint into the drop-in before the block renders.
+### Access endpoint configuration
 
-```javascript title="scripts/initializers/cart.js"
-import { initializers } from '@dropins/tools/initializer.js';
-import { initialize, setEndpoint } from '@dropins/storefront-cart/api.js';
-import { initializeDropin } from './index.js';
-import { CORE_FETCH_GRAPHQL, fetchPlaceholders } from '../commerce.js';
+`getConfigValue('commerce-endpoint')` reads the catalog endpoint. The core endpoint is `commerce-core-endpoint`; the starter uses the catalog endpoint as its fallback when no separate core endpoint is configured. The example uses the same fallback.
 
-await initializeDropin(async () => {
-  // Set Fetch GraphQL (Core)
-  setEndpoint(CORE_FETCH_GRAPHQL);
+The helpers return resolved values synchronously after initialization, so these calls do not need `await`.
 
-  // Fetch placeholders
-  const labels = await fetchPlaceholders('placeholders/cart.json');
+### Access header configuration
 
-  const langDefinitions = {
-    default: {
-      ...labels,
-    },
-  };
+`getHeaders('cs')` combines the common `headers.all` values with the catalog-specific `headers.cs` values. The scoped values take precedence when the same header appears in both. `getHeaders('all')` reads the common headers.
 
-  // Initialize cart
-  return initializers.mountImmediately(initialize, { langDefinitions });
-})();
-```
+These helpers read configured headers, not every header that a running shopping feature adds. For example, customer context can change after sign-in.
 
-</Task>
+### Access analytics and other configuration
 
-</Tasks>
+`getConfigValue` also accepts dot-separated paths such as `analytics.store-url`, `analytics.base-currency-code`, `analytics.environment`, and `plugins.picker.rootCategory`. Use the path for the setting your custom code actually needs.
+
+The helper reads configuration; it does not send analytics events or enable a plugin. Follow the feature's setup instructions for those behaviors.
+
+### Make API requests with configuration
+
+For custom Commerce requests, reuse the starter's configured clients in `scripts/commerce.js`: `CS_FETCH_GRAPHQL` for catalog requests and `CORE_FETCH_GRAPHQL` for core Commerce operations. They connect the resolved endpoint and headers to the running storefront's customer context.
+
+Use a query supported by the selected backend. Adobe Commerce Optimizer exposes the <Link href="https://developer.adobe.com/commerce/services/optimizer/merchandising-services/" text="Merchandising API" />; Adobe Commerce transactional operations use <Link href="https://developer.adobe.com/commerce/webapi/graphql/" text="core GraphQL" />. A query written for one API is not automatically valid for the other.
+
+For an Adobe Commerce core GraphQL connection, add this separate local development block to read the configured store's code and base currency. The `storeConfig` query is not an Adobe Commerce Optimizer merchandising query.
+
+<Code lang="javascript" title="blocks/config-request/config-request.js (new example block)" code={`import { CORE_FETCH_GRAPHQL } from '../../scripts/commerce.js';
+
+export default async function decorate(block) {
+  // Reuse the endpoint and headers selected during storefront startup.
+  const { data, errors } = await CORE_FETCH_GRAPHQL.fetchGraphQl(\`
+    query StorefrontConnectionCheck {
+      storeConfig {
+        store_code
+        base_currency_code
+      }
+    }
+  \`);
+
+  if (errors?.length) {
+    throw new Error(errors.map(({ message }) => message).join('; '));
+  }
+
+  const store = data?.storeConfig;
+  if (!store?.store_code || !store.base_currency_code) {
+    throw new Error('The storeConfig query did not return a store code and base currency.');
+  }
+
+  const result = document.createElement('p');
+  result.textContent = \`Store: \${store.store_code}; base currency: \${store.base_currency_code}\`;
+  block.replaceChildren(result);
+}
+`} />
+
+Add a matching `config-request` block to a local content page, as described in [Create commerce blocks](/blocks/create-commerce-blocks/). A successful response displays a message such as `Store: default; base currency: USD`. Compare both values with the intended environment.
+
+`fetchGraphQl` returns GraphQL errors alongside any response data, so the example checks those errors before displaying a result. If the query fails, confirm that the configured core endpoint supports `storeConfig` and that its headers select the intended store.
+
+### Configure a drop-in initializer
+
+The standard Commerce blocks already load their drop-in initializers. The included <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/scripts/initializers/cart.js" text="cart initializer" /> sets the cart's core API client and loads its text labels before initialization.
+
+The cart block already imports this initializer before rendering. Inside `initializeDropin`, the initializer:
+
+- Calls `setEndpoint(CORE_FETCH_GRAPHQL)` to connect the cart to the configured core client.
+- Loads `placeholders/cart.json` with `fetchPlaceholders` and places the labels in `langDefinitions.default`.
+- Passes the cart's `initialize` function and an options object containing `langDefinitions` and the existing feature settings to `initializers.mountImmediately`.
+
+When customizing this flow, edit the existing initializer and preserve its feature settings. Do not replace it with either diagnostic block above or add a second cart initialization.
 
 ## Summary
 

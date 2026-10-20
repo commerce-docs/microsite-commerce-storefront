@@ -24,7 +24,7 @@ export function generateSidebar() {
           label: 'Getting started',
           collapsed: false,
           items: [
-            { label: 'Overview', link: '/get-started/' },
+            { label: 'Getting started as a developer', link: '/get-started/' },
             { label: 'Create a storefront', link: '/get-started/create-storefront/' },
             { label: 'Run your storefront locally', link: '/get-started/run-locally/' },
             { label: 'Make your first change', link: '/get-started/first-change/' },
@@ -33,7 +33,7 @@ export function generateSidebar() {
           ],
         },
         {
-          label: 'AI tools reference',
+          label: 'AI tools',
           collapsed: true,
           items: [
             { label: 'Boilerplate skills', link: '/ai/boilerplate-skills/' },
@@ -205,9 +205,9 @@ export function generateSidebar() {
           label: 'Getting started',
           collapsed: false,
           items: [
-            { label: 'Overview', link: '/merchants/quick-start/' },
+            { label: 'Getting started as an author', link: '/merchants/quick-start/' },
             {
-              label: 'What is Commerce Storefront?',
+              label: 'Storefront authoring tools',
               link: '/merchants/quick-start/create-content/',
             },
             { label: 'How a page comes together', link: '/merchants/quick-start/content-model/' },
@@ -519,7 +519,7 @@ export function generateSidebar() {
           label: 'Author How-tos',
           collapsed: false,
           items: [
-            { label: 'Browse All', link: '/how-tos/#for-authors' },
+            { label: 'Browse All', link: '/how-tos/#how-tos-for-authors' },
             {
               label: 'Pages and blocks',
               collapsed: true,
@@ -568,7 +568,7 @@ export function generateSidebar() {
           label: 'Developer How-tos',
           collapsed: false,
           items: [
-            { label: 'Browse All', link: '/how-tos/#for-developers' },
+            { label: 'Browse All', link: '/how-tos/#how-tos-for-developers' },
             {
               label: 'Product and category pages',
               collapsed: true,

@@ -6,10 +6,30 @@ slug: get-started/architecture
 
 import CardGrid from '@components/CardGrid.astro';
 import LinkCard from '@components/LinkCard.astro';
+import Diagram from '@components/Diagram.astro';
+import Term from '@components/Term.astro';
 
 Trace a storefront's behavior by following how its pages load, how drop-ins communicate, and where Commerce data comes from. These connections help you understand a feature or investigate a problem.
 
-For an introduction to the project and what you customize, start with [Adobe Commerce Storefront overview](/get-started/).
+## The runtime model
+
+A storefront page brings together content, code, and Commerce data:
+
+<Diagram type="mermaid" code={`
+flowchart LR
+  content["Page content"] --> delivery["Edge Delivery Services"]
+  code["Storefront code"] --> delivery
+  delivery --> browser["Shopper's browser"]
+  browser <--> data["Commerce data"]
+`} caption="Edge Delivery Services delivers page content and storefront code to the shopper's browser. The storefront code then requests Commerce data." />
+
+- Page content: Authors manage text, images, and page settings in an authoring tool such as <Term>DA.live</Term>. This content is separate from the storefront code.
+- Storefront code: The project's JavaScript and styles control how pages look and behave. <Term>Edge Delivery Services</Term>, Adobe's delivery system, sends this code and the page content to the shopper's browser. Commerce blocks render the included drop-ins in that browser.
+- Commerce data: Connected Commerce services supply product information and shopping data, such as prices and cart contents. These services form the [backend](/get-started/backends/). A project can use one commerce platform or combine services from more than one.
+
+For example, a product page can show an authored promotion next to a price supplied by Commerce. Storefront code controls how they appear together.
+
+The event bus lets shopping features coordinate within that browser. Configuration determines which services receive their API requests.
 
 ## Catalog requests and shopping operations
 
@@ -66,4 +86,4 @@ Choose the topic that matches the part of your storefront you want to understand
 ## More help on this topic
 
 - [Blocks and drop-ins](/blocks/blocks-and-dropins/) connects the architecture to block responsibilities and project files.
-- [Event bus](/dropins/all/events/) provides details about communication between drop-ins.
+- [Event bus](/dropins/all/events/) is the detailed implementation reference for communication between drop-ins. Start with [How drop-ins coordinate](/get-started/architecture/drop-ins-on-a-page/) for the conceptual model.
