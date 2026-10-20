@@ -1,6 +1,6 @@
 ---
 title: Create a storefront
-description: Learn how to create an Adobe Commerce storefront from the boilerplate with GitHub, Code Sync, Commerce config, DA.live, local clone, and go-live pointers.
+description: Learn how to create an Adobe Commerce storefront project, connect its repository and Commerce services, and prepare starter content for local development.
 sidebar:
   order: 1
 ---
@@ -16,50 +16,56 @@ import Term from '@components/Term.astro';
 import TableWrapper from '@components/TableWrapper.astro';
 import SecurityNotice from 'src/content/fragments/security-notice.mdx';
 
-By the end of this page, you will have a new GitHub repository from the Commerce boilerplate, the Code Sync app on that repo, a storefront configuration for your Commerce backend, starter content in Document Authoring on DA.live, a local clone, and a local preview showing your own Commerce data.
+Create a new storefront project with its own GitHub repository, Commerce connection, and starter content in Document Authoring on DA.live. Connect these parts so the project is ready for local development.
 
-Use the [Which backend do you have?](#which-backend-do-you-have) table and finish prerequisites before the tasks below. When Commerce data or services are missing, the fix is usually the backend checklist, not a broken repository.
+If your team already has a configured storefront, [run it locally](/get-started/run-locally/) instead of repeating project setup. Use this procedure only to create or complete a storefront environment.
 
-For `npm install`, `npm start`, and local preview, use [Running locally](/boilerplate/#running-locally). If accounts and tools are not ready, read [Prerequisites](/get-started/before-you-start/) first.
+Before creating the project, confirm your backend type and access to its required services using the [backend requirements table](#which-backend-do-you-have). If Commerce data or services are missing, return to the backend checklist before treating it as a repository problem.
+
+[Prerequisites](/get-started/before-you-start/) lists the accounts, permissions, and tools needed for project creation. For local tooling, content preview URLs, and verification, use [Run your storefront locally](/get-started/run-locally/).
 
 You can return later for optional steps such as <Term>Sidekick</Term> and <Term>Experience Workspace</Term>.
 
 ## Site Creator or this walkthrough
 
-This page walks through repository creation, Code Sync, configuration, content, and local setup in order. When your organization allows it, use <Link href="https://da.live/app/adobe-commerce/storefront-tools/tools/site-creator/site-creator" text="Site Creator" /> in <Link href="https://da.live/" text="DA.live" /> so one flow can create the GitHub repo, add starter content, and fill most storefront configuration. If you cannot use Site Creator, follow GitHub, Code Sync, and the DA.live config generator as separate tasks below.
+Use <Link href="https://da.live/app/adobe-commerce/storefront-tools/tools/site-creator/site-creator" text="Site Creator" /> in <Link href="https://da.live/" text="DA.live" /> when your organization allows it. Its new-site flow creates the repository, adds starter content, and fills most storefront configuration.
+
+For more control over repository creation and configuration, follow the manual tasks below. That path still uses Site Creator to provision starter content for an existing repository. It is not a Site Creator-free setup.
 
 ### Which should you use?
 
 Use Site Creator first when you want the fastest path and your organization allows it.
 
-Stay on this page when you need to see how the pieces connect, or when Site Creator is not an option. Typical cases include the following:
+Follow the manual tasks when you need to see how the pieces connect or use your team's repository process. Typical cases include the following:
 
 - You are new to the stack and want to see what each step does before you run it in a live project.
 - Your organization limits who can create repositories or install GitHub Apps, so you follow an approved process step by step.
 - You are fixing a store that is only partly configured, or you must run steps in a fixed order for automation.
 - You already have a repository and you use Site Creator only to connect content. You may still run some tasks by hand, and the sections below explain what each part is for.
 
+If your organization does not allow Site Creator at all, ask the project owner for an approved content-provisioning process before starting. The manual repository tasks do not provide an alternative content-provisioning tool.
+
 ## Big picture
 
 This how-to uses <Term>Edge Delivery Services</Term> (EDS) to host the storefront, the Commerce boilerplate for code, and Document Authoring (DA.live) for page content. You create a new EDS storefront from the <Link href="https://github.com/hlxsites/aem-boilerplate-commerce" text="Commerce boilerplate template" />. After you connect your own backend, the same repo holds local preview, demo content, and a path to production.
 
-The diagram caption and the numbered list below describe the same flow, so you can skim either one first.
+Complete the repository, code connection, Commerce configuration, and content setup first. Then continue to local development. Authoring tools can wait; review access controls before sharing the site.
 
-<Diagram caption="Steps to create and configure your starter storefront.">
-  ![Steps to create and configure your starter storefront.](images/CreateStorefrontSteps.png)
-</Diagram>
+<Diagram type="mermaid" code={`
+flowchart LR
+    repo["Create or reuse<br/>a storefront repository"]
+    sync["Connect<br/>Code Sync"]
+    config["Connect<br/>Commerce configuration"]
+    content["Add or confirm<br/>page content"]
+    repo --> sync --> config --> content
+`} caption="The four project-creation milestones. Continue to local preview after these connections are in place." />
 
 <Callouts columnCount={1}>
 
-1. Create the site repository — Generate a storefront repository from the <Link href="https://github.com/hlxsites/aem-boilerplate-commerce" text="boilerplate template" />.
-1. Add the Code Sync app — The app redeploys your storefront when you push to the `main` branch. It connects Edge Delivery Services to your repository so code and content stay aligned, and it sets where your site's content is registered in the Edge Delivery configuration.
-1. Link the repository to Commerce data — Add a storefront `config.json` (or equivalent) in the repo with values for your backend.
-1. Add content — In <Link href="https://da.live/" text="DA.live" />, use the <Link href="https://da.live/app/adobe-commerce/storefront-tools/tools/site-creator/site-creator" text="Site Creator" /> app to create or attach a content folder.
-1. Experience Workspace — Edit content in context on the rendered page.
-1. Sidekick — Preview, publish, and open source documents from the live site.
-1. Set up a local environment — Clone the repo onto your computer.
-1. Run your storefront and confirm your data — Install dependencies, start the local server, and check that your own Commerce data appears.
-1. Secure the storefront — Tighten access to content, the repository, and the site before production or a wide audience.
+1. Create the site repository: Generate a storefront repository from the <Link href="https://github.com/hlxsites/aem-boilerplate-commerce" text="boilerplate template" />, or reuse your team's existing storefront repository.
+1. Add the Code Sync app: Connect Edge Delivery Services to the repository so it can deliver the storefront code.
+1. Link the repository to Commerce data: Save the approved connection values in shared site configuration or a local or feature-branch override, as appropriate for the project.
+1. Add content: Use the team's existing content source or copy starter content with Site Creator's existing-code-repository option.
 
 </Callouts>
 
@@ -69,39 +75,43 @@ This walkthrough uses <Term>Document Authoring</Term> on <Link href="https://da.
 
 ## Which backend do you have?
 
-<TableWrapper nowrap={[0]}>
+Confirm which platform handles cart, checkout, and accounts for your project. Using the included drop-ins requires an active Adobe Commerce as a Cloud Service or Adobe Commerce Optimizer license. See [Licensing requirements](/licensing/) if you are unsure.
 
-| Scenario | Description | Prerequisites |
-|----------|-------------|---------------|
-| [Commerce PaaS](/get-started/backends/#commerce-platform-as-a-service-paas) | Existing Adobe Commerce on cloud or on-premises without an Adobe Commerce as a Cloud Service or Adobe Commerce Optimizer license (see [Backend options](/get-started/backends/)) | Manual installation: Storefront Compatibility package, Services Connector, Catalog Service, and other storefront services your project needs. See [PaaS: required packages and services](/get-started/backends/#paas-required-packages-and-services). |
-| [Adobe Commerce as a Cloud Service](/get-started/backends/#adobe-commerce-as-a-cloud-service) | Fully managed Commerce SaaS. License includes Storefront. | Skip the Commerce PaaS storefront install checklist. Adobe runs the Commerce backend and storefront services for your license. See [Adobe Commerce as a Cloud Service](/get-started/backends/#adobe-commerce-as-a-cloud-service) for details. |
-| [Adobe Commerce Optimizer](/get-started/backends/#adobe-commerce-optimizer) | Fully managed Optimizer SaaS for catalog and merchandising. License includes Storefront. | Skip the Commerce PaaS storefront install checklist. Adobe runs the Optimizer services your license includes. See [Adobe Commerce Optimizer](/get-started/backends/#adobe-commerce-optimizer) for details. |
+<TableWrapper>
+
+| Your project's backend | What to confirm before continuing |
+| --- | --- |
+| [Adobe Commerce as a Cloud Service](/get-started/backends/#adobe-commerce-as-a-cloud-service) | Confirm access to the intended environment. Adobe manages its platform packages; your team configures the storefront connection. |
+| [Adobe Commerce on Cloud or on-premises with Adobe Commerce Optimizer](/get-started/backends/#commerce-platform-as-a-service-paas) | Complete [PaaS: required packages and services](/get-started/backends/#paas-required-packages-and-services) on the existing Commerce deployment. Optimizer catalog services do not replace those requirements. |
+| [Adobe Commerce Optimizer with a third-party platform](/get-started/backends/#adobe-commerce-optimizer) | Confirm the catalog connection and who owns the project-specific cart, checkout, and account integration. Connecting the catalog does not complete that integration. |
 
 </TableWrapper>
 
-Before you continue, confirm prerequisites on [Backend options](/get-started/backends/) for whichever scenario in the table above matches your Commerce backend.
-
-On Commerce PaaS, finish [PaaS: required packages and services](/get-started/backends/#paas-required-packages-and-services) on the Commerce instance first. On Adobe Commerce as a Cloud Service or Adobe Commerce Optimizer, skip the Commerce PaaS storefront install checklist because your licensed environment already includes the services the storefront expects.
+Use [Backend options](/get-started/backends/) for the full requirements. If your team already selected and configured a backend, confirm that setup rather than choosing a different platform for this procedure.
 
 The steps below apply to every backend unless a note says otherwise. Backend-specific detail starts at [Link your repository to Commerce data](#link-your-repository-to-commerce-data).
 
-On Adobe Commerce as a Cloud Service or Adobe Commerce Optimizer, run [Link your repository to Commerce data](#link-your-repository-to-commerce-data) only after [Commerce services and integrations](/get-started/architecture/commerce-services-and-backends/#commerce-services) shows catalog data in sync. If you are unsure, use [Data export validation](/setup/discovery/data-export-validation/) first.
+Use a known product to confirm catalog synchronization. For Adobe Commerce Optimizer, check <Link href="https://experienceleague.adobe.com/en/docs/commerce/optimizer/setup/data-sync" text="Data Sync" />. If the project uses Adobe Commerce Optimizer Connector, also review <Link href="https://experienceleague.adobe.com/en/docs/commerce/aco-optimizer-connector/troubleshooting/troubleshooting-scenarios" text="Connector troubleshooting" />. For Catalog Service or Live Search configurations, use [Data export validation](/setup/discovery/data-export-validation/).
 
-If you already have an Edge Delivery site for this Commerce project, skip creating a brand-new site and use the <Link href="https://da.live/docs/operations/import" text="Site importer tool" /> for code and content.
+If this Commerce project already has a working Edge Delivery storefront, reuse its repository and content source. Continue with [Run your storefront locally](/get-started/run-locally/) rather than importing or recreating the project.
 
 ## Example site
 
-The CitiSignal demo site was built from the same boilerplate you will set up to develop your own storefront. You can open the full demo site at <Link href="https://main--citisignal-one--adobedevxsc.aem.live/" text="main--citisignal-one--adobedevxsc.aem.live" />.
+To see what you can build from the same boilerplate, explore the CitiSignal demo storefront at <Link href="https://main--citisignal-one--adobedevxsc.aem.live/" text="main--citisignal-one--adobedevxsc.aem.live" />.
 
 [![CitiSignal demo storefront homepage showing navigation, hero banner, and product categories.](images/citisignal-demo.png)](https://main--citisignal-one--adobedevxsc.aem.live/us/en/)
 
-## Manual setup without Site Creator
+<a id="manual-setup-without-site-creator"></a>
 
-The [Site Creator or this walkthrough](#site-creator-or-this-walkthrough) section explains when to use this long-form path. The tasks below assume you create the GitHub repository from the <Link href="https://github.com/hlxsites/aem-boilerplate-commerce" text="Commerce boilerplate template" />, install the <Link href="https://github.com/apps/aem-code-sync" text="AEM Code Sync app" />, and use Site Creator for content (including attaching an existing repository), as in [Prerequisites](/get-started/before-you-start/). If your organization only allows Site Creator for brand-new sites, work with your administrator, then pick up at the Add content task with the repo Site Creator already created.
+## Manual repository setup
+
+Create the repository from the <Link href="https://github.com/hlxsites/aem-boilerplate-commerce" text="Commerce boilerplate template" /> and install the <Link href="https://github.com/apps/aem-code-sync" text="AEM Code Sync app" /> through your approved GitHub process. Then use Site Creator's **Use existing code repo (content only)** option in [Add content](#add-content).
+
+If your team already has a configured storefront with working content, reuse it and continue with [Run your storefront locally](/get-started/run-locally/).
 
 ## Step-by-step
 
-The tasks below follow the same order most teams use: GitHub repository, Code Sync, Commerce data, Document Authoring content, optional tooling, local clone, then security. Run them in order unless a note tells you to wait or skip. Open [Architecture](/get-started/architecture/) or [Prerequisites](/get-started/before-you-start/) when a label or step does not make sense.
+Set up the repository and Code Sync first, then connect Commerce data, add Document Authoring content, and prepare for local development and security. Follow this order unless a note tells you to wait or skip. If a label or step is unfamiliar, use [Architecture](/get-started/architecture/) or [Prerequisites](/get-started/before-you-start/) for background.
 
 <Tasks>
 
@@ -115,13 +125,13 @@ This task requires a GitHub account with access to the organization or account w
 
 <TabItem label="Personal GitHub account">
 
-Create the repo under your personal account. When you select Owner, choose your username. Install the Code Sync app on the repository in the next step.
+Create the repo under your personal account by choosing your username as the Owner. You'll install the Code Sync app on that repository in the next step.
 
 </TabItem>
 
 <TabItem label="GitHub Enterprise (organization)">
 
-Create the repo under your organization. When you select Owner, choose the organization. You may need organization admin approval to install the Code Sync app on a repository. Ensure you have permission to create repositories and install GitHub Apps in the organization.
+Create the repo under your organization by choosing the organization as the Owner. Because installing the Code Sync app may require admin approval, confirm that you have permission to create repositories and install GitHub Apps in the organization.
 
 <Aside type="note" title="Trouble with organization access?">
 If you have trouble with your organization access, you can create your repo from a personal account first, then migrate that repo to a <Link href="https://www.aem.live/docs/repoless" text="repoless" /> Edge Delivery Services site after you learn more about EDS and repoless.
@@ -211,7 +221,7 @@ Select your organization. You may need admin approval to install the Code Sync a
 
 1. Open the **Select repositories** selector and choose your repo from the list.
 
-1. Select **Install** (or **Save**; see the note above) to install Code Sync on your repository.
+1. Select **Install** (or **Save**, as noted above) to install Code Sync on your repository.
 
 1. You should see a success screen if the installation completed without errors. Your repo is now connected to the Edge Delivery Services code bus.
 
@@ -225,25 +235,9 @@ Select your organization. You may need admin approval to install the Code Sync a
 
 ### Link your repository to Commerce data
 
-To connect your Commerce backend to the storefront repository, use the <Link href="https://da.live/app/adobe-commerce/storefront-tools/tools/config-generator/config-generator" text="config generator tool" />. It generates a [storefront configuration](/setup/configuration/commerce-configuration/) file for your site. The file differs by backend type. Follow only the tab for your backend in the config generator and in the reference.
+Follow [Connect your storefront to Commerce](/setup/configuration/commerce-configuration/#connect-your-storefront-to-commerce) to gather connection values, generate the configuration, and save it in the right source for your project. That task covers both shared site configuration and local or feature-branch overrides.
 
-Add or update the storefront configuration for your project:
-
-<Steps>
-
-1. Open the <Link href="https://da.live/app/adobe-commerce/storefront-tools/tools/config-generator/config-generator" text="config generator tool" />.
-
-1. Select your backend type so the tool generates the correct storefront configuration structure.
-
-1. Enter the values for your project. See the [Storefront configuration reference](/setup/configuration/commerce-configuration/) for field descriptions (select the tab for your backend).
-
-1. Save the generated JSON as `config.json` at the repository root. The storefront runtime requests `/config.json` from your site.
-
-1. The template includes `demo-config.json` as a sample, not a committed `config.json`. After your root `config.json` matches your backend, remove `demo-config.json` or leave it unused so one file stays authoritative.
-
-1. Commit and push the new or updated `config.json` to the repo.
-
-</Steps>
+If Site Creator already configured the connection, review the existing settings rather than generating a replacement. After content is available and the preview is running, use [Confirm the loaded configuration](/setup/configuration/commerce-configuration/#confirm-the-loaded-configuration) to check the settings the browser actually uses.
 
 </Task>
 
@@ -251,17 +245,17 @@ Add or update the storefront configuration for your project:
 
 ### Add content
 
-In this task, you create and initialize the content side of your storefront in the Document Authoring environment. The steps are the same for all backends.
+With the repository connected, create and initialize its content in the Document Authoring environment, using the same steps for every backend.
 
-<Aside type="note" title="Demo Content">
-If you do not want demo content, you can create a file in <Link href="https://da.live/" text="https://da.live/#/{org}/{site}/" /> replacing `{org}` and `{site}` with your own. This reserves the org and site for you to add your own content.
+<Aside type="note" title="Use an empty destination for starter content">
+Site Creator rejects a destination that already contains content. If your team has working Document Authoring content, reuse that content source and skip the starter-content copy.
 </Aside>
 
 <Steps>
 
 1. Open the <Link href="https://da.live/app/adobe-commerce/storefront-tools/tools/site-creator/site-creator" text="Site Creator app" /> in DA.live.
 
-1. Select **Use existing repository**.
+1. Select **Use existing code repo (content only)**.
 
 1. Copy the GitHub owner and site values into the input fields.
 
@@ -279,74 +273,52 @@ If you do not want demo content, you can create a file in <Link href="https://da
 
 </Task>
 
-<Task>
-
-### Use Experience Workspace for content editing
-
-Experience Workspace lets authors edit content directly on the rendered page as well as in the document editor. It's off by default, and enabling it may require you to update your storefront's code. See [Using Experience Workspace](/merchants/quick-start/experience-workspace/) to enable it and to share with your authors for day-to-day use.
-</Task>
-
-<Task>
-
-### (Optional) Use Sidekick for content editing
-
-To use Sidekick, install the browser extension from the Chrome Web Store, or follow Edge steps on <Link href="https://www.aem.live/docs/sidekick" text="Using AEM Sidekick" />. Sidekick detects your project's preview and live URLs automatically. If it doesn't, add your project manually from the Sidekick's menu. That page covers install steps, adding your project, preview, and publish. For prerequisites that line up with this page, see [Prerequisites](/get-started/before-you-start/#sidekick-browser-extension).
-
-</Task>
-
-<Task>
-
-### Set up local environment
-
-Clone the repository to your computer so you can work on the code and run a local preview. On GitHub, open your storefront repository, select the Code button, and copy the clone URL (HTTPS or SSH). In a terminal, run `git clone` with that URL, then `cd` into the folder GitHub created. For example, if the clone URL is `https://github.com/my-org/my-storefront.git`, you would run:
-
-```bash frame="none"
-git clone https://github.com/my-org/my-storefront.git
-cd my-storefront
-```
-
-Use your own organization, repository, and folder names from GitHub.
-
-</Task>
-
-<Task>
-
-### Run your storefront and confirm your data
-
-Start the boilerplate locally so you can see your own Commerce data before you move on. From inside the repository folder:
-
-```bash frame="none"
-npm install
-npm start
-```
-
-`npm start` runs the AEM CLI's `aem up` command and opens a local preview in your browser, usually at `http://localhost:3000`.
-
-Open a page that loads live data, such as a product page. If your `config.json` values are correct, you see your own catalog instead of sample content or an error. If data does not load, revisit [Link your repository to Commerce data](#link-your-repository-to-commerce-data) and confirm your backend prerequisites on [Backend options](/get-started/backends/).
-
-For the full command reference and troubleshooting, such as a failed install or port `3000` already in use, see [Running locally](/boilerplate/#running-locally) on the boilerplate overview page.
-
-</Task>
-
-<Task>
-
-### (Optional) Secure your storefront
-
-The storefront works at this point, but the site is not protected by default. We recommend securing your content, repository, and site access before you deploy to production or share the site with external users. See [Security and access](/setup/launch/launch-checklist/#security-and-access) in the Launch checklist for step-by-step instructions.
-
-<SecurityNotice />
-
-</Task>
-
-<Aside type="tip" title="What you have now">
-  You have a Commerce storefront project on GitHub, starter content in Document Authoring, a local clone, and a working local preview showing your own Commerce data. Next, use [Boilerplate overview](/boilerplate/) to explore the code, then customize the boilerplate and <Term term="Drop-in components">drop-in components</Term> to match your project.
-</Aside>
-
 </Tasks>
+
+## Confirm project creation
+
+Before continuing, confirm that:
+
+- The storefront repository exists in the intended GitHub organization.
+- Code Sync has access to that repository.
+- The approved Commerce connection values are saved.
+- The intended content source and its preview URL are available.
+
+Keep the repository URL, content preview URL, and selected Commerce environment together for local setup. These milestones confirm that the project has been created, not that every shopping feature has passed testing.
+
+<a id="set-up-local-environment"></a>
+<a id="run-your-storefront-and-confirm-your-data"></a>
 
 ## What's next
 
-- [Boilerplate overview](/boilerplate/) — Install paths, `npm` scripts, and a typical local loop after your repository exists.
-- [Storefront configuration](/setup/configuration/commerce-configuration/) — Storefront configuration, `headers.xlsx`, and paths for preview versus production.
-- [Drop-ins overview](/dropins/all/introduction/) and [Connect a drop-in](/dropins/all/quick-start/) — Initializer flow, slots, and styling when you are ready to change Commerce UI.
-- [Launch checklist](/setup/launch/launch-checklist/) — Security, performance, and go-live items when you move past learning.
+Continue with [Run your storefront locally](/get-started/run-locally/). It covers cloning or reusing the repository, installing dependencies, preparing drop-in assets, and starting the preview.
+
+For a new or changed Commerce connection, then complete [Verify your storefront setup](/get-started/verify-setup/) for the shopping features in your project's agreed scope.
+
+## Optional authoring tools
+
+These tools support content editing. They are not prerequisites for the local code preview.
+
+### Use Experience Workspace for content editing
+
+Experience Workspace lets authors edit content directly on the rendered page as well as in the document editor. Because it's off by default, you may need to update your storefront's code to enable it. Follow [Using Experience Workspace](/merchants/quick-start/experience-workspace/) for setup, then share that topic with your authors for day-to-day use.
+
+<a id="optional-use-sidekick-for-content-editing"></a>
+
+### Use Sidekick for content editing
+
+Install the Sidekick browser extension from the Chrome Web Store, or follow the Edge installation steps in <Link href="https://www.aem.live/docs/sidekick" text="Using AEM Sidekick" />. Once installed, Sidekick detects your project's preview and live URLs automatically. If it doesn't recognize your project, add it manually from Sidekick's menu. For the access and setup you need first, see [Prerequisites](/get-started/before-you-start/#sidekick-browser-extension).
+
+<a id="optional-secure-your-storefront"></a>
+
+## Secure your storefront before sharing
+
+Before sharing the site outside your team or preparing for production, configure access to content, the repository, and the site. Follow [Security and access](/setup/launch/launch-checklist/#security-and-access) in the Launch checklist.
+
+<SecurityNotice />
+
+## More help on this topic
+
+- [Storefront configuration](/setup/configuration/commerce-configuration/): Look up connection settings and configuration sources.
+- [Drop-ins overview](/dropins/all/introduction/) and [Extending drop-ins](/dropins/all/extending/): Understand and customize the included shopping features.
+- [Launch checklist](/setup/launch/launch-checklist/): Check security, performance, and other requirements before production.
