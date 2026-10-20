@@ -594,8 +594,6 @@ Use this option only after checking the image in both themes and in the zoomed v
 
 Check normal text for a contrast ratio of at least 4.5:1 against its background. Meaningful lines and icons need at least 3:1. The filter does not guarantee that every diagram meets these Web Content Accessibility Guidelines (WCAG) contrast requirements. If colors still fail, adjust the source diagram or use a separately designed dark version.
 
-With the local development server running, use `node scripts/test-diagram-colors.mjs` to check the author diagram's source colors, theme switching, zoom, print, and mobile layout in Chromium. This check covers the sampled colors, not full WCAG conformance.
-
 ### Screenshots
 
 **Best Practices:**
