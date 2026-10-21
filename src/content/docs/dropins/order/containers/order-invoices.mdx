@@ -1,0 +1,86 @@
+---
+title: OrderInvoices container
+description: Display invoices for a customer's order and link each invoice to its details page.
+---
+
+import OptionsTable from '@components/OptionsTable.astro';
+import Aside from '@components/Aside.astro';
+import Diagram from '@components/Diagram.astro';
+
+The `OrderInvoices` container displays invoices associated with one order. Each entry shows the invoice number, total amount, and invoiced item count. The item count is the sum of invoiced quantities, not the number of product lines.
+
+<Diagram caption="OrderInvoices container">
+  ![An order invoice list showing an invoice number, total amount, and invoiced item
+  count.](@images/dropins/order/order-invoices.png)
+</Diagram>
+
+<Aside type="note">
+  Use a release of `@dropins/storefront-order` that exports `OrderInvoices`. Invoice retrieval uses
+  the authenticated customer's orders. This container does not provide a cross-order invoice search
+  or a guest invoice lookup.
+</Aside>
+
+## Configurations
+
+The `OrderInvoices` container provides the following configuration options:
+
+<OptionsTable
+  compact
+  options={[
+    ['Options', 'Type', 'Req?', 'Description'],
+    ['className', 'string', 'No', 'Adds a CSS class to the container wrapper.'],
+    [
+      'orderData',
+      'OrderDataModel',
+      'No',
+      'Supplies the initial order context. The container uses its number to fetch invoices and also listens for order/data events.',
+    ],
+    [
+      'routeInvoiceDetails',
+      '(invoice: OrderInvoiceModel, orderNumber: string) => string',
+      'No',
+      'Returns the URL for an invoice details page. Receives the selected invoice and its order number.',
+    ],
+  ]}
+/>
+
+## Order context and states
+
+Provide `orderData` or load the order through the existing Order initializer so that the container receives an [`order/data`](/dropins/order/events/#orderdata-emits-and-listens) event. Passing an order does not bypass customer authorization.
+
+The container shows a loader while the order or its invoices load. It shows an empty state when the order has no invoices and a separate error alert when invoice retrieval fails.
+
+## Example
+
+This example uses the order number in the page's `orderRef` query parameter. The host application must initialize the Order drop-in and authenticate the customer before fetching the order. Replace the example paths with your storefront routes.
+
+```javascript
+import '../../scripts/initializers/order.js';
+import { getOrderDetailsById } from '@dropins/storefront-order/api.js';
+import { OrderInvoices } from '@dropins/storefront-order/containers/OrderInvoices.js';
+import { render as orderRenderer } from '@dropins/storefront-order/render.js';
+
+export default async function decorate(block) {
+  const { searchParams } = new URL(window.location.href);
+  const orderRef = searchParams.get('orderRef');
+  if (!orderRef) throw new Error('An order reference is required.');
+
+  const orderData = await getOrderDetailsById({
+    orderId: orderRef,
+    queryType: 'orderData',
+  });
+
+  await orderRenderer.render(OrderInvoices, {
+    orderData,
+    routeInvoiceDetails: (invoice, orderNumber) => {
+      const query = new URLSearchParams({
+        orderRef: orderNumber,
+        invoiceRef: invoice.number,
+      });
+      return `/invoice-details?${query}`;
+    },
+  })(block);
+}
+```
+
+Use [`InvoiceDetails`](/dropins/order/containers/invoice-details/) on the destination page. For programmatic invoice retrieval, see [`getOrderInvoices`](/dropins/order/functions/#getorderinvoices).

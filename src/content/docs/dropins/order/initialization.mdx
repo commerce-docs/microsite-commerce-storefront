@@ -87,6 +87,7 @@ The following models can be customized through the `models` configuration option
 | Model | Description |
 |---|---|
 | [`OrderDataModel`](#orderdatamodel) | Transforms order data from `GraphQL` including order details, items, shipping, billing, payment, and tracking information. Use this to add custom fields specific to your order management workflow. |
+| [`OrderInvoicesModel`](#orderinvoicesmodel) | Transforms invoices returned for an order by `getOrderInvoices`. |
 | [`CustomerOrdersReturnModel`](#customerordersreturnmodel) | Transforms `CustomerOrdersReturnModel` data from `GraphQL`. |
 | [`RequestReturnModel`](#requestreturnmodel) | Transforms `RequestReturnModel` data from `GraphQL`. |
 
@@ -112,6 +113,14 @@ const models = {
 
 await initializers.mountImmediately(initialize, { models });
 ```
+
+### OrderInvoicesModel
+
+The `models.OrderInvoicesModel.transformer` callback receives the raw order entry returned by the invoice query. Its result is merged with the default normalized model. Use this extension point to add fields already present in the response; a transformer cannot retrieve fields that the GraphQL query does not select.
+
+Add this transformer to the `models` options supplied by your existing Order initializer. Preserve the normalized invoice fields when overriding them so that the invoice containers can still render the response.
+
+For the normalized result, see [`getOrderInvoices`](/dropins/order/functions/#getorderinvoices). Invoice containers use the existing Order initialization and customer authentication; they do not introduce a separate initializer.
 
 ## Drop-in configuration
 
