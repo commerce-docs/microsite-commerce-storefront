@@ -342,6 +342,7 @@ export function generateSidebar() {
           collapsed: true,
           items: [
             { label: 'Overview', link: '/merchants/blocks/b2b/' },
+            { label: 'B2B pages', link: '/merchants/blocks/b2b/pages/' },
             {
               label: 'Company management',
               collapsed: true,
@@ -352,6 +353,10 @@ export function generateSidebar() {
                 },
                 { label: 'Create Company', link: '/merchants/blocks/commerce-company-create/' },
                 { label: 'Company Credit', link: '/merchants/blocks/commerce-company-credit/' },
+                {
+                  label: 'Company Hierarchy',
+                  link: '/merchants/blocks/commerce-b2b-company-hierarchy/',
+                },
                 {
                   label: 'Company Profile',
                   link: '/merchants/blocks/commerce-company-profile/',
@@ -453,6 +458,21 @@ export function generateSidebar() {
                   label: 'Requisition List View',
                   link: '/merchants/blocks/commerce-b2b-requisition-list-view/',
                 },
+                {
+                  label: 'Requisition List Sharing',
+                  link: '/merchants/blocks/commerce-b2b-requisition-list-sharing/',
+                },
+                {
+                  label: 'Requisition List Public Share',
+                  link: '/merchants/blocks/commerce-b2b-requisition-list-public-share/',
+                },
+              ],
+            },
+            {
+              label: 'Quick order',
+              collapsed: true,
+              items: [
+                { label: 'Quick Order', link: '/merchants/blocks/commerce-b2b-quick-order/' },
               ],
             },
             {
@@ -460,6 +480,7 @@ export function generateSidebar() {
               collapsed: true,
               items: [
                 { label: 'Account Nav', link: '/merchants/blocks/commerce-account-nav/' },
+                { label: 'Addresses', link: '/merchants/blocks/commerce-addresses/' },
                 {
                   label: 'Checkout Success',
                   link: '/merchants/blocks/commerce-checkout-success/',
