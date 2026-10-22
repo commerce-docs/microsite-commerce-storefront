@@ -76,12 +76,12 @@ When consent is granted and both `aep-ims-org-id` and `aep-datastream-id` are co
 - Begins sending commerce events to the Experience Platform Edge Network
 
 <Aside type="caution" title="Consent gating">
-Analytics runs from `scripts/consented.js`, which loads only after consent is granted. The default-deny placeholder is not a production CMP; credentials alone do not enable forwarding. Integrate the merchant's CMP before launch. For local placeholder testing, `?consent=accept` is honored only on `localhost`, `127.0.0.1`, and `[::1]`, never on public preview or merchant hosts. See [Consent and CMP integration](/setup/analytics/consent/).
+Analytics runs from `scripts/consented.js`, which loads only after the consent gate grants consent. The placeholder is not a production CMP; credentials alone do not enable forwarding. Integrate the merchant's CMP before launch. The placeholder accepts `?consent=accept` (and its documented equivalents) on any hostname, so do not use that user-controlled query parameter as production consent. See [Consent and CMP integration](/setup/analytics/consent/).
 </Aside>
 
 ### Method 2: Direct Script Configuration (Alternative)
 
-Alternatively, you can configure AEP directly in your `scripts/consented.js` file. Use its existing `getConsent` and `CONSENT_TOPICS` imports, keep this custom configuration inside the consent-granted path, and preserve the existing revocation controls.
+Alternatively, you can configure AEP directly in your `scripts/consented.js` file. That file is loaded only after the consent gate grants consent, so do not add references to the removed `getConsent` or topic API. The boilerplate does not implement a complete revocation flow; implement and test any merchant-specific revocation requirements separately.
 
 ```js
 window.adobeDataLayer.push(
@@ -93,7 +93,7 @@ window.adobeDataLayer.push(
   },
   {
     eventForwardingContext: {
-      aep: getConsent(CONSENT_TOPICS.COLLECTION) && !document.prerendering
+      aep: !document.prerendering
     }
   }
 );
@@ -117,7 +117,7 @@ Using the configuration file (Method 1) is recommended because it:
 
 - **`aep-ims-org-id`**: Identifies your Adobe organization for routing events to the correct Experience Platform environment
 - **`aep-datastream-id`**: Specifies the datastream configuration that determines how events are processed and where they are sent
-- **Automatic event forwarding**: With consent granted and both values present, the storefront enables `eventForwardingContext.aep` and configures the `aepContext`. Revocation disables forwarding and updates Alloy consent.
+- **Automatic event forwarding**: When analytics loads after consent and both values are present, the storefront enables `eventForwardingContext.aep` and configures the `aepContext`. The boilerplate does not implement a complete revocation flow; add and validate merchant-specific controls if required.
 
 ## Storefront events
 
