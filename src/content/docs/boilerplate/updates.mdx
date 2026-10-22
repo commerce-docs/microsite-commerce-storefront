@@ -102,6 +102,16 @@ The Commerce Boilerplate team moved most of the complex Commerce logic into npm-
 
 ## Upgrade strategies
 
+### Consent-gating migration
+
+When adopting the consent-gating update, review the storefront integration code as well as npm packages. The Commerce Events SDK and collector are loaded only after consent; ACDL and local product and purchase history recording continue before consent. Recommendation requests may still run before consent and may include the current product SKU or explicitly authored `currentsku` and `currentprice` values, but do not include stored viewing or purchase history, cart SKUs, or shopper-derived pricing.
+
+Move customized consent-dependent `delayed.js` logic to `scripts/consented.js`, and keep the delayed entry point loading `scripts/consent-check.js` instead of importing trackers unconditionally. Integrate the merchant's CMP before launch. The placeholder accepts `consent=accept`, `true`, `1`, or `yes` (case-insensitive) on any hostname; it is only a test override and must not be used as a production consent mechanism.
+
+The boilerplate does not persist consent preferences or implement a complete revocation flow. Recommendation history is recorded locally before consent but withheld from recommendation requests until consent; after consent, stored history may be used. Without consent, analytics collection is off and behavior-based recommendations may be less personalized, although recommendation requests themselves remain available.
+
+Follow [Consent and CMP integration](/setup/analytics/consent/#migrate-customized-delayed-scripts) for the consent event and migration guidance. Validate the CMP integration in staging, brief support and go-live teams about the behavior change, and deploy the code and documentation together.
+
 <Options label="Strategy">
 <Option>
 

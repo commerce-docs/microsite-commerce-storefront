@@ -1,0 +1,135 @@
+---
+title: Consent and CMP integration
+description: Understand the Commerce Boilerplate consent gate, recommendation data boundaries, and how to integrate a merchant consent management platform.
+slug: setup/analytics/consent
+---
+
+import Aside from '@components/Aside.astro';
+import Link from '@components/Link.astro';
+import TableWrapper from '@components/TableWrapper.astro';
+
+The Commerce Boilerplate includes a consent gate for analytics SDKs and
+collectors, but it does not include a production consent management platform
+(CMP), consent banner, or saved consent preference. The merchant or System
+Integrator (SI) must integrate the chosen CMP before launch.
+
+The default `scripts/consent-check.js` is a placeholder for testing. It reads
+the `consent` query parameter; it is not a record of the shopper's choice and
+must not be treated as a production CMP.
+
+## Default behavior and data boundaries
+
+<TableWrapper>
+
+| Area                            | Before consent                                                                                                                                                                                                          | After consent                                                       |
+| ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| Commerce analytics              | The Commerce Events SDK and collector are not loaded.                                                                                                                                                                   | They load when the analytics configuration is present.              |
+| Adobe Experience Platform (AEP) | Consent-dependent event forwarding is not initialized.                                                                                                                                                                  | Forwarding also requires `aep-ims-org-id` and `aep-datastream-id`.  |
+| Adobe Client Data Layer (ACDL)  | Continues to run for storefront functionality.                                                                                                                                                                          | Continues to run.                                                   |
+| Product and purchase history    | New history is still recorded in `localStorage`, but is not read for or sent with recommendation requests.                                                                                                              | Stored history may be read and included in recommendation requests. |
+| Recommendations                 | Requests may still run. They may include the current product SKU and explicitly authored `currentsku` or `currentprice` block values, but not viewing history, purchase history, cart SKUs, or shopper-derived pricing. | Requests may include recommendation history and cart context.       |
+
+</TableWrapper>
+
+An event or context in ACDL is not evidence that an analytics SDK or collector
+sent it. The consent gate controls loading analytics libraries; it does not
+disable all storefront network requests. Recommendation requests can continue
+before consent, with the data boundaries shown above.
+
+The storefront records local product and purchase history before consent.
+Under the current behavior, this stored history is not transmitted until the
+shopper has consented. A merchant's CMP and privacy policy should account for
+the local storage behavior.
+
+## Consent gate and event
+
+The placeholder accepts `?consent=accept`, `?consent=true`, `?consent=1`, or
+`?consent=yes`, case-insensitively. Any other or missing value is treated as
+not consented. The decision is page-local; the boilerplate does not persist the
+shopper's preference.
+
+The placeholder dispatches a `consent.update` event on `window` with a boolean
+`detail.consented` value. Commerce uses that decision to control which
+recommendation context may be read and sent. When a CMP is integrated, adapt
+the consent-check flow to resolve the CMP's initial decision, load
+`scripts/consented.js` once when consent is granted, and dispatch
+`consent.update` with the resolved decision so the recommendation block can
+update.
+
+There is no topic-based consent API. The notification does not provide a
+complete CMP integration or a revocation framework. Analytics libraries that
+have already loaded are not unloaded or fully disabled by a later denial
+notification. If the merchant requires in-session revocation, implement and
+validate that behavior as part of the CMP integration.
+
+## Integrate the merchant CMP
+
+Replace or adapt `scripts/consent-check.js` so the CMP is initialized and its
+decision is resolved before consent-dependent analytics load. Keep all of the
+following in the integration:
+
+1. Start with consent denied while the CMP restores or obtains the shopper's
+   decision.
+2. On acceptance, load `scripts/consented.js` once and dispatch
+   `consent.update` with `detail: { consented: true }`.
+3. On rejection, dispatch `consent.update` with
+   `detail: { consented: false }`.
+4. Store and restore the preference using the CMP and the merchant's chosen
+   policy; the boilerplate does not save it.
+5. Review any additional trackers or services loaded by the merchant. The
+   Commerce gate does not automatically control integrations outside it.
+
+See <Link href="https://www.aem.live/developer/cmp-integration#how-consent-gating-works" text="AEM's CMP integration guide" /> for the upstream consent-gating pattern. The storefront notification is an integration point, not a drop-in CMP API; adapt the loader as well as dispatching the event.
+
+The boilerplate does not provide a modal or visitor-facing consent wording.
+The merchant supplies the CMP experience and determines the applicable
+purposes, categories, preference retention, and user controls.
+
+## Migrate customized delayed scripts
+
+When upgrading a customized storefront:
+
+1. Review custom code in `scripts/delayed.js`. Move consent-dependent analytics
+   SDKs, tag managers, and marketing scripts to `scripts/consented.js`.
+2. Keep the delayed entry point using `scripts/consent-check.js`; remove
+   duplicate imports that load consent-dependent scripts without the gate.
+3. Audit `head.html`, eager and lazy scripts, blocks, and initializers for
+   tracking that may bypass the gate.
+4. Keep essential page functionality and services that do not require consent
+   available independently of the analytics loader.
+5. Validate the CMP integration after full navigation and on pages that
+   contain recommendation blocks.
+
+Do not assume that moving a script out of `delayed.js` is sufficient if another
+part of the storefront still loads it.
+
+## Test and launch
+
+The query-parameter placeholder accepts its positive values on any hostname.
+Because a URL parameter is user-controlled, it is not a production consent
+mechanism. Replace or remove the placeholder when integrating the merchant's
+CMP; do not rely on the query parameter to collect valid consent on a public
+preview or production site.
+
+Validate the integrated behavior on staging:
+
+- Without consent, verify that the analytics SDK and collector are not
+  requested, while ACDL and local history recording continue.
+- Confirm that recommendation requests may still occur, but do not contain
+  viewing history, purchase history, cart SKUs, or shopper-derived pricing
+  before consent. The current product SKU and explicitly authored block values
+  may be present.
+- After consent, verify that analytics loads once and that permitted
+  recommendation context is available.
+- If the merchant implements revocation, test its behavior separately. The
+  boilerplate does not provide a complete revocation mechanism.
+- If AEP is configured, validate the real datastream and network behavior;
+  local tests or ACDL state alone do not establish delivery to AEP.
+
+If analytics or behavior-based recommendations appear less complete before
+consent, first verify the CMP decision, the `consent.update` payload, and the
+analytics configuration. Do not remove the consent gate to restore
+pre-consent tracking.
+
+See the [launch checklist](/setup/launch/#consent-and-privacy) and
+[Boilerplate update migration guidance](/boilerplate/updates/#consent-gating-migration).
