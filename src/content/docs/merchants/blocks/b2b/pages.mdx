@@ -1,0 +1,253 @@
+---
+title: B2B storefront pages
+description: Create the pages a B2B storefront needs, with the path, blocks, layout, and page metadata for each page.
+sidebar:
+  label: B2B pages
+---
+
+import { Aside, Steps } from '@astrojs/starlight/components';
+import Link from '@components/Link.astro';
+import TableWrapper from '@components/TableWrapper.astro';
+
+A B2B storefront needs pages that a B2C storefront does not have, such as company management, purchase orders, quotes, requisition lists, and quick order. The storefront code already includes the B2B blocks. You create the pages that hold them in Document Authoring (DA). This page lists every page to create or change, the blocks to add to each page in order, and the layout and page metadata to use.
+
+The paths, blocks, and layout on this page match the <Link href="https://main--boilerplate-b2b--adobe-commerce.aem.live/" text="B2B reference storefront" />, except where a note says otherwise.
+
+## Before you begin
+
+- B2B features are turned on in the Adobe Commerce Admin. Each block page lists the settings that block needs.
+- Your storefront runs the B2B storefront code. Ask your developer if you are not sure.
+- You know how to add a block to a page. If you do not, read [Block table structure](/merchants/blocks/block-tables/) first.
+
+## Use the paths shown
+
+Many B2B blocks link to other pages by their path. For example, the Customer Purchase Orders block opens `/customer/purchase-order-details` when a buyer selects a purchase order. If you create that page at a different path, the link opens a page that does not exist. Use the paths on this page exactly, unless a section says you can change them.
+
+## Account page layout
+
+Most B2B pages are account pages. An account page shows the account navigation in one column and the page content in a second column beside it. On screens narrower than 900 pixels, the two columns stack.
+
+To build an account page:
+
+<Steps>
+
+1. Add a `fragment` block with the path `/customer/nav`. This block loads the [account navigation](#account-navigation).
+1. Add a section break to start the second section.
+1. Add the page's blocks in the order listed in [Pages to create](#pages-to-create). When the list starts with Account Header, add a `commerce-account-header` block first. It shows the page title.
+1. Add a `metadata` table. Set **Template** to `Columns` and **Robots** to `noindex, nofollow`.
+
+</Steps>
+
+For example, the Company Users page contains these tables. The section break goes between the `fragment` block and the `commerce-account-header` block.
+
+<table style="width: 100%; min-width: 470px; max-width: 100%; table-layout: fixed; border-collapse: collapse; margin-bottom: 1rem;">
+<tbody>
+<tr>
+<td style="text-align: center; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5); background-color: var(--sl-color-gray-6); font-weight: 600;">fragment</td>
+</tr>
+<tr>
+<td style="padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);">/customer/nav</td>
+</tr>
+</tbody>
+</table>
+
+<table style="width: 100%; min-width: 470px; max-width: 100%; table-layout: fixed; border-collapse: collapse; margin-bottom: 1rem;">
+<tbody>
+<tr>
+<td colspan="2" style="text-align: center; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5); background-color: var(--sl-color-gray-6); font-weight: 600;">commerce-account-header</td>
+</tr>
+<tr>
+<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);">Title</td>
+<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);">Company Users</td>
+</tr>
+</tbody>
+</table>
+
+<table style="width: 100%; min-width: 470px; max-width: 100%; table-layout: fixed; border-collapse: collapse; margin-bottom: 1rem;">
+<tbody>
+<tr>
+<td style="text-align: center; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5); background-color: var(--sl-color-gray-6); font-weight: 600;">commerce-company-users</td>
+</tr>
+<tr>
+<td style="padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);"></td>
+</tr>
+</tbody>
+</table>
+
+<table style="width: 100%; min-width: 470px; max-width: 100%; table-layout: fixed; border-collapse: collapse;">
+<tbody>
+<tr>
+<td colspan="2" style="text-align: center; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5); background-color: var(--sl-color-gray-6); font-weight: 600;">metadata</td>
+</tr>
+<tr>
+<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);">Title</td>
+<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);">Company Users</td>
+</tr>
+<tr>
+<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);">Template</td>
+<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);">Columns</td>
+</tr>
+<tr>
+<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);">Robots</td>
+<td style="width: 50%; padding: 0.75rem; border: 1px solid var(--sl-color-gray-5);">noindex, nofollow</td>
+</tr>
+</tbody>
+</table>
+
+The important settings are:
+
+- **Template** set to `Columns` places the two sections side by side. Without it, the sections do not sit side by side.
+- **Robots** set to `noindex, nofollow` keeps search engines from listing account pages, which show private company data.
+
+<Aside type="note">
+The reference storefront adds a page name before `Columns`, for example `My Account, Columns`. The page name does not change the layout, so `Columns` alone works.
+
+The reference storefront also starts each section with a `section-metadata` table that sets **Column Width** and **Gap**. The storefront code does not read section metadata, so these tables do not change the layout, and they appear on the page as plain text. Leave them out.
+</Aside>
+
+## Account navigation
+
+The account navigation is a page at `/customer/nav`. Account pages load it through the `fragment` block, and each customer sees only the links their company role allows.
+
+The page contains one or more `commerce-account-nav` blocks. Each block is one group of links, and each row in a block adds one link with a label, an icon, and a permission that controls who sees it. For what to enter in each column, see [Account Navigation](/merchants/blocks/commerce-account-nav/).
+
+The reference storefront uses these links. Rows that share a group are in the same `commerce-account-nav` block.
+
+<TableWrapper nowrap={[0, 2, 3]}>
+
+| Label | Description | Link | Icon | Permission |
+| --- | --- | --- | --- | --- |
+| My account | Account details | `/customer/account` | `User` | `all` |
+| Orders | Track, manage, and return | `/customer/orders` | `Order` | `all` |
+| Addresses | Manage your locations | `/customer/address` | `AddressBook` | `all` |
+| Returns | Manage your returns | `/customer/returns` | `EmptyBox` | `all` |
+| Requisition Lists | Manage your requisition lists | `/customer/requisition-lists` | `List` | `all` |
+| Company Profile | Manage company | `/customer/company` | `Business` | `Magento_Company::view_account` |
+| Company Structure | Manage company structure | `/customer/company/structure` | `Structure` | `Magento_Company::users_view` |
+| Company Users | Manage company users | `/customer/company/users` | `Team` | `Magento_Company::users_view` |
+| Roles and Permissions | Manage roles and permissions | `/customer/company/roles` | `Locker` | `Magento_Company::roles_view` |
+| Company Credit | View company credit history | `/customer/company/credit` | `Wallet` | `Magento_Company::credit` |
+| Quotes | Manage negotiable quotes | `/customer/negotiable-quote` | `Quote` | `all` |
+| Quote Templates | Manage negotiable quote templates | `/customer/negotiable-quote-template` | `Bulk` | `all` |
+| Purchase Orders | Manage purchase orders | `/customer/purchase-orders` | `Purchase` | `Magento_PurchaseOrder::view_purchase_orders` |
+| Approval Rules | Manage approval rules | `/customer/approval-rules` | `CheckWithCircle` | `Magento_PurchaseOrderRule::view_approval_rules` |
+| Seller Assisted Purchasing | Manage seller assisted purchases | `/customer/seller-assisted-purchasing` | `Placeholder` | `all` |
+| Company Hierarchy | Manage company hierarchy | `/customer/company/hierarchy` | `Structure` | `admin` |
+
+</TableWrapper>
+
+The company links (Company Profile through Company Credit) share one block, Quotes and Quote Templates share one block, Purchase Orders and Approval Rules share one block, and Seller Assisted Purchasing and Company Hierarchy share one block. Every other link has its own block.
+
+When the company address book is turned on, the Addresses link hides automatically for customers who cannot view company addresses.
+
+## Pages to create
+
+Create these pages in DA. Every page uses **Robots** set to `noindex, nofollow`. Pages marked **Account** use the [account page layout](#account-page-layout). Pages marked **Full page** contain only the listed blocks and a `metadata` table. On account pages that start with an Account Header block, set its **Title** to the page title. Titles match the reference storefront, except titles marked *(suggested)*, where the reference storefront uses a placeholder title.
+
+### Company management
+
+Keep `/customer/company/create` exactly as shown. The Company Structure block links to it when a customer does not belong to a company yet, and that link is built into the drop-in. The account navigation is the only place that links to the pages that use the account layout, so you can use different paths for them if you update the links in `/customer/nav`.
+
+<TableWrapper nowrap={[0]}>
+
+| Path | Title | Layout | Blocks, in order |
+| --- | --- | --- | --- |
+| `/customer/company` | Company Profile | Account | Account Header, [Company Profile](/merchants/blocks/commerce-company-profile/) |
+| `/customer/company/structure` | Company Structure | Account | Account Header, [Company Structure](/merchants/blocks/commerce-company-structure/) |
+| `/customer/company/users` | Company Users | Account | Account Header, [Company Users](/merchants/blocks/commerce-company-users/) |
+| `/customer/company/roles` | Company Roles and Permissions | Account | Account Header, [Company Roles and Permissions](/merchants/blocks/commerce-company-roles-permissions/) |
+| `/customer/company/credit` | Company Credit | Account | Account Header, [Company Credit](/merchants/blocks/commerce-company-credit/) |
+| `/customer/company/hierarchy` | Company Hierarchy | Account | Account Header, [Company Hierarchy](/merchants/blocks/commerce-b2b-company-hierarchy/) |
+| `/customer/company/create` | Create Company *(suggested)* | Full page | [Create Company](/merchants/blocks/commerce-company-create/) |
+| `/customer/company/accept-invitation/` | Accept Company Invitation *(suggested)* | Full page | [Accept Company Invitation](/merchants/blocks/commerce-company-accept-invitation/) |
+
+</TableWrapper>
+
+<Aside type="caution">
+Company invitation emails link to the Accept Company Invitation page, and no storefront code sets that path. Confirm with your developer which path your emails use before you create the page. The reference storefront publishes the page as the `index` document in a `customer/company/accept-invitation` folder, so its path ends with a slash.
+</Aside>
+
+### Purchase orders
+
+Blocks link to these paths, so use them exactly.
+
+<TableWrapper nowrap={[0]}>
+
+| Path | Title | Layout | Blocks, in order |
+| --- | --- | --- | --- |
+| `/customer/purchase-orders` | Purchase Orders | Account | Account Header, [Customer Purchase Orders](/merchants/blocks/commerce-b2b-po-customer-purchase-orders/), [Purchase Orders Requiring Approval](/merchants/blocks/commerce-b2b-po-require-approval-purchase-orders/), [Company Purchase Orders](/merchants/blocks/commerce-b2b-po-company-purchase-orders/) |
+| `/customer/purchase-order-details` | Purchase Order Details | Account | [Purchase Order Header](/merchants/blocks/commerce-b2b-po-header/), [Purchase Order Status](/merchants/blocks/commerce-b2b-po-status/), [Purchase Order Approval Flow](/merchants/blocks/commerce-b2b-po-approval-flow/), [Purchase Order History Log](/merchants/blocks/commerce-b2b-po-history-log/), [Purchase Order Comments List](/merchants/blocks/commerce-b2b-po-comments-list/), [Customer Details](/merchants/blocks/commerce-customer-details/), [Order Cost Summary](/merchants/blocks/commerce-order-cost-summary/), [Order Product List](/merchants/blocks/commerce-order-product-list/), [Purchase Order Comment Form](/merchants/blocks/commerce-b2b-po-comment-form/) |
+| `/customer/approval-rules` | Approval Rules | Account | [Purchase Order Approval Rules List](/merchants/blocks/commerce-b2b-po-approval-rules-list/) |
+| `/customer/approval-rule` | Approval Rule | Account | [Purchase Order Approval Rule Form](/merchants/blocks/commerce-b2b-po-approval-rule-form/) |
+| `/customer/approval-rule-details` | Approval Rule Details | Account | [Purchase Order Approval Rule Details](/merchants/blocks/commerce-b2b-po-approval-rule-details/) |
+
+</TableWrapper>
+
+You do not need to create a page for the [Purchase Order Checkout Success](/merchants/blocks/commerce-b2b-po-checkout-success/) block. The Checkout and Quote Checkout blocks show it after a buyer places a purchase order.
+
+### Quotes
+
+Blocks link to these paths, so use them exactly. The quote checkout page also uses **Cache Control** set to `no-store`. Its title matches the one the [Quote Checkout](/merchants/blocks/commerce-b2b-quote-checkout/#page-setup) block sets when the page loads, which replaces any title in the page's `metadata` table.
+
+<TableWrapper nowrap={[0]}>
+
+| Path | Title | Layout | Blocks, in order |
+| --- | --- | --- | --- |
+| `/customer/negotiable-quote` | Negotiable Quote | Account | [Negotiable Quote](/merchants/blocks/commerce-b2b-negotiable-quote/) |
+| `/customer/negotiable-quote-template` | Negotiable Quote Template | Account | [Negotiable Quote Template](/merchants/blocks/commerce-b2b-negotiable-quote-template/) |
+| `/b2b/quote-checkout` | B2B Checkout | Full page | [Quote Checkout](/merchants/blocks/commerce-b2b-quote-checkout/) |
+
+</TableWrapper>
+
+### Requisition lists
+
+Blocks link to the first two paths, so use them exactly. The two sharing paths come from the Adobe Commerce configuration, which sets the path in every share link. The reference storefront uses the paths shown. If an administrator changes them, move the pages to match.
+
+<TableWrapper nowrap={[0]}>
+
+| Path | Title | Layout | Blocks, in order |
+| --- | --- | --- | --- |
+| `/customer/requisition-lists` | Requisition Lists | Account | [Requisition Lists](/merchants/blocks/commerce-b2b-requisition-list/) |
+| `/customer/requisition-list-view` | Requisition List | Account | [Requisition List View](/merchants/blocks/commerce-b2b-requisition-list-view/) |
+| `/customer/requisition-list-sharing` | Shared Requisition List *(suggested)* | Full page | [Requisition List Sharing](/merchants/blocks/commerce-b2b-requisition-list-sharing/) |
+| `/customer/requisition-list-public-share` | Shared Requisition List *(suggested)* | Full page | [Requisition List Public Share](/merchants/blocks/commerce-b2b-requisition-list-public-share/) |
+
+</TableWrapper>
+
+### Quick order
+
+Use this exact path. The storefront code checks for it when it loads product data for Quick Order.
+
+<TableWrapper nowrap={[0]}>
+
+| Path | Title | Layout | Blocks, in order |
+| --- | --- | --- | --- |
+| `/quick-order` | Quick Order | Full page | [Quick Order](/merchants/blocks/commerce-b2b-quick-order/) |
+
+</TableWrapper>
+
+## Pages to update
+
+These pages exist on every storefront. Change them as follows for B2B:
+
+<TableWrapper nowrap={[0]}>
+
+| Page | Change |
+| --- | --- |
+| `/customer/account`, `/customer/address`, `/customer/orders`, `/customer/returns`, `/customer/order-details`, `/customer/seller-assisted-purchasing` | In the first section, use a `fragment` block that points to `/customer/nav` instead of the `commerce-account-sidebar` block. |
+| `/customer/account` | Add the [Customer Company](/merchants/blocks/commerce-customer-company/) block after the Customer Information block. |
+| `/nav` | Add a **Create New Company Account** link to `/customer/company/create` and a **Quick Order** link to `/quick-order`. |
+| `/products/default` | In the `product-details` block, add a **Grid Ordering Enabled** row set to `true`. Buyers can then add several variants of a configurable product to the cart from one grid. See [Turn on grid ordering](/merchants/blocks/product-details/#turn-on-grid-ordering-on-a-b2b-storefront). |
+
+</TableWrapper>
+
+You do not need a separate page for company addresses. When a company turns on the company address book, the [Addresses](/merchants/blocks/commerce-addresses/) block on `/customer/address` shows the company's shared addresses.
+
+## Placeholder sheets
+
+B2B blocks read their labels and messages from B2B placeholder sheets, such as `company` and `purchase-order`. To find the sheet for a block, see [B2B drop-in sheets](/merchants/blocks/placeholder-sheets/#b2b-drop-in-sheets).
+
+## Related resources
+
+- [B2B blocks](/merchants/blocks/b2b/): What each B2B block does.
+- [Page metadata](/merchants/blocks/page-metadata/): All page metadata properties.
