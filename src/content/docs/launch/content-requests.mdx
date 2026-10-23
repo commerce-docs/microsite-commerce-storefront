@@ -66,7 +66,7 @@ The following traffic counts when it delivers eligible HTML or JSON page content
 
 | Included traffic              | Counting rule                                                                                        |
 | ----------------------------- | ---------------------------------------------------------------------------------------------------- |
-| HTML or JSON page content     | Included status range `100-299`, including partial content returned with `206`.                      |
+| HTML or JSON page content     | Included status range **100-299**, including partial content returned with **206**.                      |
 | CDN cache hits                | Counted even when the CDN already has a copy of the content.                                         |
 | Prefetched content            | Counted when fetched, even if the shopper never opens the page.                                      |
 | Automation and monitoring     | Included unless a recognized bot or a specific monitoring exclusion applies.                         |
@@ -83,7 +83,7 @@ These requests do not consume the content request allowance under the AEM rules.
 | Excluded traffic                              | Scope of the exclusion                                                                                                      |
 | --------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
 | Static assets                                 | Images, style sheets, and JavaScript files.                                                                                 |
-| Redirects and errors                          | Status codes `300-399`, `400-499`, and `500` or above. A subsequent successful content request can still count.             |
+| Redirects and errors                          | Status codes **300-399**, **400-499**, and **500** or above. A subsequent successful content request can still count.             |
 | Recognized bots                               | Identified search, social, and AI crawlers. Unrecognized automation can count.                                              |
 | Detected attacks                              | Traffic AEM identifies and blocks as a distributed denial-of-service attack.                                                |
 | Specified health checks                       | Excluded AEM monitoring mechanisms. For Edge Delivery availability checks, AEM recommends `HEAD` instead of `GET` requests. |
@@ -94,7 +94,7 @@ These requests do not consume the content request allowance under the AEM rules.
 
 <Aside type="note" title="Common counting surprises">
 
-- An error page returned with status `200` counts. Return missing pages with status `404` so they don't consume content requests.
+- An error page returned with status **200** counts. Return missing pages with status **404** so they don't consume content requests.
 - A JSON response doesn't automatically count. AEM counts JSON that serves as page content and typically excludes API responses that return other data.
 - A Commerce API call isn't automatically excluded. The Commerce-specific exclusions cover only calls that never reach AEM and calls forwarded through `/api/graphql`.
 
@@ -118,11 +118,11 @@ Your browser's network tools list the requests a page makes, so you can estimate
 
 1. Open your browser's developer tools, and then select the **Network** tab.
 
-1. Select **Disable cache**, and then reload the page.
+1. Select <b>Disable cache</b>, and then reload the page.
 
    Disabling the cache shows the requests a first-time visitor makes. DevTools lists only the requests made while it is open, so reload the page after you open it.
 
-1. In the **Filter** box, enter the following filter. Replace `www.example.com` with your storefront's domain.
+1. In the <b>Filter</b> box, enter the following filter. Replace `www.example.com` with your storefront's domain.
 
    ```text showLineNumbers=false
    domain:www.example.com mime-type:text/html
@@ -131,7 +131,7 @@ Your browser's network tools list the requests a page makes, so you can estimate
    The status bar at the bottom of the panel shows the number of matching requests, followed by the total. Record the first number as your listed HTML count.
 
    <Diagram adaptColors caption="The HTML filter lists the page document and four fragments.">
-     ![Chrome DevTools Network panel with Disable cache selected and the request list filtered to HTML responses from www.aemshop.net. Five responses with status 200 are listed: the page document and four .plain.html fragments.](./images/devtools-html-requests.png)
+     ![Chrome DevTools Network panel with Disable cache selected and the request list filtered to HTML responses from www.aemshop.net. Five responses with status 200 are listed: the page document and four .plain.html fragments.](./images/html-requests.png)
    </Diagram>
 
 1. Replace the filter with the following one, and record your listed JSON count the same way.
@@ -141,12 +141,12 @@ Your browser's network tools list the requests a page makes, so you can estimate
    ```
 
    <Diagram adaptColors caption="The JSON filter lists seven storefront data files and five Commerce API calls.">
-     ![Chrome DevTools Network panel with the request list filtered to JSON responses from www.aemshop.net. Twelve responses with status 200 are listed: seven storefront data files, such as global.json and cart.json, and five graphql and cs-graphql requests.](./images/devtools-json-requests.png)
+     ![Chrome DevTools Network panel with the request list filtered to JSON responses from www.aemshop.net. Thirteen responses with status 200 are listed: 7 storefront data files, such as global.json and cart.json, and 6 graphql and cs-graphql requests.](./images/json-requests.png)
    </Diagram>
 
 1. Subtract the listed requests that don't count:
 
-   - Redirects and errors: any request whose Status column shows a value outside `200` to `299`, such as `301` or `404`.
+   - Redirects and errors: any request whose Status column shows a value outside **200** to **299**, such as **301** or **404**.
    - Commerce API calls: any request whose name starts with `graphql` or `cs-graphql`. Your CDN routes these to Commerce, so they never reach AEM.
 
    You don't need to check for other exclusions. The filters already hide images, style sheets, scripts, and requests to other domains, and your own browser visit isn't bot or monitoring traffic.
@@ -159,19 +159,19 @@ Your browser's network tools list the requests a page makes, so you can estimate
 
 The following table applies the [estimation steps](#estimate-content-requests-for-a-page) to the product page in the screenshots. That storefront's CDN routes its `graphql` and `cs-graphql` paths to Commerce, so those five JSON requests don't count.
 
-<TableWrapper nowrap={[1]}>
+<TableWrapper nowrap={[0]}>
 
 | Requests                                   | From Network filter        | Content requests before exclusions | Rule applied                                                                              | Content requests after exclusions |
 | ------------------------------------------ | --------------------------- | ---------------------------------- | ----------------------------------------------------------------------------------------- | --------------------------------- |
 | Product page                      | 1 HTML request              | **1**                                  | Included: [HTML or JSON page content](#which-requests-count)                              | 1                                 |
 | Fragments, such as footer, nav, etc.        | 4 HTML requests             | **4**                                  | Included: [HTML or JSON page content](#which-requests-count)                              | 4                                 |
 | Storefront data files, such as cart.json | 7 JSON requests             | **1.4**  (7 ÷ 5)                        | Included: [HTML or JSON page content](#which-requests-count)                              | 1.4                               |
-| graphql and cs-graphql calls           | 5 JSON requests             | **1** (5 ÷ 5)                         | **Excluded:** [Responses from other services](#which-requests-are-excluded)                   | **0**                                 |
-| **TOTAL FOR PAGE**                         | 5 HTML and 12 JSON requests | **7.4** (1 + 4 + 1.4 + 1)              | **Excluded:** 5 JSON requests: [Responses from other services](#which-requests-are-excluded) | **6.4** (1 + 4 + 1.4 + 0)            |
+| graphql and cs-graphql calls           | 6 JSON requests             | **1.2** (6 ÷ 5)                         | **Excluded** [Responses from other services](#which-requests-are-excluded)                   | **0**                                 |
+| **TOTAL FOR PAGE**                         | 5 HTML and 13 JSON requests | **7.6** (1+4+1.4+1.2)              | **Excluded**  6 JSON requests (-1.2) [Responses from other services](#which-requests-are-excluded) | **6.4**            |
 
 </TableWrapper>
 
-The [responses from other services](#which-requests-are-excluded) exclusion removes the five `graphql` and `cs-graphql` calls, which lowers the estimate from 7.4 to 6.4 content requests for each first-time visit to this page.
+The [responses from other services](#which-requests-are-excluded) exclusion removes the 6 `graphql` and `cs-graphql` calls (1.2 content requests), which **lowers the estimate from 7.6 to 6.4 content requests** for each first-time visit to this page.
 
 <Aside type="note" title="Estimated versus measured usage">
 
