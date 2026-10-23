@@ -58,7 +58,12 @@ Content requests are an Adobe Experience Manager (AEM) usage measure. Your store
 
 ## How requests are counted
 
-The <Link href="https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/using-cloud-manager/license-dashboard#what-is-a-content-request" text="AEM counting definition" /> sets two rates. Each eligible HTML response counts as one content request, and every five eligible JSON responses count as one more. HTML fragments are the exception. The storefront requests the navigation, footer, and other fragments with a `.plain.html` URL, which returns only the body content of the fragment page. AEM doesn't count `.plain.html` responses.
+Unless an [exclusion](#which-requests-are-excluded) applies, the <Link href="https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/using-cloud-manager/license-dashboard#what-is-a-content-request" text="AEM counting definition" /> counts responses by type:
+
+- **HTML:** Each HTML response, such as the page itself, counts as one content request.
+- **JSON:** Every five JSON responses, such as storefront data files, count as one content request.
+
+HTML fragments are one of those exclusions. The storefront loads fragments, such as the navigation and footer, from URLs that end in `.plain.html`, and AEM doesn't count `.plain.html` responses.
 
 <Aside type="tip" title="Forecasting usage">
 
@@ -115,7 +120,7 @@ For all exclusions, including AEM internal requests and specific content reuse r
 
 Your browser's network tools list the requests a page makes, so you can estimate the content requests for any storefront page. These steps use the <Link href="https://developer.chrome.com/docs/devtools/network/reference" text="Chrome DevTools Network panel" />. Other browsers have similar tools. The screenshots in these steps show requests from a product page on an Adobe demo storefront.
 
-<Diagram adaptColors caption="The demo storefront product page used for the screenshots and the example estimate.">
+<Diagram caption="The demo storefront product page used for the screenshots and the example estimate.">
   ![Demo storefront product page for the Pride at Adobe t-shirt, with product images, price, quantity selector, and Add to Cart button, followed by content cards, a team photo, product recommendations, and the footer.](./images/product-page.webp)
 </Diagram>
 
@@ -139,7 +144,7 @@ Your browser's network tools list the requests a page makes, so you can estimate
 
    The status bar at the bottom of the panel shows the number of matching requests, followed by the total. Record the first number as your listed HTML count.
 
-   <Diagram adaptColors caption="The HTML filter lists the page document and four fragments.">
+   <Diagram caption="The HTML filter lists the page document and four fragments.">
      ![Chrome DevTools Network panel with Disable cache selected and the request list filtered to HTML responses from www.aemshop.net. Five responses with status 200 are listed: the page document and four .plain.html fragments.](./images/html-requests.png)
    </Diagram>
 
@@ -149,7 +154,7 @@ Your browser's network tools list the requests a page makes, so you can estimate
    domain:www.example.com mime-type:application/json
    ```
 
-   <Diagram adaptColors caption="The JSON filter lists seven storefront data files and six Commerce API calls.">
+   <Diagram caption="The JSON filter lists seven storefront data files and six Commerce API calls.">
      ![Chrome DevTools Network panel with the request list filtered to JSON responses from www.aemshop.net. Thirteen responses with status 200 are listed: 7 storefront data files, such as global.json and cart.json, and 6 graphql and cs-graphql requests.](./images/json-requests.png)
    </Diagram>
 
@@ -169,9 +174,9 @@ Your browser's network tools list the requests a page makes, so you can estimate
 
 The following table applies the [estimation steps](#estimate-content-requests-for-a-page) to the product page in the screenshots. The four fragments use `.plain.html` URLs, and that storefront's CDN routes its `graphql` and `cs-graphql` paths to Commerce, so neither group counts.
 
-<TableWrapper nowrap={[0]} highlightLast>
+<TableWrapper nowrap={[0]} highlightLast totalRow>
 
-| Requests                                   | Listed count                | Before exclusions                  | Rule                                                                                      | Content requests                  |
+| Requests                                   | Counts                | Possible                  | Rule                                                                                      | Content requests                  |
 | ------------------------------------------ | --------------------------- | ---------------------------------- | ----------------------------------------------------------------------------------------- | :-------------------------------: |
 | Product page                      | 1 HTML request              | **1**                                  | Included: [HTML or JSON page content](#which-requests-count)                              | **1**                                 |
 | Fragments, such as footer, nav, etc.        | 4 HTML requests             | **4**                                  | **Excluded** [HTML fragments](#which-requests-are-excluded)                               | **0**                             |

@@ -17,9 +17,10 @@ interface Props {
   nowrap?: number[]; // Column indices that should not wrap (0-based)
   variant?: 'default' | 'metadata' | 'release' | 'changelog'; // Visual style variant
   highlightLast?: boolean; // Shade the last column, such as a result or total column
+  totalRow?: boolean; // Draw a heavy rule above the last row to set it off as a total row
 }
 
-const { nowrap = [], variant = 'default', highlightLast = false } = Astro.props;
+const { nowrap = [], variant = 'default', highlightLast = false, totalRow = false } = Astro.props;
 ---
 
 <div
@@ -30,6 +31,7 @@ const { nowrap = [], variant = 'default', highlightLast = false } = Astro.props;
       'release-table': variant === 'release',
       'changelog-table': variant === 'changelog',
       'highlight-last-column': highlightLast,
+      'total-row': totalRow,
     },
   ]}
   data-nowrap-columns={nowrap.join(',')}>
@@ -51,6 +53,11 @@ const { nowrap = [], variant = 'default', highlightLast = false } = Astro.props;
   .table-wrapper.highlight-last-column :is(th, td):last-child {
     background-color: var(--sl-color-accent-low);
     padding-inline: 1rem;
+  }
+
+  /* --sl-color-white is Starlight's highest-contrast color: black in light mode, white in dark mode. */
+  .table-wrapper.total-row tbody tr:last-child td {
+    border-top: 1px solid var(--sl-color-white);
   }
 
   /* Keep columns aligned across separate release tables. */
