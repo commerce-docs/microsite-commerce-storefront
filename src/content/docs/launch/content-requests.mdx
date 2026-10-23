@@ -9,52 +9,60 @@ import Diagram from '@components/Diagram.astro';
 import Link from '@components/Link.astro';
 import TableWrapper from '@components/TableWrapper.astro';
 
-When a shopper opens a page, their browser requests HTML and may fetch JSON data through API calls. These requests can count toward the content request allowance included in your license.
+One page view on your storefront usually counts as more than one content request toward the allowance in your license. The shopper sees one page, but the browser builds that page from several separate requests, and each eligible request counts.
 
-## How requests are counted
+Content requests are an Adobe Experience Manager (AEM) usage measure. Your storefront pages are delivered by Edge Delivery Services, which is part of AEM, so AEM rules decide what counts. In the [example estimate](#example-estimate-for-a-product-page), one product page view adds up to about 2.4 content requests:
 
-Under the <Link href="https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/using-cloud-manager/license-dashboard#what-is-a-content-request" text="AEM counting definition" />, one HTML page view or five eligible JSON content API calls count as one content request. An API call asks a service for data. Only requests that meet the inclusion rules count.
+- **Counted:** the page HTML (1 content request) and the JSON data files (1 content request for every 5 files)
+- **Not counted:** HTML fragments, such as the navigation and footer; Commerce API calls that your content delivery network (CDN) sends to Commerce; and images, style sheets, and JavaScript files
 
 <Diagram adaptColors
   type="mermaid"
-  caption="Eligible HTML requests and JSON content API calls have different counting rates."
+  caption="How one view of the example product page adds up to about 2.4 content requests. HTML fragments, Commerce API calls, and static assets don't count."
   code={`flowchart LR
-    HTML["1 eligible<br/>HTML request"] -->|counts as| HTML_UNIT["1 content<br/>request"]
-    JSON["5 eligible JSON content<br/>API calls"] -->|counts as| JSON_UNIT["1 content<br/>request"]
+    PAGE["1 shopper<br/>page view"]
+    subgraph EDS["Counted: Page HTML and data files"]
+        DOC["Page HTML<br/>1 request"]
+        DATA["JSON data files<br/>7 requests"]
+    end
+    subgraph OTHER["Not counted"]
+        FRAG["Navigation, footer, and<br/>other HTML fragments<br/>4 .plain.html requests"]
+        API["Commerce API calls<br/>sent to Adobe Commerce<br/>6 requests"]
+        ASSETS["Images, CSS,<br/>and JavaScript"]
+    end
+    PAGE --> DOC
+    PAGE --> DATA
+    PAGE -.-> FRAG
+    PAGE -.-> API
+    PAGE -.-> ASSETS
+    DOC -->|1 per HTML request| DOC_UNIT["1 content<br/>request"]
+    DATA -->|1 per 5 JSON requests| DATA_UNIT["1.4 content<br/>requests"]
+    DOC_UNIT --> TOTAL["About 2.4<br/>content requests"]
+    DATA_UNIT --> TOTAL
+    classDef page fill:#f4f4f4,stroke:#404040,color:#262626,stroke-width:2px
     classDef html fill:#e8f1ff,stroke:#2463c7,color:#163d78,stroke-width:2px
     classDef json fill:#fff4cc,stroke:#9a6700,color:#684600,stroke-width:2px
     classDef counted fill:#e4f5eb,stroke:#168250,color:#145c3b,stroke-width:2px
-    class HTML html
-    class JSON json
-    class HTML_UNIT,JSON_UNIT counted
-  `}
-/>
-
-AEM measures production traffic at the first caching system that receives the request. A response served from a content delivery network (CDN) cache still counts if it qualifies. Fetching it again from the original server does not add another content request.
-
-## Why page views differ
-
-A shopper page view can generate several content requests. The total depends on the eligible HTML and JSON content the page loads. Static assets, such as images, CSS, and JavaScript, do not consume the content request allowance.
-
-<Diagram adaptColors
-  type="mermaid"
-  caption="One page view can generate several content requests. Eligible HTML and JSON content count toward the content request allowance, but static assets do not."
-  code={`flowchart LR
-    PAGE["One shopper<br/>page view"] --> HTML["Eligible HTML content<br/>Counts as content requests"]
-    PAGE --> JSON["Eligible JSON content<br/>Counts as content requests"]
-    PAGE --> ASSETS["Images, CSS and JavaScript<br/>Do not count as content requests"]
-    classDef page fill:#e4f5eb,stroke:#168250,color:#145c3b,stroke-width:2px
-    classDef content fill:#e8f1ff,stroke:#2463c7,color:#163d78,stroke-width:2px
+    classDef total fill:#e4f5eb,stroke:#168250,color:#145c3b,stroke-width:3px
     classDef excluded fill:#f4f4f4,stroke:#737373,color:#404040,stroke-dasharray:4 4
     class PAGE page
-    class HTML,JSON content
-    class ASSETS excluded
+    class DOC html
+    class DATA json
+    class DOC_UNIT,DATA_UNIT counted
+    class TOTAL total
+    class FRAG,API,ASSETS excluded
+    style EDS fill:#f7fbff,stroke:#2463c7,stroke-width:1px
+    style OTHER fill:#fafafa,stroke:#737373,stroke-dasharray:4 4
   `}
 />
+
+## How requests are counted
+
+The <Link href="https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/using-cloud-manager/license-dashboard#what-is-a-content-request" text="AEM counting definition" /> sets two rates. Each eligible HTML response counts as one content request, and every five eligible JSON responses count as one more. HTML fragments are the exception. The storefront requests the navigation, footer, and other fragments with a `.plain.html` URL, which returns only the body content of the fragment page. AEM doesn't count `.plain.html` responses.
 
 <Aside type="tip" title="Forecasting usage">
 
-To forecast usage, [estimate the content requests for representative pages](#estimate-content-requests-for-a-page), multiply each estimate by that page's expected views, and then add content requests that occur without a shopper page view. Prefetched content and bots that AEM does not recognize can add these content requests. You control how much your storefront prefetches, and AEM documents <Link href="https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/using-cloud-manager/content-requests#manage-content-requests" text="ways to manage content requests" />, including blocking unwanted bot traffic. To see what drives your usage, ask your Adobe team for a top usage report.
+To forecast usage, [estimate the content requests for representative pages](#estimate-content-requests-for-a-page), multiply each estimate by that page's expected views, and then add content requests that occur without a shopper page view. Prefetched content and bots that AEM does not recognize can add these content requests. You control how much your storefront prefetches, and AEM documents <Link href="https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/using-cloud-manager/content-requests#manage-content-requests" text="ways to manage content requests" />, including blocking unwanted bot traffic.
 
 </Aside>
 
@@ -67,7 +75,7 @@ The following traffic counts when it delivers eligible HTML or JSON page content
 | Included traffic              | Counting rule                                                                                        |
 | ----------------------------- | ---------------------------------------------------------------------------------------------------- |
 | HTML or JSON page content     | Included status range **100-299**, including partial content returned with **206**.                      |
-| CDN cache hits                | Counted even when the CDN already has a copy of the content.                                         |
+| CDN cache hits                | Counted once, at the first caching system that receives the request, even when the CDN serves a cached copy. |
 | Prefetched content            | Counted when fetched, even if the shopper never opens the page.                                      |
 | Automation and monitoring     | Included unless a recognized bot or a specific monitoring exclusion applies.                         |
 | Visits missing from analytics | Still counted when consent settings or tracking blockers prevent analytics from recording the visit. |
@@ -76,19 +84,20 @@ The following traffic counts when it delivers eligible HTML or JSON page content
 
 ## Which requests are excluded
 
-These requests do not consume the content request allowance under the AEM rules.
+These requests don't consume your content request allowance.
 
 <TableWrapper>
 
 | Excluded traffic                              | Scope of the exclusion                                                                                                      |
 | --------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
 | Static assets                                 | Images, style sheets, and JavaScript files.                                                                                 |
+| HTML fragments                                | Responses whose URL ends in `.plain.html`, such as the navigation and footer that the storefront's <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/blocks/fragment/fragment.js" text="fragment loader" /> requests. |
 | Redirects and errors                          | Status codes **300-399**, **400-499**, and **500** or above. A subsequent successful content request can still count.             |
 | Recognized bots                               | Identified search, social, and AI crawlers. Unrecognized automation can count.                                              |
 | Detected attacks                              | Traffic AEM identifies and blocks as a distributed denial-of-service attack.                                                |
 | Specified health checks                       | Excluded AEM monitoring mechanisms. For Edge Delivery availability checks, AEM recommends `HEAD` instead of `GET` requests. |
 | Responses from other services                 | Requests that never reach AEM, such as Commerce API calls that your CDN routes to Commerce.                                 |
-| Specific Commerce Integration Framework calls | Requests made to AEM and forwarded through `/api/graphql`. This does not exclude every Commerce API call.                   |
+| Specific Commerce Integration Framework calls | Requests made to AEM and forwarded through `/api/graphql`.                                                                  |
 
 </TableWrapper>
 
@@ -140,13 +149,14 @@ Your browser's network tools list the requests a page makes, so you can estimate
    domain:www.example.com mime-type:application/json
    ```
 
-   <Diagram adaptColors caption="The JSON filter lists seven storefront data files and five Commerce API calls.">
+   <Diagram adaptColors caption="The JSON filter lists seven storefront data files and six Commerce API calls.">
      ![Chrome DevTools Network panel with the request list filtered to JSON responses from www.aemshop.net. Thirteen responses with status 200 are listed: 7 storefront data files, such as global.json and cart.json, and 6 graphql and cs-graphql requests.](./images/json-requests.png)
    </Diagram>
 
 1. Subtract the listed requests that don't count:
 
    - Redirects and errors: any request whose Status column shows a value outside **200** to **299**, such as **301** or **404**.
+   - HTML fragments: any request whose name ends in `.plain.html`, such as `nav.plain.html` or `footer.plain.html`.
    - Commerce API calls: any request whose name starts with `graphql` or `cs-graphql`. Your CDN routes these to Commerce, so they never reach AEM.
 
    You don't need to check for other exclusions. The filters already hide images, style sheets, scripts, and requests to other domains, and your own browser visit isn't bot or monitoring traffic.
@@ -157,21 +167,19 @@ Your browser's network tools list the requests a page makes, so you can estimate
 
 ## Example estimate for a product page
 
-The following table applies the [estimation steps](#estimate-content-requests-for-a-page) to the product page in the screenshots. That storefront's CDN routes its `graphql` and `cs-graphql` paths to Commerce, so those five JSON requests don't count.
+The following table applies the [estimation steps](#estimate-content-requests-for-a-page) to the product page in the screenshots. The four fragments use `.plain.html` URLs, and that storefront's CDN routes its `graphql` and `cs-graphql` paths to Commerce, so neither group counts.
 
-<TableWrapper nowrap={[0]}>
+<TableWrapper nowrap={[0]} highlightLast>
 
-| Requests                                   | From Network filter        | Content requests before exclusions | Rule applied                                                                              | Content requests after exclusions |
-| ------------------------------------------ | --------------------------- | ---------------------------------- | ----------------------------------------------------------------------------------------- | --------------------------------- |
-| Product page                      | 1 HTML request              | **1**                                  | Included: [HTML or JSON page content](#which-requests-count)                              | 1                                 |
-| Fragments, such as footer, nav, etc.        | 4 HTML requests             | **4**                                  | Included: [HTML or JSON page content](#which-requests-count)                              | 4                                 |
-| Storefront data files, such as cart.json | 7 JSON requests             | **1.4**  (7 ÷ 5)                        | Included: [HTML or JSON page content](#which-requests-count)                              | 1.4                               |
+| Requests                                   | Listed count                | Before exclusions                  | Rule                                                                                      | Content requests                  |
+| ------------------------------------------ | --------------------------- | ---------------------------------- | ----------------------------------------------------------------------------------------- | :-------------------------------: |
+| Product page                      | 1 HTML request              | **1**                                  | Included: [HTML or JSON page content](#which-requests-count)                              | **1**                                 |
+| Fragments, such as footer, nav, etc.        | 4 HTML requests             | **4**                                  | **Excluded** [HTML fragments](#which-requests-are-excluded)                               | **0**                             |
+| Storefront data files, such as cart.json | 7 JSON requests             | **1.4**  (7 ÷ 5)                        | Included: [HTML or JSON page content](#which-requests-count)                              | **1.4**                               |
 | graphql and cs-graphql calls           | 6 JSON requests             | **1.2** (6 ÷ 5)                         | **Excluded** [Responses from other services](#which-requests-are-excluded)                   | **0**                                 |
-| **TOTAL FOR PAGE**                         | 5 HTML and 13 JSON requests | **7.6** (1+4+1.4+1.2)              | **Excluded**  6 JSON requests (-1.2) [Responses from other services](#which-requests-are-excluded) | **6.4**            |
+| **TOTAL FOR PAGE**                         | 5 HTML and 13 JSON requests | **7.6** (1+4+1.4+1.2)              | **Excluded** 4 fragments (-4) and 6 Commerce API calls (-1.2)                             | **2.4**                           |
 
 </TableWrapper>
-
-The [responses from other services](#which-requests-are-excluded) exclusion removes the 6 `graphql` and `cs-graphql` calls (1.2 content requests), which **lowers the estimate from 7.6 to 6.4 content requests** for each first-time visit to this page.
 
 <Aside type="note" title="Estimated versus measured usage">
 
@@ -181,6 +189,6 @@ Treat the result as an estimate for one visit, not a measured total. Your report
 - Shoppers can trigger more requests as they use the page. To include those requests, use the page with DevTools open before you record your counts.
 - Bots and monitoring tools also load pages, and their requests count unless an exclusion applies.
 
-Your Adobe team's top usage report shows measured usage.
+To see measured usage and what drives it, ask your Adobe team for a top usage report.
 
 </Aside>
