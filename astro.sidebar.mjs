@@ -155,7 +155,6 @@ export function generateSidebar() {
             { label: 'Overview', link: '/setup/launch/' },
             { label: 'Adobe Experience Platform', link: '/setup/analytics/adobe-experience-platform/' },
             { label: 'Analytics instrumentation', link: '/setup/analytics/instrumentation/' },
-            { label: 'Content requests', link: '/setup/launch/content-requests/' },
             { label: 'Browser compatibility', link: '/get-started/browser-compatibility/' },
             { label: 'Performance best practices', link: '/get-started/performance/' },
             {
