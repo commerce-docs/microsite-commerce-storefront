@@ -1,6 +1,6 @@
 ---
 title: Content requests and storefront usage
-description: Understand which storefront requests consume your content request allowance, why one page view can count as more than one request, and how to estimate the count for any page.
+description: Learn which storefront requests count toward your content request allowance, how to estimate content requests per page view, and how to forecast usage before launch.
 slug: setup/launch/content-requests
 ---
 
@@ -9,22 +9,22 @@ import Diagram from '@components/Diagram.astro';
 import Link from '@components/Link.astro';
 import TableWrapper from '@components/TableWrapper.astro';
 
-Your storefront delivers pages through Edge Delivery Services, part of Adobe Experience Manager (AEM). AEM measures usage in content requests, which count toward the allowance in your license.
+Content requests and page views don't match one to one. Learn which requests count, estimate content requests per page view, and use those estimates to plan for launch.
 
-One page view can use more than one content request because the browser loads the page and its data through separate requests. Not every request counts: AEM includes eligible HTML and JSON responses but excludes traffic such as images, style sheets, and JavaScript files.
+## Page views vs. content requests
 
-Understanding what counts helps you estimate usage before launch. The example below shows how one product page view adds up to about 2.4 content requests after exclusions:
+When a shopper views a page, the browser makes many requests, but only some count toward your content request allowance. The main HTML page and its JSON data files count, but images, CSS, JavaScript, and other static assets don't. For example, the requests from one product page view add up to about 2.4 content requests:
 
 <Diagram adaptColors
    type="mermaid"
    caption="How one view of the example product page adds up to about 2.4 content requests. HTML fragments, Commerce API calls, and static assets don't count."
    code={`flowchart LR
       PAGE["1 page view"]
-      subgraph EDS["Counted: Page HTML and data files"]
+      subgraph EDS["Page requests counted"]
             DOC["Page HTML<br/>1 request"]
             DATA["JSON data files<br/>7 requests"]
       end
-      subgraph OTHER["Not counted"]
+      subgraph OTHER["Page requests NOT counted"]
             FRAG["Navigation, footer, and<br/>other HTML fragments<br/>4 .plain.html requests"]
             API["Commerce API calls<br/>sent to Adobe Commerce<br/>6 requests"]
             ASSETS["Images, CSS,<br/>and JavaScript"]
@@ -55,64 +55,46 @@ Understanding what counts helps you estimate usage before launch. The example be
    `}
 />
 
-## How content requests are calculated
+## Counted requests
 
-Unless an [exclusion](#which-requests-are-excluded) applies, the <Link href="https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/using-cloud-manager/license-dashboard#what-is-a-content-request" text="AEM counting definition" /> counts responses by type:
+Your storefront delivers pages through Edge Delivery Services, part of Adobe Experience Manager (AEM), so AEM's counting rules apply.
 
-- **HTML:** Each HTML response, such as the page itself, counts as one content request.
-- **JSON:** Every five JSON responses, such as storefront data files, count as one content request.
-
-<Aside type="tip" title="Forecasting usage">
-
-To forecast usage, [estimate the content requests for representative pages](#estimate-content-requests-for-a-page), multiply each estimate by that page's expected views, and then add content requests that occur without a shopper page view. Prefetched content and bots that AEM does not recognize can add these content requests.
-
-</Aside>
-
-## Which requests count
-
-AEM counts eligible HTML and JSON page content with HTTP status codes `100-299`, including partial content (`206`), unless an [exclusion](#which-requests-are-excluded) applies. The status code describes the result of a request.
-
-These situations still count:
+AEM counts successful responses, with status codes `100-299`, unless an [exclusion](#excluded-requests) applies. According to the <Link href="https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/using-cloud-manager/license-dashboard#what-is-a-content-request" text="AEM counting definition" />, these storefront requests count toward your allowance:
 
 <TableWrapper>
 
-| Situation | Counting rule |
-| --------- | ------------- |
-| A content delivery network (CDN) serves a cached response | Counted once, at the first caching system that receives the request. |
-| A page is prefetched (loaded in advance) | Counted when fetched, even if the shopper never opens the page. |
-| A script, bot, or monitoring tool fetches content | Counted unless AEM excludes the bot or monitoring check. |
-| Analytics does not record the visit | Consent settings and tracking blockers do not remove eligible requests from the count. |
+| Request type | How it counts |
+| ------------ | ------------- |
+| HTML responses | Each HTML response, such as the page itself, counts as 1 content request. |
+| JSON responses | Every 5 JSON responses, such as storefront data files, count as 1 content request. |
+| Cached responses | Count the same as responses that aren't cached. |
+| Prefetched pages | Count when loaded, even if the shopper never opens the page. |
+| Automated traffic | Requests from scripts and monitoring tools count unless [excluded](#excluded-requests). |
+| Visits that analytics doesn't record | Count, because AEM counts the content it delivers, even when a shopper's browser blocks analytics. |
 
 </TableWrapper>
 
-## Which requests are excluded
+## Excluded requests
 
-These requests don't consume your content request allowance.
+These storefront requests don't count toward your allowance:
 
 <TableWrapper>
 
 | Request type | What to look for |
 | ------------ | ---------------- |
 | Static assets | Images, style sheets, and JavaScript files. |
-| HTML fragments | Navigation, footer, or other fragments requested from URLs ending in `.plain.html`. |
-| Redirects and errors | Responses with status codes `300-399`, `400-499`, or `500` and above. A successful follow-up request can still count. |
-| Recognized bots | Search, social, or artificial intelligence (AI) crawlers that AEM identifies as excluded bots. Unrecognized bots can still count. |
-| Detected attacks | Traffic AEM detects and blocks as a distributed denial-of-service attack. |
-| Specified health checks | Only the monitoring checks listed in the <Link href="https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/using-cloud-manager/content-requests" text="AEM exclusion rules" />. For Edge Delivery availability checks, use `HEAD` instead of `GET`. |
-| Requests to other services | Requests routed directly to Commerce or another service without reaching AEM. |
-| Commerce Integration Framework calls | Requests forwarded by AEM through URLs starting with `/api/graphql`. |
+| HTML fragments | URLs ending in `.plain.html`, such as `nav.plain.html`. Fragments at other URLs, such as `/fragments/promo.html`, [count normally](#counted-requests). |
+| Common Edge Delivery JSON files | `placeholders.json`, `placeholder.json`, `query-index.json`, and `form-data.json`. |
+| Redirects and errors | Status codes `300` and above, such as `301` or `404`. The page that a redirect leads to [counts normally](#counted-requests). |
+| Commerce API calls | Requests routed directly to Adobe Commerce without reaching AEM, such as `graphql` and `cs-graphql`. Calls to other services that don't reach AEM are also excluded. |
 
 </TableWrapper>
 
-For all exclusions, see <Link href="https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/using-cloud-manager/content-requests" text="AEM content request rules" />.
+AEM also excludes recognized search, social, and AI crawlers, DDoS attacks that it detects and blocks, and health checks that use `HEAD` requests. For the full list and ways to manage usage, see the <Link href="https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/using-cloud-manager/content-requests" text="AEM content request rules" />.
 
-## Estimate content requests for a page
+## Estimate content requests per page view
 
-Using an Adobe demo product page, we'll show how to estimate content requests for any storefront page with your browser's developer tools.
-
-<Diagram caption="Adobe demo product page used to estimate content requests.">
-  ![Demo storefront product page for the Pride at Adobe t-shirt, with product images, price, quantity selector, and Add to Cart button, followed by content cards, a team photo, product recommendations, and the footer.](./images/product-page.webp)
-</Diagram>
+Use your browser's developer tools to estimate content requests for one page view on your storefront.
 
 <Steps>
 
@@ -120,47 +102,58 @@ Using an Adobe demo product page, we'll show how to estimate content requests fo
 
    Only production traffic counts toward your allowance.
 
-1. Open your browser's <b>developer tools</b>, and then select the **Network** tab.
+    <Diagram caption="The examples on this page use this Adobe demo product page.">
+       ![Demo storefront product page for the Pride at Adobe t-shirt, with product images, price, quantity selector, and Add to Cart button, followed by content cards, a team photo, product recommendations, and the footer.](./images/product-page.webp)
+    </Diagram>
 
-1. Select <b>Disable cache</b>, and then reload the page.
+1. Open your browser's developer tools and then select the **Network** tab.
 
-   Disabling the cache shows the requests a first-time visitor makes.
+1. Select **Disable cache** and then reload the page.
 
-1. In the <b>Filter</b> box, enter the following filter. Replace `www.example.com` with your storefront's domain.
+   Disabling the cache shows the requests a first-time visitor makes. To include shopper actions in your estimate, interact with the page now, before you record your counts.
+
+1. In the **Filter** box, enter the following filter. Replace `www.example.com` with your storefront's domain.
 
    ```text showLineNumbers=false
    domain:www.example.com mime-type:text/html
    ```
 
-    At the bottom of the panel, record the first number (matching requests) as your listed HTML count.
+   At the bottom of the panel, record the number before the slash. This is your HTML count. It represents the number of requests that match the filter.
 
-   <Diagram caption="The HTML filter lists the page document and four fragments.">
-     ![Chrome DevTools Network panel with Disable cache selected and the request list filtered to HTML responses from www.aemshop.net. Five responses with status 200 are listed: the page document and four .plain.html fragments.](./images/html-requests.png)
+   If no requests appear, check the domain in the filter and reload the page with the **Network** tab open.
+
+    <Diagram caption="The HTML filter lists the page document and 4 fragments.">
+       ![Chrome DevTools Network panel with Disable cache selected and the request list filtered to HTML responses from www.aemshop.net. Five responses with status 200 are listed: the page document and 4 .plain.html fragments.](./images/html-requests.png)
    </Diagram>
 
-1. Replace the filter with the following one, and record your listed JSON count the same way.
+1. Replace the filter with the following one, and record your JSON count the same way.
 
    ```text showLineNumbers=false
    domain:www.example.com mime-type:application/json
    ```
 
-   <Diagram caption="The JSON filter lists seven storefront data files and six Commerce API calls.">
+    <Diagram caption="The JSON filter lists 7 storefront data files and 6 Commerce API calls.">
      ![Chrome DevTools Network panel with the request list filtered to JSON responses from www.aemshop.net. Thirteen responses with status 200 are listed: 7 storefront data files, such as global.json and cart.json, and 6 graphql and cs-graphql requests.](./images/json-requests.png)
    </Diagram>
 
-1. <b>Subtract</b> the excluded requests (shown above):
+1. Subtract requests that match the [exclusions](#excluded-requests):
 
-   - Redirects and errors: any request whose Status column shows a value outside **200** to **299**, such as **301** or **404**.
-   - HTML fragments: any request whose name ends in `.plain.html`, such as `nav.plain.html` or `footer.plain.html`.
-   - Commerce API calls: any request whose name starts with `graphql` or `cs-graphql`.
+   - Redirects and errors: a **Status** value of `300` or higher, such as `301` or `404`.
+   - HTML fragments: names ending in `.plain.html`, such as `nav.plain.html`.
+   - Common Edge Delivery JSON files: `placeholders.json`, `placeholder.json`, `query-index.json`, or `form-data.json`.
+   - Commerce API calls: requests routed directly to Adobe Commerce, such as `graphql` and `cs-graphql` in the example.
 
-1. <b>Add</b> your remaining HTML count to your remaining JSON count divided by five.
+   If you're not sure how a Commerce request is routed, ask your storefront team before you exclude it.
+
+1. Add your remaining HTML count to your remaining JSON count divided by 5.
+
+   The result is your content requests per page view.
 
 </Steps>
 
-## Product page calculation example
+### Example calculation
 
-For the product page in the screenshots, exclude the `.plain.html` fragments and the `graphql` and `cs-graphql` calls that its CDN routes to Commerce.
+For the product page in the screenshots, these steps give about 2.4 content requests per view:
 
 <TableWrapper highlightLast totalRow>
 
@@ -168,18 +161,22 @@ For the product page in the screenshots, exclude the `.plain.html` fragments and
 | ----- | ---------------- | ---------------: |
 | Product page | 1 HTML | **1** |
 | Fragments, such as the footer | 4 HTML | excluded = **0** |
-| Storefront data files, such as cart.json | 7 JSON | 7 ÷ 5 = **1.4** |
-| graphql and cs-graphql calls | 6 JSON | excluded = **0** |
+| Storefront data files, such as `cart.json` | 7 JSON | 7 ÷ 5 = **1.4** |
+| `graphql` and `cs-graphql` calls | 6 JSON | excluded = **0** |
 | Total | 5 HTML, 13 JSON | **2.4** |
 
 </TableWrapper>
 
+## Forecast usage
+
+Multiply each page's content requests per view by its expected views for your forecast period, then add the totals. For example, 10,000 views of the product page at 2.4 content requests per view use about 24,000 content requests.
+
+The result is a starting forecast for shopper traffic. Before launch, review expected traffic and planned automated checks with your storefront team.
+
 <Aside type="note" title="Estimated versus measured usage">
 
-This estimate covers one visit. Browser caching can reduce requests on repeat visits. Shopper interactions, bots, and monitoring tools can add requests unless an exclusion applies.
+Your estimate reflects one test visit. Repeat visitors can make fewer requests, because their browsers cache some files.
 
-To include shopper interactions in your estimate, use the page with DevTools open before recording your counts.
-
-For a breakdown of measured usage, ask your Adobe team for a top usage report.
+For a site-wide comparison, ask your Adobe team or Adobe Customer Support to review measured usage, including eligible automated traffic. A top usage report shows what contributes most to your content request volume.
 
 </Aside>
