@@ -36,10 +36,51 @@ sent it. The consent gate controls loading analytics libraries; it does not
 disable all storefront network requests. Recommendation requests can continue
 before consent, with the data boundaries shown above.
 
-The storefront records local product and purchase history before consent.
-Under the current behavior, this stored history is not transmitted until the
-shopper has consented. A merchant's CMP and privacy policy should account for
-the local storage behavior.
+ACDL retains events and context in runtime memory. Separately, custom code in
+`scripts/commerce.js` records product-view and purchase history in
+`localStorage`, independently of consent. Unlike runtime memory, this storage
+persists across page navigations and can survive browser restarts.
+
+The recommendations block does not read these histories or include them in
+recommendation requests until the shopper grants consent. This request boundary
+does not prevent local history recording or delete existing history. A merchant's
+CMP and privacy policy must account for the local storage behavior.
+
+## Commerce Cookie Restriction Mode and `mg_dnt`
+
+Boilerplate's consent gate does not automatically integrate with Adobe Commerce
+Cookie Restriction Mode or manage the `mg_dnt` cookie. These mechanisms are not
+interchangeable:
+
+- **Boilerplate's consent gate** controls loading consent-dependent analytics
+  libraries and which personal context is passed to recommendation requests.
+- **Adobe Commerce Cookie Restriction Mode** is a Commerce configuration whose
+  behavior depends on the storefront components that implement it. Enabling it
+  does not automatically connect this EDS storefront to that configuration.
+- **`mg_dnt`** is a do-not-track signal used by Commerce components that support
+  it. It is not a global browser-storage block, a CMP preference store, or a
+  replacement for Boilerplate's analytics-loading gate.
+
+Adobe's [Product Recommendations cookie-restriction documentation](https://experienceleague.adobe.com/en/docs/commerce/product-recommendations/developer/setting-cookie)
+describes how that Commerce integration restricts collection and storage before
+acceptance. It also documents setting `mg_dnt` when cookies are declined and
+clearing it when accepted for custom consent solutions. Establishing that signal
+and having a component respect it are separate integration responsibilities.
+The [Commerce Events Collector consent documentation](https://github.com/adobe/commerce-events/tree/84da724408a456d7ef1cd15b1cb6c1c6da4f83e3/packages/storefront-events-collector#shopper-consent-and-data-collection-opt-out)
+describes the Commerce/Data Services integration that sets or clears the cookie
+and how the signal is used to update AEP consent. This does not mean Boilerplate
+supplies that integration.
+
+Boilerplate's custom history-storage code does not check `mg_dnt` or Cookie
+Restriction Mode. Setting the cookie alone does not prevent that code from
+writing histories to `localStorage`. If the merchant's consent policy requires
+blocking local history storage before consent, the merchant or SI must also
+adapt that code and validate the resulting behavior.
+
+If the implementation also uses Commerce components that rely on `mg_dnt`, the
+CMP integration must keep that signal consistent with the applicable consent
+decision. Not every EDS integration needs to manage this cookie; determine which
+components use it rather than treating it as an additional universal requirement.
 
 ## Consent gate and event
 
@@ -78,6 +119,10 @@ following in the integration:
    policy; the boilerplate does not save it.
 5. Review any additional trackers or services loaded by the merchant. The
    Commerce gate does not automatically control integrations outside it.
+6. Review local history storage against the merchant's consent policy. Where
+   applicable, integrate Commerce cookie-restriction signals as described
+   [above](#commerce-cookie-restriction-mode-and-mg_dnt); dispatching
+   `consent.update` alone does not stop the custom history writes.
 
 See <Link href="https://www.aem.live/developer/cmp-integration#how-consent-gating-works" text="AEM's CMP integration guide" /> for the upstream consent-gating pattern. The storefront notification is an integration point, not a drop-in CMP API; adapt the loader as well as dispatching the event.
 
@@ -114,7 +159,9 @@ preview or production site.
 Validate the integrated behavior on staging:
 
 - Without consent, verify that the analytics SDK and collector are not
-  requested, while ACDL and local history recording continue.
+  requested, while ACDL remains available. Unmodified Boilerplate continues
+  recording local histories; if the integration changes that behavior to meet
+  the merchant's policy, verify the required storage restrictions separately.
 - Confirm that recommendation requests may still occur, but do not contain
   viewing history, purchase history, cart SKUs, or shopper-derived pricing
   before consent. The current product SKU and explicitly authored block values
@@ -123,6 +170,9 @@ Validate the integrated behavior on staging:
   recommendation context is available.
 - If the merchant implements revocation, test its behavior separately. The
   boilerplate does not provide a complete revocation mechanism.
+- If the integration uses `mg_dnt`, verify that its value follows the applicable
+  CMP decision and that the consuming components respect it. Check custom
+  `localStorage` writes separately; the cookie does not block them automatically.
 - If AEP is configured, validate the real datastream and network behavior;
   local tests or ACDL state alone do not establish delivery to AEP.
 
