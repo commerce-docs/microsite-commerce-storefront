@@ -13,30 +13,32 @@ Content requests and page views do not have a one-to-one relationship. Learn whi
 
 ## Page views vs. content requests
 
-When a shopper views a page, the browser makes many requests, but only some count toward your content request allowance. The main HTML page and its JSON data files count, but HTML fragments, Commerce API calls, and images, CSS, JavaScript, and other static assets don't. For example, the requests from one product page view add up to 2.4 content requests:
+When a shopper views a page, the browser makes many requests, but only some count toward your content request allowance. The main HTML page and some JSON data files count, but HTML fragments, placeholder files, Commerce API calls, and images, CSS, JavaScript, and other static assets don't. For example, the requests from one product page view add up to 1.2 content requests:
 
 <Diagram adaptColors
    type="mermaid"
-   caption="How one view of the example product page adds up to about 2.4 content requests. HTML fragments, Commerce API calls, and static assets don't count."
+   caption="How one view of the example product page adds up to about 1.2 content requests. HTML fragments, placeholder files, Commerce API calls, and static assets don't count."
    code={`flowchart LR
       PAGE["1 page view"]
       subgraph EDS["Page requests counted"]
             DOC["Page HTML<br/>1 request"]
-            DATA["JSON data files<br/>7 requests"]
+            DATA["JSON index file<br/>1 request"]
       end
       subgraph OTHER["Page requests NOT counted"]
             FRAG["Navigation, footer, and<br/>other HTML fragments<br/>4 .plain.html requests"]
+            PH["Placeholder JSON files<br/>6 requests"]
             API["Commerce API calls<br/>sent to Adobe Commerce<br/>6 requests"]
             ASSETS["Images, CSS,<br/>and JavaScript"]
       end
       PAGE --> DOC
       PAGE --> DATA
       PAGE -.-> FRAG
+      PAGE -.-> PH
       PAGE -.-> API
       PAGE -.-> ASSETS
       DOC -->|1 per HTML request| DOC_UNIT["1 <br/>content request"]
-      DATA -->|1 per 5 JSON requests| DATA_UNIT["7 ÷ 5 = 1.4<br/>content requests"]
-      DOC_UNIT --> TOTAL["1 + 1.4 = 2.4<br/>content requests"]
+      DATA -->|1 per 5 JSON requests| DATA_UNIT["1 ÷ 5 = 0.2<br/>content requests"]
+      DOC_UNIT --> TOTAL["1 + 0.2 = 1.2<br/>content requests"]
       DATA_UNIT --> TOTAL
       classDef page fill:#f4f4f4,stroke:#404040,color:#262626,stroke-width:2px
       classDef html fill:#f4f4f4,stroke:#2463c7,color:#163d78,stroke-width:2px
@@ -49,7 +51,7 @@ When a shopper views a page, the browser makes many requests, but only some coun
       class DATA json
       class DOC_UNIT,DATA_UNIT counted
       class TOTAL total
-      class FRAG,API,ASSETS excluded
+      class FRAG,PH,API,ASSETS excluded
       style EDS fill:#e8f1ff,stroke:#2463c7,stroke-width:1px
       style OTHER fill:#FFE1E8,stroke:#737373,stroke-dasharray:4 4
    `}
@@ -66,7 +68,7 @@ AEM counts successful responses, with status codes `100-299`, unless an [exclusi
 | Request type | How it counts |
 | ------------ | ------------- |
 | HTML responses | Each HTML response, such as the page itself, counts as 1 content request. |
-| JSON responses | Every 5 JSON responses, such as storefront data files, count as 1 content request. |
+| JSON responses | Every 5 JSON responses, such as the `enrichment.json` index, count as 1 content request. |
 | Cached responses | Count the same as responses that aren't cached. |
 | Prefetched pages | Count when loaded, even if the shopper never opens the page. |
 | Automated traffic | Requests from scripts and monitoring tools count unless [excluded](#excluded-requests). |
@@ -84,7 +86,7 @@ These storefront requests don't count toward your allowance:
 | ------------ | ---------------- |
 | Static assets | Images, style sheets, and JavaScript files. |
 | HTML fragments | URLs ending in `.plain.html`, such as `nav.plain.html`. Fragments at other URLs, such as `/fragments/promo.html`, [count normally](#counted-requests). |
-| Common Edge Delivery JSON files | `placeholders.json`, `placeholder.json`, `query-index.json`, and `form-data.json`. |
+| Common Edge Delivery JSON files | `placeholders.json`, `placeholder.json`, `query-index.json`, `form-data.json`, and `config.json`, plus any JSON file in a `placeholders/` folder, such as `/placeholders/cart.json`. |
 | Redirects and errors | Status codes `300` and above, such as `301` or `404`. The page that a redirect leads to [counts normally](#counted-requests). |
 | Commerce API calls | Requests routed directly to Adobe Commerce without reaching AEM, such as `graphql` and `cs-graphql`. Calls to other services that don't reach AEM are also excluded. |
 
@@ -132,15 +134,15 @@ Use your browser's developer tools to estimate content requests for one page vie
    domain:www.example.com mime-type:application/json
    ```
 
-    <Diagram caption="The JSON filter lists 7 storefront data files and 6 Commerce API calls.">
-     ![Chrome DevTools Network panel with the request list filtered to JSON responses from www.aemshop.net. Thirteen responses with status 200 are listed: 7 storefront data files, such as global.json and cart.json, and 6 graphql and cs-graphql requests.](./images/json-requests.png)
+    <Diagram caption="The JSON filter lists 6 placeholder files, the enrichment index, and 6 Commerce API calls.">
+     ![Chrome DevTools Network panel with the request list filtered to JSON responses from www.aemshop.net. Thirteen responses with status 200 are listed: 6 placeholder files, such as global.json and cart.json, the enrichment.json index, and 6 graphql and cs-graphql requests.](./images/json-requests.png)
    </Diagram>
 
 1. Subtract requests that match the [exclusions](#excluded-requests):
 
    - Redirects and errors: a **Status** value of `300` or higher, such as `301` or `404`.
    - HTML fragments: names ending in `.plain.html`, such as `nav.plain.html`.
-   - Common Edge Delivery JSON files: `placeholders.json`, `placeholder.json`, `query-index.json`, or `form-data.json`.
+   - Common Edge Delivery JSON files: `placeholders.json`, `placeholder.json`, `query-index.json`, `form-data.json`, `config.json`, or any file in a `placeholders/` folder. To see a request's folder, hover over its name.
    - Commerce API calls: JSON requests routed directly to Adobe Commerce, such as `graphql` and `cs-graphql` in the example.
 
    If you're not sure how a Commerce request is routed, ask your storefront team before you exclude it.
@@ -151,7 +153,7 @@ Use your browser's developer tools to estimate content requests for one page vie
 
 ### Example calculation
 
-For the product page in the screenshots, these steps result in about 2.4 content requests per view:
+For the product page in the screenshots, these steps result in about 1.2 content requests per view:
 
 <TableWrapper highlightLast totalRow>
 
@@ -159,15 +161,16 @@ For the product page in the screenshots, these steps result in about 2.4 content
 | ----- | ---------------- | ---------------: |
 | Product page | 1 HTML | **1** |
 | Fragments, such as the footer | 4 HTML | excluded = **0** |
-| Storefront data files, such as `cart.json` | 7 JSON | 7 ÷ 5 = **1.4** |
+| Placeholder files, such as `/placeholders/cart.json` | 6 JSON | excluded = **0** |
+| Enrichment index, `enrichment.json` | 1 JSON | 1 ÷ 5 = **0.2** |
 | `graphql` and `cs-graphql` calls | 6 JSON | excluded = **0** |
-| Total | 5 HTML, 13 JSON | **2.4** |
+| Total | 5 HTML, 13 JSON | **1.2** |
 
 </TableWrapper>
 
 ## Forecast usage
 
-Multiply each page's content requests per view by its expected views for your forecast period, then add the totals. For example, 10,000 views of the product page at 2.4 content requests per view use about 24,000 content requests.
+Multiply each page's content requests per view by its expected views for your forecast period, then add the totals. For example, 10,000 views of the product page at 1.2 content requests per view use about 12,000 content requests.
 
 The result is a starting forecast for shopper traffic. Before launch, review expected traffic and planned automated checks with your storefront team.
 
