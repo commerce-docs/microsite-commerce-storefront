@@ -1,40 +1,51 @@
 ---
-const { caption, type = "image", code } = Astro.props;
+interface Props {
+  caption?: string;
+  type?: 'image' | 'mermaid';
+  code?: string;
+  adaptColors?: boolean;
+}
+
+const { caption, type = 'image', code, adaptColors = false } = Astro.props;
 const id = `diagram-${Math.random().toString(36).substring(2, 11)}`;
 // Embed Mermaid text as JSON inside the markup — not in define:vars. Large or multiline
 // sources break or bloat the hoisted module script; a broken module leaves "Loading…" forever.
 const mermaidSourceJson =
-  type === "mermaid" && code != null
+  type === 'mermaid' && code != null
     ? JSON.stringify(String(code))
-        .replace(/</g, "\\u003c")   // prevent </script> from closing the JSON block
-        .replace(/>/g, "\\u003e")   // prevent --> from being parsed as an HTML comment
-        .replace(/&/g, "\\u0026")   // prevent &foo; sequences being decoded by HTML parser
-    : "";
+        .replace(/</g, '\\u003c') // prevent </script> from closing the JSON block
+        .replace(/>/g, '\\u003e') // prevent --> from being parsed as an HTML comment
+        .replace(/&/g, '\\u0026') // prevent &foo; sequences being decoded by HTML parser
+    : '';
 ---
 
 <div
-  class="diagram"
+  class='diagram'
   data-diagram-type={type}
-  {...(type === "mermaid" ? { "data-pagefind-ignore": true } : {})}
->
-  <div class="diagram-content">
-    {type === "mermaid" ? (
-      <div id={id} class="mermaid-diagram" data-pending-mermaid="true">
-        {/*
+  data-adapt-colors={adaptColors ? true : undefined}
+  {...type === 'mermaid' ? { 'data-pagefind-ignore': true } : {}}>
+  <div class='diagram-content'>
+    {
+      type === 'mermaid' ? (
+        <div id={id} class='mermaid-diagram' data-pending-mermaid='true'>
+          {/*
           set:html is intentional: Astro's default child-expression escaping would double-escape
           the JSON (e.g. `"` → `&amp;quot;`), producing unreadable source. mermaidSourceJson is
           already sanitised above (< → \u003c) — no user-controlled HTML reaches this slot.
           Using <template> instead of <script type="application/json"> avoids confusing the
           Astro language server, which treats any <script> element in the template body specially.
         */}
-        <template class="mermaid-diagram__source" set:html={mermaidSourceJson}></template>
-        <div class="mermaid-loading">Loading diagram...</div>
-      </div>
-    ) : (
-      <slot />
-    )}
+          <template class='mermaid-diagram__source'>
+            <Fragment set:html={mermaidSourceJson} />
+          </template>
+          <div class='mermaid-loading'>Loading diagram...</div>
+        </div>
+      ) : (
+        <slot />
+      )
+    }
   </div>
-  <div class="caption">{caption}</div>
+  <div class='caption'>{caption}</div>
 </div>
 
 <style is:global>
@@ -97,6 +108,24 @@ const mermaidSourceJson =
     max-height: calc(700px - 2rem);
     margin: 0 auto;
     object-fit: contain;
+  }
+
+  .diagram[data-adapt-colors] img,
+  body:has(.diagram[data-adapt-colors] .starlight-image-zoom-source) .starlight-image-zoom-image {
+    filter: contrast(1.1);
+  }
+
+  @media screen {
+    :root[data-theme='dark'] .diagram[data-adapt-colors] {
+      background-color: #1a1a1a;
+    }
+
+    :root[data-theme='dark'] .diagram[data-adapt-colors] img,
+    :root[data-theme='dark']
+      body:has(.diagram[data-adapt-colors] .starlight-image-zoom-source)
+      .starlight-image-zoom-image {
+      filter: contrast(1.1) invert(0.9) hue-rotate(180deg);
+    }
   }
 
   .caption.caption {
