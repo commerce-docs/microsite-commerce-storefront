@@ -1,11 +1,65 @@
 ---
 title: Color Swatch
-description: Use Color Swatches to display and select color options.
-tableOfContents: false
-iframe:
-    src: "components-colorswatch--overview"
+description: Use ColorSwatch to display and select a product color option, with selected, disabled, and out-of-stock states.
 ---
 
-import IFrame from '@components/IFrame.astro'
+import TableWrapper from '@components/TableWrapper.astro';
+import ComponentPreview from '@components/ComponentPreview.astro';
+import previewImage from './images/colorswatch.webp';
 
-<IFrame src={frontmatter.iframe.src} />
+Use `ColorSwatch` to display a selectable color option, such as one of a product's available colors. It renders a radio input by default, or a checkbox when you set `multi`.
+
+<ComponentPreview src={previewImage} alt="The SDK ColorSwatch showing a selected color option." />
+
+## Import
+
+```js
+import { ColorSwatch } from '@dropins/tools/components.js';
+```
+
+## Props
+
+<TableWrapper nowrap={[0]}>
+
+| Prop | Type | Req? | Description |
+|---|---|---|---|
+| `label` | `string` | No | Field label. |
+| `groupAriaLabel` | `string` | No | Label for the swatch group, used in the accessible label. |
+| `name` | `string` | No | Field name, used to map the value in a form. |
+| `id` | `string` | No | Field id. |
+| `value` | `string` | No | Field value. |
+| `color` | `string` | No | Color of the swatch. Accepts any valid CSS color; falls back to a default gray when invalid. |
+| `size` | `'medium' \| 'large'` | No | Size of the color swatch. Defaults to medium. |
+| `selected` | `boolean` | No | Whether the color swatch is selected. Defaults to false. |
+| `disabled` | `boolean` | No | Whether the color swatch is disabled. Defaults to false. |
+| `outOfStock` | `boolean` | No | Whether the color swatch is out of stock. Defaults to false. |
+| `multi` | `boolean` | No | Whether the swatch allows multiple selection, rendering a checkbox instead of a radio. Defaults to false. |
+| `onValue` | `(value: any) => void` | No | Function to handle value changes. |
+| `onUpdateError` | `(error: Error) => void` | No | Function to handle errors thrown by onValue. |
+
+</TableWrapper>
+
+`ColorSwatch` also accepts standard input HTML attributes (for example, `aria-describedby` and `className`), except `label` and `size`. Don't pass your own `onChange` — it replaces the component's built-in value handling; use `onValue` instead.
+
+## Example
+
+Render a selectable color swatch and handle selection with `onValue`:
+
+```js
+import { ColorSwatch, provider } from '@dropins/tools/components.js';
+
+await provider.render(ColorSwatch, {
+  name: 'color',
+  label: 'Gray',
+  groupAriaLabel: 'Color',
+  value: 'gray',
+  color: '#E8E8E8',
+  selected: false,
+  onValue: (value) => yourSelectColor(value),
+})(document.querySelector('.colorswatch'));
+```
+
+## Related
+
+- [Image Swatch](/sdk/components/imageswatch/) — the same selection pattern for image-based options.
+- [Design tokens](/sdk/design/) — the colors, spacing, and sizing swatches use.

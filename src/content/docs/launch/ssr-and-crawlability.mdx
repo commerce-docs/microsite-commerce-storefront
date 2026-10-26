@@ -1,0 +1,288 @@
+---
+title: SSR and Crawlability
+description: How to decide which pages need server-side rendering (SSR) for SEO, using Google Search Console crawl-demand data instead of SKU count.
+slug: setup/seo/ssr-and-crawlability
+---
+
+import Link from '@components/Link.astro';
+import Tasks from '@components/Tasks.astro';
+import Task from '@components/Task.astro';
+import TableWrapper from '@components/TableWrapper.astro';
+
+This guide is for merchants, partners, and solution architects planning search-engine optimization (SEO) for an Adobe Commerce storefront. It addresses a frequently asked question:
+
+> "We have millions of SKUs. Do all of them need to be server-side rendered for SEO?"
+
+This guide explains the concepts behind that question and gives you a way to decide which pages benefit from server-side rendering (SSR). The deciding factor is how much Google is willing to crawl your site, which is usually different from how many SKUs you have.
+
+A few points up front:
+
+- SSR is not a ranking signal. It can make indexing faster and give a freshness signal, but SSR does not automatically make a page rank higher [[1]](https://www.aem.live/docs/seo-geo#google-and-other-search-engines).
+- Google does not crawl every page you publish. It crawls what it can and wants to crawl, and no more [[8]](https://developers.google.com/crawling/docs/crawl-budget#general_theory).
+- Crawl demand [[10]](https://developers.google.com/crawling/docs/crawl-budget#crawl-demand) sets the useful number of pages, not SKU count. For example, publishing millions of pages when Google wants a fraction of them does not create millions of ranking opportunities. It creates a crawl backlog.
+- The best starting point for SSR planning is your Google Search Console data, not the size of your catalog.
+
+## Four concepts that are often combined
+
+Most "server-side render everything" requests treat four separate ideas as a single concept. Separating them is the foundation for every decision that follows.
+
+<TableWrapper nowrap={[0]}>
+
+| Concept                    | Question it answers                                                                       | Where it happens         |
+| -------------------------- | ----------------------------------------------------------------------------------------- | ------------------------ |
+| **Rendering** (SSR vs CSR) | Is the content in the initial HTML response, or added later by JavaScript in the browser? | Your server or edge      |
+| **Crawling**               | Did a search engine bot fetch this URL at all?                                            | Google's crawler         |
+| **Indexing**               | Did Google store this page and consider it eligible to appear in results?                 | Google's index           |
+| **Ranking**                | For a given query, where does this page appear?                                           | Google's ranking systems |
+
+</TableWrapper>
+
+A page can be fully server-side rendered and still never be crawled. A crawled page can be excluded from the index. An indexed page can rank far down the results for every query. SSR influences only the first step in this process, and even there its role is narrower than it first appears.
+
+## What SSR does and does not do
+
+What SSR does:
+
+- Places the canonical content of a page in the **initial HTML response**, before any JavaScript runs [[2]](https://www.aem.live/docs/seo-geo#server-side-vs-client-side-rendering).
+- Lets Google index that content on its **first pass**, without waiting for a second, JavaScript-rendering pass. This rendering can make indexing faster and more reliable [[1]](https://www.aem.live/docs/seo-geo#google-and-other-search-engines).
+- Makes content visible to clients that **do not execute JavaScript**, most notably the large language model (LLM) crawlers behind AI answers and assistants. This visibility is the strongest current argument for SSR, and it falls under GEO (generative engine optimization) rather than classic SEO [[4]](https://www.aem.live/docs/seo-geo#large-language-models-llm). For GEO scenarios, Adobe recommends using <Link href="https://experienceleague.adobe.com/en/docs/brand-visibility/using/home" text="Adobe Brand Visibility" /> to ensure your site is optimized and ready for AI.
+
+What SSR does not do:
+
+- The rendering method is not itself a ranking signal. SSR does speed up indexing, and by placing content changes in the initial HTML it helps Google detect updates sooner, which supports freshness. It does not move a page up in the rankings [[1]](https://www.aem.live/docs/seo-geo#google-and-other-search-engines) [[10]](https://developers.google.com/crawling/docs/crawl-budget#crawl-demand).
+- It does not create crawl demand. Rendering a page well does not make Google want to crawl it [[10]](https://developers.google.com/crawling/docs/crawl-budget#crawl-demand).
+- It does not resolve duplicate-content classification. A near-identical page is still treated as a duplicate by Google whether it is server-rendered or client-rendered. The rendering method does not make the page unique. See [Keep filter and facet state out of the URL path](#keep-filter-and-facet-state-out-of-the-url-path).
+
+Adobe's guidance is to include "all the canonical content of a page … in the initial HTML," while loading non-critical elements asynchronously for performance [[2]](https://www.aem.live/docs/seo-geo#server-side-vs-client-side-rendering). Adobe ran a multi-month experiment inlining headers and footers server-side and measured the result in Google Search Console. The finding was that "there is no measurable upside on any SEO metric" [[3]](https://www.aem.live/docs/seo-geo#experiment-1-wwwaemlive-includes-header-and-footer-on-the-server-side).
+
+The practical implication is that SSR, in EDS, is a tool for getting the right primary content into the initial response for the pages that matter. It isn't a single setting you enable across an entire catalog.
+
+## What Google actually crawls: crawl budget
+
+Google does not attempt to crawl every URL you publish. It crawls within a **crawl budget**, which Google defines as "the set of URLs that Google can and wants to crawl" [[8]](https://developers.google.com/crawling/docs/crawl-budget#general_theory). That budget has two independent parts:
+
+- **Crawl capacity limit**: how much Google can crawl without overloading your servers. A slow site (poor Core Web Vitals) lowers this ceiling. Faster sites earn more capacity [[9]](https://developers.google.com/crawling/docs/crawl-budget#crawl-capacity-limit).
+- **Crawl demand**: how much Google wants to crawl your site. [[10]](https://developers.google.com/crawling/docs/crawl-budget#crawl-demand) drives it:
+  - **Perceived inventory**: how many URLs Google considers worth having. Duplicate, faceted, and low-value URLs lower this.
+  - **Popularity**: URLs with links and traffic are re-crawled more often. Brand authority matters too — an established site with a long history tends to earn more crawl budget than a new brand with comparable traffic.
+  - **Staleness**: Google re-crawls to catch changes.
+
+A useful principle from Adobe's large-sites guidance: "a site should only ever have as many pages as Google is willing to index" [[6]](https://www.aem.live/docs/large-sites#google-limits). This principle is a statement about indexable footprint, not catalog size. It means large sites should be deliberate about which pages they submit for indexing, and shouldn't expose more thin, duplicate, or low-value URLs than are worth indexing. It doesn't mean that products beyond that count should be dropped from the catalog or site. A product can remain on the storefront, discoverable through on-site search and navigation, without being served as an indexable, SEO-optimized page.
+
+Crawl demand is a ceiling that publishing more pages does not raise. If Google wants roughly eighteen thousand pages from your site, publishing six million does not increase that number. The additional pages sit in a backlog labeled _Discovered—currently not indexed_, competing with your valuable pages for the same finite crawl capacity [[9]](https://developers.google.com/crawling/docs/crawl-budget#crawl-capacity-limit).
+
+### Who needs to think about crawl budget?
+
+Per Google, crawl budget is a genuine concern for [[11]](https://developers.google.com/crawling/docs/crawl-budget#who-this-guide):
+
+- Large sites (one million or more pages) that change weekly, or
+- Medium-to-large sites (ten thousand or more pages) with content that changes daily, or
+- Any site with a large share of URLs marked _Discovered—currently not indexed_.
+
+If your indexable page count sits well under these thresholds, crawl budget is likely not a constraint for you, and "server-side render everything for crawl budget" solves a problem you may not have.
+
+## Google Search Console versus Google Merchant Center
+
+These two tools are often cited interchangeably in SEO requirements. They measure different things.
+
+### Google Search Console (GSC): the record of organic search
+
+GSC is the authoritative record of how Google crawls, indexes, and ranks your site in **organic** search results. It holds the data that drives SSR decisions:
+
+- **Page indexing (Coverage) report**: how many URLs are indexed versus excluded, and why. Common exclusion reasons include _Duplicate without user-selected canonical_, _Excluded by noindex_, _Discovered - currently not indexed_, _Crawled - currently not indexed_, and _Soft 404_.
+- **Crawl stats**: how many requests Googlebot makes, response times, and where budget is spent.
+- **Performance**: impressions, clicks, and average position for the queries you appear on.
+
+GSC shows you what Google wants from your site, which is why it is the right starting point for any SEO conversation. Without access to a site's GSC data, an SEO requirement can only be estimated rather than validated.
+
+### Google Merchant Center (GMC): the product feed for Shopping
+
+GMC is a **product feed** that powers Google Shopping ads and free product listings. It is a separate channel from organic crawling:
+
+- It ingests a structured feed of sellable items, and those products can appear and rank across Google surfaces (Search, the Shopping tab, Images, and more) through free listings and ads [[22]](https://support.google.com/merchants/answer/13692890).
+- Google does crawl the product detail pages (PDPs) in your feed, using Googlebot, to confirm the feed matches the page (for example, price and availability). The feed and organic crawling overlap at the crawler, so they are related pipelines rather than fully separate ones [[21]](https://support.google.com/merchants/answer/4752265).
+- Its data model is flat. Every sellable item is a row. Category pages, filtered views, and content pages have no place in a feed.
+- The number of SKUs you can push into a feed does not indicate how many pages Google crawls and indexes organically.
+
+A common misconception is that a large SKU count in a Merchant Center feed implies a need for the same number of server-rendered organic pages. Merchant Center uses only products that are eligible to appear on Google, those with genuine demand or interaction, so a multimillion-SKU feed does not translate into the same number of crawled, ranked products. The feed and organic search overlap at the crawler, but feed size still does not set organic crawl demand.
+
+## A real-world example of crawl backlog issues
+
+A well-known consumer brand built roughly **six million product listing pages (PLPs)** for SEO reasons. When their crawl and indexing data was reviewed in Google Search Console, only about **eighteen thousand pages had actual crawl demand**, meaning pages Google wanted to crawl. The remaining pages carried little value from Google's perspective.
+
+The cost was measurable. The brand spent roughly **eighteen months** clearing the resulting crawl backlog, and was still working through about **six hundred thousand** remaining URLs long after the pages went live. Each low-demand page competed for the same finite crawl capacity as the pages that mattered.
+
+The conclusion is about method rather than about PLPs. The pages were planned to a SKU and facet count instead of crawl demand. Using GSC crawl-demand data would have achieved the same SEO outcome with a small fraction of the pages and without the backlog.
+
+A similar pattern shows up in other large catalogs. One retailer with a broad product catalog had roughly 1.6 million PDPs sitting in _Crawled—currently not indexed_, competing with its higher-value pages for the same crawl capacity.
+
+## A framework for deciding what to SSR
+
+Work through these in order. Catalog size does not appear as an input until the final step, where it serves as a validation check.
+
+<Tasks>
+<Task>
+### Review your Search Console data first
+
+Begin by reviewing the site's **Google Search Console** data (and Google Merchant Center data if Shopping is in scope). Validate any SSR or SEO requirement against what Google does on the site. In practice, many broad "render everything" requirements change once the real crawl and index data is available.
+
+For a large catalog, this review may reveal that most of the catalog consists of low-demand products. A large share of products can have little or no sales and little or no search interest, and those tend to be the pages Google has the least crawl demand for [[10]](https://developers.google.com/crawling/docs/crawl-budget#crawl-demand). Rank PDPs by sales and Search Console impressions and clicks, then prioritize SSR for the pages that show genuine demand. The low-demand products can stay client-side rendered, or, where the pages add no value, be kept out of the index entirely. Boosting demand for those products — through brand visibility, catalog structure, or PDP content optimization — is a separate SEO effort outside the scope of this guide.
+</Task>
+
+<Task>
+### Sort pages into rendering tiers by purpose and demand
+
+<TableWrapper nowrap={[0]}>
+
+| Tier                                         | Page types                                                                                                                                                                                                                                                                                                                                                   | Render strategy                                   | Why                                                                                            |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| **Tier 1: SSR the canonical content**        | PDPs with real traffic, revenue, or crawl demand; a curated set of category PLPs with genuine editorial value and accurate canonicals; key content pages such as the home page and top landing pages; and, in special cases, a highly controlled, curated subset of high-demand facet combinations promoted to indexable landing pages | Canonical content in the initial HTML             | These have crawl demand and organic value. First-pass indexing and LLM visibility matter here. |
+| **Tier 2: Client-side rendering is fine**    | Interactive and dynamic views, personalized modules, recommendation carousels, anything below the fold that is not canonical content                                                                                                                                                                                                                         | CSR, hydrate after load                           | Server-rendering these adds no crawl or ranking value.                                         |
+| **Tier 3: Do not create as indexable pages** | Facet and filter combinations, sort orders, search-result pages, session and state views, near-duplicate variants                                                                                                                                                                                                                                            | Not indexable, and often not distinct URLs at all | These consume crawl budget. Rendering them well makes the problem larger.                      |
+
+</TableWrapper>
+</Task>
+
+<Task>
+### Keep filter and facet state out of the URL path
+
+A URL path carries semantic weight. It signals to Google that a page is a distinct thing worth caring about. A path such as `/wine/italy_spain_australia_argentina` presents itself as a real, distinct page, when it is a transient view of a product list. That signal produces no indexable value and still consumes crawl budget.
+
+- Use **query parameters** for filter, sort, and search state. This method is the web's standard way to express the same resource with state attached.
+- Reserve **paths** for canonical pages you genuinely want indexed and ranked.
+- Focus link authority and editorial content into the small set of category pages that rank, rather than replicating an elaborate URL pattern that produces no indexable pages. Grouping related products under a clear path structure can also help Google crawl larger sites [[18]](https://developers.google.com/search/docs/fundamentals/seo-starter-guide#group-topically).
+
+There is also a duplicate-content risk to keep in mind. During the initial crawl, if a page looks like many others on the site, Google may classify it as a duplicate. It then holds the page out of the index or adds it to the rendering queue at low priority, so indexing is delayed or does not happen at all [[20]](https://developers.google.com/search/docs/crawling-indexing/consolidate-duplicate-urls).
+</Task>
+
+<Task>
+### Handle exclusion correctly (noindex, nofollow, and robots.txt)
+
+A common and costly mistake is to mark facet pages `noindex` while leaving them crawlable. Google still requests every `noindex` URL before it discovers the tag and drops the page, so the crawl budget is still spent [[12]](https://developers.google.com/crawling/docs/crawl-budget#best_practices). For pages you never want crawled, block the pattern in `robots.txt`, or return `404` or `410` for pages that have been removed [[12]](https://developers.google.com/crawling/docs/crawl-budget#best_practices). Reserve `noindex` for pages that stay crawlable for other reasons, but do not appear in results. You can also add `nofollow` to internal links pointing at low-value pages (like facet combinations) to further discourage crawling through them.
+
+#### If you are migrating from a platform with an existing facet-URL backlog
+
+Merchants arriving from a legacy storefront are rarely starting from zero. Google already has a large number of faceted or filtered PLP URLs indexed from years of crawling — the same pattern behind the backlogs described in [A real-world example of crawl backlog issues](#a-real-world-example-of-crawl-backlog-issues).
+
+#### The common case: the facet URLs don't need to exist on the new platform
+
+A migration is an opportunity, not an obligation to recreate the old URL structure. You do not have to stand up a page at every legacy facet URL to noindex it. You can choose not to build them at all, and instead 301-redirect each legacy facet URL to the most relevant canonical page, typically the unfiltered PLP. A 301 is a strong canonicalization signal: it deindexes the old URL and consolidates accumulated link equity into the page you want to rank. This approach is better than keeping millions of unnecessary URLs alive on the new platform to serve a `noindex` tag. Where no relevant canonical page exists, return 410 (Gone) instead. See [Platform limits and realistic expectations](#platform-limits-and-realistic-expectations) for prioritizing which redirects to implement first during migration, and [Redirects](/setup/seo/indexing/#redirects) for how to implement them in Edge Delivery Services.
+
+#### If you do carry the facet URLs forward onto the new platform
+
+If the new platform still resolves these facet URLs, order matters for clearing the existing backlog. If you block a URL pattern in `robots.txt` before Google has recrawled it and seen a `noindex` tag, Google can no longer crawl the page at all. It can never discover the `noindex` tag, so it never drops the page from the index. The URL stays indexed, uncrawlable to you [[12]](https://developers.google.com/crawling/docs/crawl-budget#best_practices). To remove already-indexed low-value pages:
+
+1. Add `noindex` to the pages and leave them crawlable.
+1. Wait for Google to recrawl and drop them from the index. Track progress in the Page indexing (Coverage) report in Search Console.
+1. To stop spending crawl budget on them going forward, block the URL pattern in `robots.txt` once they are confirmed out of the index.
+
+Doing this out of order is a common mistake for large, migrated catalogs. A merchant inherits millions of already-indexed facet URLs, blocks them in `robots.txt` immediately to "prevent further issues," and inadvertently locks the existing backlog into the index instead of clearing it.
+</Task>
+
+<Task>
+### Handle product duplication deliberately (markets and product families)
+
+The same underlying product can end up with more than one near-identical page for reasons that have nothing to do with catalog size. Two common causes: running separate storefronts per region, and modeling a family of closely related products as separate part-number pages. Left unmanaged, both patterns look like duplicates to Google and compete for the same crawl capacity.
+
+#### Across markets
+
+When you run separate storefronts for regions or locales (for example, North America, Europe, and Asia Pacific), the same product yields a PDP in each storefront. The same category yields a PLP in each one. Handle these deliberately:
+
+- Use **hreflang annotations** so Google understands the regional pages are localized equivalents and serves the right one per region, rather than treating them as duplicates. Each version must reference itself and all alternates, or the annotations are ignored [[23]](https://developers.google.com/search/docs/specialty/international/localized-versions).
+- Give each localized page a **canonical in its own language** rather than canonicalizing every market onto a single URL, which drops the others from search [[20]](https://developers.google.com/search/docs/crawling-indexing/consolidate-duplicate-urls).
+- Count these pages honestly. PDP and PLP counts scale with the number of storefronts, so a modest base catalog can still produce a large page count across markets.
+
+#### Across product families (grouped and bundled products)
+
+A family of closely related products, for example, the same part sold in 100+ configurations within a category, can produce a large number of individual, near-identical part-number PDPs. By default, each part-number PDP gets its own self-referencing canonical and hreflang tags, and its own independently generated structured data (JSON-LD). A 100-part family can surface as 100 thin, competing pages when only a handful are worth indexing on their own. This maps to Grouped and Bundled products in Adobe Commerce.
+
+Google's guidance for multi-page product variants addresses this case directly [[17]](https://developers.google.com/search/docs/appearance/structured-data/product-variants#multi-page-website):
+
+- Identify a representative part-number PDP for the family (or the family or group page itself, if one exists), and point the canonical URL for every part-number PDP in that family to the representative page.
+- Replace independent, per-page Product structured data with the `ProductGroup -> hasVariant[]` structure Google recommends for multi-page product variants.
+</Task>
+
+<Task>
+### Sanity-check against catalog and platform math
+
+- PDP count is usually higher than base SKU count. It is base SKUs multiplied by the number of storefronts you run for markets or locales. A small catalog across many locales can still produce a large page count, so plan for the product rather than the raw SKU number.
+- Emit the canonical URL for a product once, and avoid minting a separate indexable page for each category a product belongs to, which invites duplicate-content classification.
+- Respect platform limits (see [Platform limits and realistic expectations](#platform-limits-and-realistic-expectations)), as well as the separate prerendering limits for [AEM Commerce Prerender](/setup/configuration/aem-prerender/#limitations), such as the roughly 10,000-product cap per category path.
+</Task>
+</Tasks>
+
+## Platform limits and realistic expectations
+
+These figures are ceilings rather than targets. Most stores operate well below them.
+
+- Up to **one million pages per site** (recommended maximum) [[13]](https://www.aem.live/docs/limits#number-of-pages-per-site).
+- Up to **fifty thousand pages per individual index** [[14]](https://www.aem.live/docs/limits#indexing-limits).
+- Up to **fifty thousand URLs, or 50 MB, per sitemap file** [[15]](https://www.aem.live/docs/limits#sitemap-limits) [[19]](https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap#general-guidelines). If a site grows past this, split large sites into logical, segmented sitemaps under a sitemap index [[7]](https://www.aem.live/docs/large-sites#large-sitemaps).
+- Up to **one hundred thousand redirects per site** [[16]](https://www.aem.live/docs/limits#redirect-limits). This limit is specific to EDS redirects, which do not support wildcard or query-parameter based rules. For those redirect types, implement them at your BYO CDN. During migration/implementation, prioritize redirects which are both live and actively receiving traffic.
+
+Note for Adobe Commerce Optimizer and Adobe Commerce as a Cloud Service: a plan tier may list a large SKU allowance, for example, 250,000 SKUs at the lowest Adobe Commerce Optimizer tier. The ingestion rate is lower than that headline number, and the practical SSR ceiling is lower still. A SKU allowance is not a guarantee that every SKU becomes a fast, server-rendered, indexed page. Set expectations against ingestion capacity and crawl demand [[13]](https://www.aem.live/docs/limits#number-of-pages-per-site).
+
+## Approaching an SSR or SEO decision together
+
+A few practices help these projects go smoothly:
+
+1. **Start from real data.** Reviewing the site's Google Search Console data (and Merchant Center data where Shopping is involved) grounds the conversation in what Google is doing today, before any page-level decisions are made.
+1. **Look for measurable improvement.** SEO and SSR changes are best validated in Google Search Console. When an experiment shows no measurable movement on SEO metrics, that is a strong signal to keep the simpler configuration. Adobe's header and footer inlining experiment is a useful precedent: measured in GSC, it showed no upside, and the simpler default was retained [[3]](https://www.aem.live/docs/seo-geo#experiment-1-wwwaemlive-includes-header-and-footer-on-the-server-side).
+1. **Treat new SSR work as an experiment first.** For pages the product does not server-side render today, a controlled experiment that demonstrates the SEO benefit is a sound first step before broader adoption [[5]](https://www.aem.live/docs/seo-geo#experiments-with-server-side-header-footer-and-fragment-inclusion-and-other-changes-to-server-sided-markup).
+1. **Frame the plan around crawl demand.** Crawl demand, rather than SKU count, is the number that tells you how many pages are worth optimizing.
+
+## Common misconceptions
+
+<TableWrapper>
+
+| Belief                                                                                  | What is actually true                                                                                                                                                                                                                                                                                                                                |
+| --------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| "All of our SKUs need to be server-side rendered."                                      | SKU count does not drive SSR value. Crawl demand does. Most catalogs have crawl demand for a small fraction of their pages [[10]](https://developers.google.com/crawling/docs/crawl-budget#crawl-demand).                                                                                                                                            |
+| "We need a distinct indexable URL for every filter combination."                        | Most filter and facet combinations belong in Tier 3. They are best kept out of the index and expressed as query parameters. In some cases, a highly controlled, curated subset of high-demand facet combinations can be legitimately worth promoting to indexable landing pages if they are important to your site.                                  |
+| "Our Merchant Center feed has millions of items, so we need millions of organic pages." | The Merchant Center feed is a distinct pipeline. It overlaps with organic crawling at the crawler, but feed size does not set organic crawl demand.                                                                                                                                                                                                  |
+| "SSR will improve our rankings."                                                        | SSR affects indexing speed and visibility to non-JavaScript and LLM crawlers. It does not change ranking position [[1]](https://www.aem.live/docs/seo-geo#google-and-other-search-engines). It can indirectly grow overall visibility by getting more pages indexed in the first place, but it doesn't move an already-indexed page up the results. |
+| "More published pages means more chances to rank."                                      | Google indexes only as many pages as it is willing to. Extra low-demand pages create a crawl backlog rather than new ranking opportunities [[6]](https://www.aem.live/docs/large-sites#google-limits) [[10]](https://developers.google.com/crawling/docs/crawl-budget#crawl-demand).                                                                 |
+| "Googlebot can't run JavaScript, so client-rendered pages won't get indexed."           | Googlebot renders JavaScript, so CSR pages can be indexed. The gap is speed and reliability, not eligibility — CSR pages wait for a second, JavaScript-rendering pass, while SSR content is indexable on the first pass (see [What SSR does and does not do](#what-ssr-does-and-does-not-do)).                                                                                                             |
+| "Disallowing a page in robots.txt removes it from the index."                           | A robots.txt disallow blocks crawling, not indexing. A disallowed URL can still be indexed based on other signals such as external links, typically with little or no content or snippet, because Google cannot crawl the page to see what's on it (see [Handle exclusion correctly](#handle-exclusion-correctly-noindex-nofollow-and-robotstxt)).                                                                          |
+| "If it's in the sitemap, Google will index it."                                         | Sitemaps aid discovery. They do not guarantee indexing. Google still determines whether a submitted URL is worth indexing.                                                                                                                                                                                                                           |
+| "Once a page is indexed, it stays indexed."                                             | Google can later decide an indexed page is duplicate, low-value, or otherwise not worth keeping, and drop it from the index.                                                                                                                                                                                                                         |
+
+</TableWrapper>
+
+## Quick reference
+
+- Rendering, crawling, indexing, and ranking are four separate things. SSR touches only the first, and affects speed of indexing and visibility to non-JavaScript and LLM crawlers [[4]](https://www.aem.live/docs/seo-geo#large-language-models-llm).
+- Crawl demand is the ceiling. A site should only ever have as many pages as Google is willing to index [[6]](https://www.aem.live/docs/large-sites#google-limits).
+- Start from Google Search Console. It is the source of truth for what Google wants. Google Merchant Center is a separate feed pipeline, not a count of organic pages.
+- Tier your pages. Server-side render canonical content for high-demand pages, use client-side rendering for dynamic views, and keep facet, filter, and search pages out of the index.
+- Keep state in query parameters, and reserve paths for canonical pages [[18]](https://developers.google.com/search/docs/fundamentals/seo-starter-guide#group-topically).
+- Block pages you never want crawled in `robots.txt`, rather than relying on `noindex` alone [[12]](https://developers.google.com/crawling/docs/crawl-budget#best_practices).
+- PDP count is base SKUs multiplied by storefronts, and platform and ingestion limits are lower than headline SKU allowances [[13]](https://www.aem.live/docs/limits#number-of-pages-per-site).
+
+## References
+
+Each reference links to the specific section that supports the marked statement.
+
+1. Adobe, SEO and GEO best practices, "Google (and other Search Engines)": [https://www.aem.live/docs/seo-geo#google-and-other-search-engines](https://www.aem.live/docs/seo-geo#google-and-other-search-engines)
+1. Adobe, SEO and GEO best practices, "Server-Side versus Client-Side Rendering": [https://www.aem.live/docs/seo-geo#server-side-vs-client-side-rendering](https://www.aem.live/docs/seo-geo#server-side-vs-client-side-rendering)
+1. Adobe, SEO and GEO best practices, "Experiment #1: www.aem.live includes header and footer on the server side": [https://www.aem.live/docs/seo-geo#experiment-1-wwwaemlive-includes-header-and-footer-on-the-server-side](https://www.aem.live/docs/seo-geo#experiment-1-wwwaemlive-includes-header-and-footer-on-the-server-side)
+1. Adobe, SEO and GEO best practices, "Large Language Models (LLM)": [https://www.aem.live/docs/seo-geo#large-language-models-llm](https://www.aem.live/docs/seo-geo#large-language-models-llm)
+1. Adobe, SEO and GEO best practices, "Experiments with server-side header, footer, and fragment inclusion": [https://www.aem.live/docs/seo-geo#experiments-with-server-side-header-footer-and-fragment-inclusion-and-other-changes-to-server-sided-markup](https://www.aem.live/docs/seo-geo#experiments-with-server-side-header-footer-and-fragment-inclusion-and-other-changes-to-server-sided-markup)
+1. Adobe, Large sites, "Google limits": [https://www.aem.live/docs/large-sites#google-limits](https://www.aem.live/docs/large-sites#google-limits)
+1. Adobe, Large sites, "Large sitemaps": [https://www.aem.live/docs/large-sites#large-sitemaps](https://www.aem.live/docs/large-sites#large-sitemaps)
+1. Google, Crawl budget management, "General theory of crawling": [https://developers.google.com/crawling/docs/crawl-budget#general_theory](https://developers.google.com/crawling/docs/crawl-budget#general_theory)
+1. Google, Crawl budget management, "Crawl capacity limit": [https://developers.google.com/crawling/docs/crawl-budget#crawl-capacity-limit](https://developers.google.com/crawling/docs/crawl-budget#crawl-capacity-limit)
+1. Google, Crawl budget management, "Crawl demand": [https://developers.google.com/crawling/docs/crawl-budget#crawl-demand](https://developers.google.com/crawling/docs/crawl-budget#crawl-demand)
+1. Google, Crawl budget management, "Who this guide is for": [https://developers.google.com/crawling/docs/crawl-budget#who-this-guide](https://developers.google.com/crawling/docs/crawl-budget#who-this-guide)
+1. Google, Crawl budget management, "Best practices": [https://developers.google.com/crawling/docs/crawl-budget#best_practices](https://developers.google.com/crawling/docs/crawl-budget#best_practices)
+1. Adobe, Limits, "Number of pages per site": [https://www.aem.live/docs/limits#number-of-pages-per-site](https://www.aem.live/docs/limits#number-of-pages-per-site)
+1. Adobe, Limits, "Indexing Limits": [https://www.aem.live/docs/limits#indexing-limits](https://www.aem.live/docs/limits#indexing-limits)
+1. Adobe, Limits, "Sitemap Limits": [https://www.aem.live/docs/limits#sitemap-limits](https://www.aem.live/docs/limits#sitemap-limits)
+1. Adobe, Limits, "Redirect Limits": [https://www.aem.live/docs/limits#redirect-limits](https://www.aem.live/docs/limits#redirect-limits)
+1. Google, Product variants structured data, "Multi-page website": [https://developers.google.com/search/docs/appearance/structured-data/product-variants#multi-page-website](https://developers.google.com/search/docs/appearance/structured-data/product-variants#multi-page-website)
+1. Google, SEO starter guide, "Group topically similar pages in directories": [https://developers.google.com/search/docs/fundamentals/seo-starter-guide#group-topically](https://developers.google.com/search/docs/fundamentals/seo-starter-guide#group-topically)
+1. Google, Build and submit a sitemap, "Sitemap best practices" (50 MB or 50,000 URL limit): [https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap#general-guidelines](https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap#general-guidelines)
+1. Google, Consolidate duplicate URLs (canonicalization and duplicate classification): [https://developers.google.com/search/docs/crawling-indexing/consolidate-duplicate-urls](https://developers.google.com/search/docs/crawling-indexing/consolidate-duplicate-urls)
+1. Google Merchant Center Help, About landing page requirements (Googlebot crawls landing pages to verify feed data): [https://support.google.com/merchants/answer/4752265](https://support.google.com/merchants/answer/4752265)
+1. Google Merchant Center Help, Show your products for free on Google (products appear across Google surfaces): [https://support.google.com/merchants/answer/13692890](https://support.google.com/merchants/answer/13692890)
+1. Google, Tell Google about localized versions of your page (hreflang, self and mutual references): [https://developers.google.com/search/docs/specialty/international/localized-versions](https://developers.google.com/search/docs/specialty/international/localized-versions)

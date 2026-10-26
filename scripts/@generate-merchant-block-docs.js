@@ -1426,9 +1426,9 @@ function generateSectionMetadataTable(blockName) {
     output += `</tbody>\n`;
     output += `</table>\n\n`;
 
-    output += `<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0 2rem 0;">\n`;
-    output += `<strong>Learn more:</strong> See the <a href="/merchants/storefront-builder/section-metadata/">Section Metadata guide</a> for all available values and the <a href="/merchants/storefront-builder/page-metadata/">Page Metadata guide</a> for SEO and caching options.\n`;
-    output += `</div>\n\n`;
+    output += `<Aside type="tip" title="Learn more">\n\n`;
+    output += `See the [Section Metadata guide](/merchants/quick-start/section-metadata/) for all available values and the [Page Metadata guide](/merchants/quick-start/page-metadata/) for SEO and caching options.\n\n`;
+    output += `</Aside>\n\n`;
 
     return output;
 }
@@ -1820,6 +1820,8 @@ description: ${description}
 sidebar:
   label: ${sidebarLabel}
 ---
+
+import { Aside } from '@astrojs/starlight/components';
 
 ${description}
 

@@ -278,7 +278,6 @@ function generateDictionaryMDX(repoName, repoConfig, dictionaryData, versionInfo
         'DROPIN_KEY': repoName,  // kebab-case key for filenames
         'DROPIN_VAR': dictionaryVarName,  // camelCase variable name
         'DROPIN_PACKAGE': repoConfig.packageName,
-        'DROPIN_VERSION': cleanVersion(version),
         'DICTIONARY_JSON': dictionaryJson,
         'CUSTOM_EXAMPLE': indentedExample,
         'REPO_URL': repoConfig.gitUrl.replace('.git', '')

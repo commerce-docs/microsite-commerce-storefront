@@ -1,0 +1,539 @@
+---
+// All Pagefind coupling lives in this one file. Two facts drive the design:
+//   1. The site runs under a base path in production, so the Pagefind bundle
+//      lives at `<base>/pagefind/`. We compute that the same way Starlight's
+//      own Search component does, from import.meta.env.BASE_URL.
+//   2. Pagefind only exists in a production build, never in `astro dev`. When
+//      it is absent (dev, or a broken upgrade), the box falls back to opening
+//      Starlight's existing search modal, so it is never a dead input.
+// We use Pagefind's documented JS API (pagefind.js) and render results into
+// our own themed markup, rather than the @pagefind/default-ui widget, so the
+// results inherit the site's design tokens and carry no third-party CSS.
+---
+
+<div class='home-search' data-home-search>
+  <form class='home-search__form' role='search' data-home-search-form>
+    <svg
+      class='home-search__icon'
+      aria-hidden='true'
+      width='20'
+      height='20'
+      viewBox='0 0 24 24'
+      fill='none'>
+      <circle cx='11' cy='11' r='7' stroke='currentColor' stroke-width='2'></circle>
+      <line
+        x1='16.5'
+        y1='16.5'
+        x2='21'
+        y2='21'
+        stroke='currentColor'
+        stroke-width='2'
+        stroke-linecap='round'></line>
+    </svg>
+    <input
+      type='search'
+      class='home-search__input'
+      data-home-search-input
+      placeholder='Search the documentation'
+      aria-label='Search the documentation'
+      role='combobox'
+      aria-expanded='false'
+      aria-controls='home-search-listbox'
+      aria-autocomplete='list'
+      autocomplete='off'
+    />
+    <kbd class='home-search__kbd' aria-hidden='true'>⌘&nbsp;K</kbd>
+  </form>
+
+  <div class='home-search__panel' data-home-search-panel hidden>
+    <ul
+      id='home-search-listbox'
+      class='home-search__list'
+      role='listbox'
+      aria-label='Search results'
+      data-home-search-list>
+    </ul>
+    <p class='home-search__empty' data-home-search-empty hidden>No results found.</p>
+    {
+      import.meta.env.DEV && (
+        <p class='home-search__notice' data-home-search-notice hidden>
+          Search isn't available in this preview. It works on the published site.
+        </p>
+      )
+    }
+  </div>
+  <div class='home-search__status' role='status' aria-live='polite' data-home-search-status></div>
+</div>
+
+<script>
+  type PagefindResultData = {
+    url: string;
+    excerpt: string;
+    meta?: { title?: string };
+  };
+  type PagefindModule = {
+    init?: () => Promise<void>;
+    debouncedSearch: (
+      term: string
+    ) => Promise<{ results: { data: () => Promise<PagefindResultData> }[] } | null>;
+  };
+
+  const MAX_RESULTS = 8;
+
+  // Mirror Starlight's own bundlePath computation so we share its source of
+  // truth for where Pagefind lives, base path included.
+  const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+  const PAGEFIND_API = `${base}/pagefind/pagefind.js`;
+
+  const root = document.querySelector<HTMLElement>('[data-home-search]');
+  const form = root?.querySelector<HTMLFormElement>('[data-home-search-form]');
+  const input = root?.querySelector<HTMLInputElement>('[data-home-search-input]');
+  const panel = root?.querySelector<HTMLElement>('[data-home-search-panel]');
+  const list = root?.querySelector<HTMLUListElement>('[data-home-search-list]');
+  const empty = root?.querySelector<HTMLElement>('[data-home-search-empty]');
+  const notice = root?.querySelector<HTMLElement>('[data-home-search-notice]');
+  const status = root?.querySelector<HTMLElement>('[data-home-search-status]');
+
+  let pagefindPromise: Promise<PagefindModule | null> | null = null;
+  let activeIndex = -1;
+
+  /** Open Starlight's existing search modal — the automatic fallback. */
+  function openStarlightModal(): boolean {
+    const trigger = document.querySelector<HTMLButtonElement>('button[data-open-modal]');
+    if (trigger) {
+      trigger.click();
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Load Pagefind once, lazily, sharing a single in-flight promise so that
+   * warming on focus and the first keystroke await the same load. Resolves to
+   * null when the bundle is absent (dev or a moved path), which is the signal
+   * to fall back to the modal.
+   */
+  function ensurePagefind(): Promise<PagefindModule | null> {
+    if (!pagefindPromise) {
+      pagefindPromise = (async () => {
+        try {
+          // Import Pagefind's JS API directly, the way Starlight does. A
+          // missing bundle throws here and we fall back to the modal.
+          const mod = (await import(/* @vite-ignore */ PAGEFIND_API)) as PagefindModule;
+          await mod.init?.();
+          return mod;
+        } catch {
+          return null;
+        }
+      })();
+    }
+    return pagefindPromise;
+  }
+
+  function closePanel(): void {
+    if (!panel || !input) return;
+    panel.hidden = true;
+    input.setAttribute('aria-expanded', 'false');
+    input.removeAttribute('aria-activedescendant');
+    activeIndex = -1;
+  }
+
+  /** Announce result counts politely for screen-reader users. */
+  function announce(message: string): void {
+    if (status) status.textContent = message;
+  }
+
+  /** Dev builds ship no Pagefind index, so surface the notice instead of
+   * failing silently. The notice element only exists under `astro dev`. */
+  function showNotice(): void {
+    if (!panel || !notice || !input || !list || !empty) return;
+    list.innerHTML = '';
+    activeIndex = -1;
+    empty.hidden = true;
+    notice.hidden = false;
+    panel.hidden = false;
+    input.setAttribute('aria-expanded', 'true');
+    announce(notice.textContent?.trim() ?? '');
+  }
+
+  function setActive(next: number): void {
+    if (!list || !input) return;
+    const options = Array.from(list.querySelectorAll<HTMLElement>('[role="option"]'));
+    if (options.length === 0) return;
+    activeIndex = (next + options.length) % options.length;
+    options.forEach((opt, i) => {
+      const isActive = i === activeIndex;
+      opt.classList.toggle('is-active', isActive);
+      opt.setAttribute('aria-selected', String(isActive));
+      if (isActive) input.setAttribute('aria-activedescendant', opt.id);
+    });
+  }
+
+  /**
+   * Pagefind indexes our page <h1> and joins it to the first body block with
+   * ". ", so an excerpt window that overlaps the title opens with the title —
+   * or a trailing slice of it when Pagefind drops the first word or two — the
+   * same string already shown as the bold result title. Detect that leading
+   * title fragment (the text before the first ". ", matched to a word-aligned
+   * tail of the title) and drop it, so the excerpt shows real body content while
+   * keeping Pagefind's <mark> highlights on the remainder. Also trims a stray
+   * leading space from windows that start just after the title's separator.
+   */
+  function stripLeadingExcerptTitle(excerptHtml: string, title?: string): string {
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = excerptHtml;
+
+    const fullText = wrapper.textContent ?? '';
+    const leadingWs = fullText.length - fullText.trimStart().length;
+
+    // Always drop leading whitespace; additionally drop a leading title fragment.
+    let toRemove = leadingWs;
+    let strippedTitle = false;
+    const trimmedTitle = title?.trim();
+    if (trimmedTitle) {
+      const afterWs = fullText.slice(leadingWs);
+      const sep = afterWs.indexOf('. ');
+      const lead = sep === -1 ? '' : afterWs.slice(0, sep);
+      const isTitleTail =
+        lead.length > 0 &&
+        lead.length <= trimmedTitle.length &&
+        trimmedTitle.toLowerCase().endsWith(lead.toLowerCase()) &&
+        (lead.length === trimmedTitle.length ||
+          trimmedTitle[trimmedTitle.length - lead.length - 1] === ' ');
+      if (isTitleTail) {
+        toRemove = leadingWs + sep + 2; // whitespace + title tail + ". "
+        strippedTitle = true;
+      }
+    }
+    if (toRemove === 0) return excerptHtml;
+
+    // Empty the leading run node-by-node so any <mark> tags Pagefind wrapped
+    // around title words are cleared too.
+    const walker = document.createTreeWalker(wrapper, NodeFilter.SHOW_TEXT);
+    let node = walker.nextNode();
+    while (node && toRemove > 0) {
+      const value = node.nodeValue ?? '';
+      if (value.length <= toRemove) {
+        toRemove -= value.length;
+        node.nodeValue = '';
+      } else {
+        node.nodeValue = value.slice(toRemove);
+        toRemove = 0;
+      }
+      node = walker.nextNode();
+    }
+
+    if (strippedTitle) {
+      // Drop a separator left dangling after the title (". ", ": ", " — ", …).
+      const trimWalker = document.createTreeWalker(wrapper, NodeFilter.SHOW_TEXT);
+      let firstText = trimWalker.nextNode();
+      while (firstText && firstText.nodeValue === '') firstText = trimWalker.nextNode();
+      if (firstText) {
+        firstText.nodeValue = (firstText.nodeValue ?? '').replace(/^[\s.:;,—–-]+/, '');
+      }
+      // Remove now-empty <mark> wrappers that only held title words.
+      wrapper.querySelectorAll('mark').forEach((mark) => {
+        if (!mark.textContent) mark.remove();
+      });
+    }
+
+    return (wrapper.textContent ?? '').trim() ? wrapper.innerHTML : excerptHtml;
+  }
+
+  function renderResults(results: PagefindResultData[]): void {
+    if (!list || !panel || !input || !empty) return;
+    list.innerHTML = '';
+    activeIndex = -1;
+
+    if (results.length === 0) {
+      empty.hidden = false;
+      panel.hidden = false;
+      input.setAttribute('aria-expanded', 'true');
+      announce('No results found.');
+      return;
+    }
+
+    empty.hidden = true;
+    results.forEach((result, i) => {
+      const li = document.createElement('li');
+      li.id = `home-search-option-${i}`;
+      li.className = 'home-search__option';
+      li.setAttribute('role', 'option');
+      li.setAttribute('aria-selected', 'false');
+
+      const link = document.createElement('a');
+      link.className = 'home-search__result';
+      link.href = result.url.replace(/index\.html$/, '');
+
+      const title = document.createElement('span');
+      title.className = 'home-search__result-title';
+      title.textContent = result.meta?.title ?? result.url;
+
+      const excerpt = document.createElement('span');
+      excerpt.className = 'home-search__result-excerpt';
+      // Pagefind's <mark>-annotated excerpt anchors on our weighted <h1>, so a
+      // title match makes it repeat the title shown above. Drop that leading
+      // title while keeping <mark> highlights on the body remainder.
+      excerpt.innerHTML = stripLeadingExcerptTitle(result.excerpt, result.meta?.title);
+
+      link.append(title, excerpt);
+      li.append(link);
+      list.append(li);
+    });
+
+    panel.hidden = false;
+    input.setAttribute('aria-expanded', 'true');
+    announce(`${results.length} result${results.length === 1 ? '' : 's'} available.`);
+  }
+
+  async function runSearch(term: string): Promise<void> {
+    if (!term) {
+      closePanel();
+      return;
+    }
+
+    // Dev builds have no Pagefind index; show the notice rather than fall back.
+    if (notice) {
+      showNotice();
+      return;
+    }
+
+    const pf = await ensurePagefind();
+    if (!pf) {
+      // No inline index available — hand off to Starlight's modal instead.
+      openStarlightModal();
+      return;
+    }
+
+    const search = await pf.debouncedSearch(term);
+    if (search === null) return; // superseded by a newer keystroke
+    const data = await Promise.all(search.results.slice(0, MAX_RESULTS).map((r) => r.data()));
+    renderResults(data);
+  }
+
+  input?.addEventListener('focus', () => {
+    // Dev builds have no index: surface the notice on focus instead of warming a
+    // bundle that will 404. In production the notice element is absent.
+    if (notice) {
+      showNotice();
+      return;
+    }
+    void ensurePagefind();
+  });
+
+  input?.addEventListener('input', () => {
+    const term = input.value.trim();
+    if (!term) announce('');
+    void runSearch(term);
+  });
+
+  input?.addEventListener('keydown', (event) => {
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      setActive(activeIndex + 1);
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      setActive(activeIndex - 1);
+    } else if (event.key === 'Enter') {
+      const active = list?.querySelector<HTMLAnchorElement>('.is-active .home-search__result');
+      const first = list?.querySelector<HTMLAnchorElement>('.home-search__result');
+      const target = active ?? first;
+      if (target) {
+        event.preventDefault();
+        window.location.href = target.href;
+      }
+    } else if (event.key === 'Escape') {
+      closePanel();
+    }
+  });
+
+  form?.addEventListener('submit', (event) => event.preventDefault());
+
+  // Bind the ⌘K / Ctrl+K shortcut the box advertises. Starlight's own global
+  // shortcut lives in its Search component, which the splash home page does not
+  // render, so we focus this input ourselves.
+  window.addEventListener('keydown', (event) => {
+    if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
+      event.preventDefault();
+      input?.focus();
+      input?.select();
+    }
+  });
+
+  document.addEventListener('click', (event) => {
+    if (root && !root.contains(event.target as Node)) closePanel();
+  });
+</script>
+
+<style>
+  .home-search {
+    position: relative;
+    width: 100%;
+    max-width: 52rem;
+    margin: 0 auto;
+  }
+
+  .home-search__form {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0.9rem 1.25rem;
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 0.75rem;
+    background: var(--sl-color-black);
+    box-shadow:
+      0 0 0 1px color-mix(in oklch, var(--sl-color-accent) 45%, transparent),
+      0 0 24px -2px color-mix(in oklch, var(--sl-color-accent) 30%, transparent);
+    transition:
+      border-color 0.15s ease,
+      box-shadow 0.2s ease;
+  }
+
+  .home-search__form:focus-within {
+    border-color: var(--sl-color-accent);
+    box-shadow:
+      0 0 0 1px color-mix(in oklch, var(--sl-color-accent) 70%, transparent),
+      0 0 32px 0 color-mix(in oklch, var(--sl-color-accent) 55%, transparent);
+  }
+
+  .home-search__icon {
+    flex-shrink: 0;
+    color: var(--sl-color-gray-3);
+  }
+
+  .home-search__input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    color: var(--sl-color-white);
+    font-size: var(--sl-text-lg);
+    line-height: 1.4;
+  }
+
+  .home-search__input:focus {
+    outline: none;
+  }
+
+  .home-search__input::placeholder {
+    color: var(--sl-color-gray-3);
+  }
+
+  /* Hide the native search-clear affordance so the control stays on-theme. */
+  .home-search__input::-webkit-search-decoration,
+  .home-search__input::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  .home-search__kbd {
+    flex-shrink: 0;
+    padding: 0.2rem 0.5rem;
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 0.375rem;
+    color: var(--sl-color-gray-3);
+    font-family: var(--sl-font);
+    font-size: var(--sl-text-xs);
+  }
+
+  /* Visually hidden, still announced by assistive tech. */
+  .home-search__status {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .home-search__panel {
+    position: absolute;
+    z-index: 10;
+    inset-inline: 0;
+    margin-top: 0.5rem;
+    padding: 0.5rem;
+    max-height: 24rem;
+    overflow-y: auto;
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 0.75rem;
+    background: var(--sl-color-black);
+    box-shadow: var(--sl-shadow-lg);
+    text-align: start;
+  }
+
+  .home-search__list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* Results are injected at runtime with createElement, so they never receive
+     Astro's scoped-style attribute. Scope on the static .home-search root and
+     mark the runtime descendants :global so these rules actually reach them. */
+  .home-search :global(.home-search__option + .home-search__option) {
+    border-top: 1px solid var(--sl-color-gray-6);
+  }
+
+  .home-search :global(.home-search__result) {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    padding: 0.7rem 0.85rem;
+    border-radius: 0.5rem;
+    text-decoration: none;
+    transition: background 0.12s ease;
+  }
+
+  .home-search :global(.home-search__option.is-active .home-search__result),
+  .home-search :global(.home-search__result:hover) {
+    background: var(--sl-color-accent-low);
+  }
+
+  .home-search :global(.home-search__result-title) {
+    color: var(--sl-color-white);
+    font-weight: 600;
+    font-size: var(--sl-text-base);
+    line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .home-search :global(.home-search__result-excerpt) {
+    color: var(--sl-color-gray-2);
+    font-size: var(--sl-text-sm);
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+  }
+
+  .home-search :global(.home-search__result-excerpt mark) {
+    background: var(--sl-color-accent-low);
+    color: var(--sl-color-text-accent);
+    font-weight: 600;
+    border-radius: 3px;
+    padding: 0 0.15em;
+  }
+
+  .home-search__empty {
+    margin: 0;
+    padding: 0.65rem 0.75rem;
+    color: var(--sl-color-gray-3);
+    font-size: var(--sl-text-sm);
+  }
+
+  .home-search__notice {
+    margin: 0;
+    padding: 0.65rem 0.75rem;
+    color: var(--sl-color-gray-2);
+    font-size: var(--sl-text-sm);
+    line-height: 1.5;
+  }
+</style>

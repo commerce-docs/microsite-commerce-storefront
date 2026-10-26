@@ -1,0 +1,91 @@
+---
+title: Enrichment configuration
+description: Configure query.yaml so your storefront generates the enrichment.json file that maps enrichment content to products and categories.
+slug: setup/configuration/enrichment
+---
+
+import Aside from '@components/Aside.astro';
+import { Code } from '@astrojs/starlight/components';
+import Tasks from '@components/Tasks.astro';
+import Task from '@components/Task.astro';
+import Callouts from '@components/Callouts.astro';
+import Link from '@components/Link.astro';
+
+Before a content author can add [enrichment content](/merchants/content-customizations/enrichment/) to product pages, configure your `query.yaml` file so the storefront can automatically generate the `enrichment.json` file it depends on.
+
+<Aside type="caution">
+Configure `query.yaml` before anyone authors enrichment content. Manually creating `enrichment.json` instead of generating it from `query.yaml` is the most common cause of enrichment failures.
+</Aside>
+
+<Tasks>
+
+<Task>
+### Configure query.yaml to generate enrichment.json
+
+To include the enrichment index configuration, configure your `helix-query.yaml` or the `query.yaml` pushed to your Helix site config.
+
+<Code code={`version: 1
+indices:
+  enrichment:
+    target: /enrichment/enrichment.json
+    include:
+      - '**/enrichment/**'
+    properties:
+      title:
+        select: head > meta[property="og:title"]
+        value: |
+          attribute(el, 'content')
+      products:
+        select: head > meta[name="enrichment-products"]
+        values: |
+          match(attribute(el, 'content'), '([^,]+)')
+      categories:
+        select: head > meta[name="enrichment-categories"]
+        values: |
+          match(attribute(el, 'content'), '([^,]+)')
+      positions:
+        select: head > meta[name="enrichment-positions"]
+        values: |
+          match(attribute(el, 'content'), '([^,]+)')`} lang="yaml" title="query.yaml enrichment index configuration" />
+
+The `/enrichment/enrichment.json` file is generated automatically from this configuration — you don't need to create it manually.
+
+</Task>
+
+<Task>
+### Choose the correct location for your query.yaml
+
+You have two options for where to place your `query.yaml` configuration:
+
+**Option 1: Site-specific configuration (recommended for Helix 5)**
+- Configure at: `https://admin.hlx.page/config/[ORG]/sites/[SITE]/content/query.yaml`
+- Each site has its own independent configuration, so multiple sites don't conflict.
+
+**Option 2: GitHub-based configuration**
+- Place as `helix-query.yaml` in your GitHub repository.
+- All sites that share this codebase share this configuration, so use this option for multi-site deployments with shared configuration.
+
+<Aside type="tip">
+For the complete `query.yaml` configuration, including all required indices, see the <Link href={"https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/default-query.yaml"} text={"AEM boilerplate repository"} />.
+</Aside>
+
+</Task>
+
+</Tasks>
+
+To allow your content author to [add enrichment content](/merchants/content-customizations/enrichment/#add-content-blocks), provide access to the storefront once `enrichment.json` is generated correctly.
+
+## Troubleshooting
+
+<Callouts columnCount="1">
+
+**Enrichment content doesn't appear on product pages**
+
+- **Verify the `query.yaml` configuration**: Confirm the enrichment index is configured with the correct `include` pattern (`'**/enrichment/**'`).
+- **Confirm the enrichment target**: Check that `target: /enrichment/enrichment.json` is present in your configuration.
+- **Compare against the boilerplate**: Check your `query.yaml` against the <Link href={"https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/default-query.yaml"} text={"default-query.yaml"} /> in the AEM boilerplate repository.
+- **Check the browser console**: Identify JavaScript errors that prevent enrichment from loading.
+
+</Callouts>
+
+If issues continue, check the <Link href={"https://github.com/hlxsites/aem-boilerplate-commerce"} text={"AEM boilerplate repository"} /> for a reference implementation, or contact Adobe Commerce support with the specific error messages from your browser console.

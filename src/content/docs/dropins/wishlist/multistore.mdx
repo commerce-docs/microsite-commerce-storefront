@@ -1,0 +1,161 @@
+---
+title: Wishlist multistore support
+description: Learn how the Wishlist drop-in isolates wishlist data per store view and how to configure it in a multistore storefront.
+sidebar:
+  label: Multistore
+  order: 4
+---
+
+import Aside from '@components/Aside.astro';
+import Link from '@components/Link.astro';
+import TableWrapper from '@components/TableWrapper.astro';
+
+Many merchants serve several store views from a single Adobe Commerce instance—for example, one per country, language, or brand. Each store view can expose different products, prices, and localized experiences, so wishlist data must not leak from one store view to another.
+
+The Wishlist drop-in supports multistore storefronts. When you pass a `storeCode` during initialization, the drop-in scopes browser storage and the wishlist ID cookie to the current store view.
+
+`storeCode` isolates guest wishlist data and cached authenticated wishlist data per store view. It does not change the authoritative wishlist scope in Adobe Commerce.
+
+
+## What multistore support solves
+
+Browser storage is scoped to the browser origin, while the wishlist ID cookie is scoped to the host. In typical storefront deployments, store views on the same domain share both unless `storeCode` is configured. For example, `example.com/es` and `example.com/fr` share client-side wishlist data, while `es.example.com` and `fr.example.com` do not.
+
+When store views share client-side storage and no `storeCode` is set, you see the following symptoms:
+
+- Guest wishlist data added on one store view appears on another store view.
+- Customers see items that they did not add to the current store view.
+- Removing an item fails because the item belongs to a different store view.
+- Item counts do not match the items rendered in the wishlist.
+
+With a `storeCode`, each store view keeps its own storage namespace, so these behaviors disappear.
+
+## Configure the storeCode
+
+Pass the `storeCode` option to the Wishlist initializer. In the Commerce Boilerplate, the value comes from the `Store` header defined in `config.json`, which holds the Adobe Commerce store view code:
+
+```javascript title="scripts/initializers/wishlist.js"
+const headers = getHeaders('wishlist');
+
+return initializers.mountImmediately(initialize, {
+  langDefinitions,
+  isGuestWishlistEnabled: true,
+  storeCode: headers.Store,
+});
+```
+
+The `Store` header is defined per path in `config.json`, so each store view automatically resolves to its own value:
+
+```json title="config.json"
+{
+  "public": {
+    "default": {
+      "headers": {
+        "all": { "Store": "default" }
+      }
+    },
+    "/fr/": {
+      "headers": {
+        "all": { "Store": "fr" }
+      }
+    }
+  }
+}
+```
+
+<Aside type="tip">
+For the complete header reference and per-path configuration rules, see [Storefront configuration](/setup/configuration/commerce-configuration/) and [Multistore setup](/setup/configuration/multistore-setup/).
+</Aside>
+
+## How data isolation works
+
+The drop-in derives its storage keys and cookie name from the configured `storeCode`:
+
+- When `storeCode` is set to any value other than `default`, the drop-in appends `__<storeCode>` to each base key.
+- When `storeCode` is omitted, empty, or set to `default`, the drop-in uses the original unscoped keys.
+
+<TableWrapper nowrap={[0]}>
+
+| Data | Storage | Key when `storeCode` is omitted or `default` | Key for `storeCode: 'fr'` |
+|---|---|---|---|
+| Wishlist ID | Cookie | `DROPIN__WISHLIST__WISHLIST-ID` | `DROPIN__WISHLIST__WISHLIST-ID__fr` |
+| Wishlist data | `localStorage` (guests) / `sessionStorage` (authenticated) | `DROPIN__WISHLIST__WISHLIST__DATA` | `DROPIN__WISHLIST__WISHLIST__DATA__fr` |
+| All-items cache | `localStorage` (guests) / `sessionStorage` (authenticated) | `DROPIN__WISHLIST__ALL_ITEMS__DATA` | `DROPIN__WISHLIST__ALL_ITEMS__DATA__fr` |
+
+</TableWrapper>
+
+The all-items cache holds every wishlist item across all pages so that the `WishlistToggle` container renders the correct heart-icon state regardless of pagination. It is scoped the same way as the wishlist data.
+
+<Aside type="note" title="Backward compatibility">
+Single-store storefronts, and the default store view in a multistore storefront, continue to use the original unscoped keys. Existing wishlists are not invalidated when you upgrade the drop-in, as long as you do not change the code of your default store view.
+</Aside>
+
+<Aside type="cool" title="In short">
+`storeCode` creates separate browser state per store view. It does not create separate Adobe Commerce wishlists. Authenticated customers share one wishlist across store views of the same website, while SCP (Storefront Compatibility Package) filters which items are visible in each store view.
+</Aside>
+
+## Backend behavior
+
+Scoping the storage keys isolates what the drop-in persists in the browser, but it does not change which items Adobe Commerce returns. For authenticated customers, the GraphQL layer determines the authoritative scope:
+
+- Wishlists are **shared between store views that belong to the same website**. For example, the `es`, `fr`, and `de` store views under a European website share the same wishlist.
+- Wishlists are **not shared between different websites**. Wishlists created on the European website are not visible on the US website, and vice versa.
+
+Guest wishlists are never affected by this, because they live entirely in browser storage and are isolated by the `storeCode` alone.
+
+<Aside type="caution" title="Required Commerce version">
+
+The wishlist remains website-scoped. SCP applies store-view-aware filtering to returned items, item counts, and item removal. This requires **SCP 4.7.17** or later on the 4.7 release line, or **SCP 4.8.19** or later on the 4.8+ release line.
+
+For the SCP versions listed above, wishlist item visibility is scoped by website and store view independently of the customer-account sharing setting. Confirm this behavior for your Commerce version.
+
+</Aside>
+
+## Store-aware links
+
+Wishlist links must include the store view path prefix so that customers stay inside their store view when navigating. The Commerce Boilerplate handles this automatically with `decorateLinks`, which prepends the current root path to internal links—for example, `/wishlist` becomes `/fr/wishlist` on French pages.
+
+If you render wishlist links outside of decorated content, prefix them with the active root path yourself. For details, see [Localizing links](/dropins/all/linking/).
+
+## Verify your setup
+
+Use this checklist to confirm that multistore wishlist behavior works end to end:
+
+1. Confirm that `config.json` defines a distinct `Store` header value for each store view path.
+2. Confirm that `scripts/initializers/wishlist.js` passes `storeCode: headers.Store`.
+3. As a guest, add an item on one store view, switch to another store view, and verify that the wishlist is empty.
+4. Inspect browser storage and confirm that the keys carry the `__<storeCode>` suffix for non-default store views.
+5. As an authenticated customer, add an item on one store view and verify that `items_count` matches the rendered items on every store view of the same website.
+6. For an item available in both store views, remove it from a store view other than the one where it was added, and confirm that the operation succeeds without a "does not belong to the wishlist" error.
+7. Confirm that wishlist links keep the store view path prefix after navigation.
+
+## Troubleshooting
+
+<TableWrapper nowrap={[0]}>
+
+| Symptom | Likely cause | Resolution |
+|---|---|---|
+| Guest wishlist items appear on every store view | `storeCode` not passed to the initializer | Pass `storeCode: headers.Store` in `scripts/initializers/wishlist.js` |
+| Item count is `0` but items render | `items_v2.items` is not store-view-scoped | Upgrade to SCP 4.7.17 or later (4.7 line), or SCP 4.8.19 or later (4.8+ line) |
+| `The wishlist item with ID "…" does not belong to the wishlist` | Removal attempted from a different store view scope | Upgrade to SCP 4.7.17 or later (4.7 line), or SCP 4.8.19 or later (4.8+ line) |
+| Wishlist links drop the store view path prefix | Links rendered outside of decorated content | Prefix links with the active root path or run `decorateLinks` |
+
+</TableWrapper>
+
+## Related resources
+
+- [Wishlist initialization](/dropins/wishlist/initialization/) - Full configuration reference for the drop-in
+- [Wishlist functions](/dropins/wishlist/functions/) - Guest and authenticated storage behavior, and wishlist merging
+- [Multistore setup](/setup/configuration/multistore-setup/) - End-to-end multistore storefront configuration
+- [Storefront configuration](/setup/configuration/commerce-configuration/) - `config.json` and header reference
+- [Localizing links](/dropins/all/linking/) - Keeping navigation inside the active store view
+- <Link href={"https://experienceleague.adobe.com/en/docs/commerce-admin/stores-sales/site-store/store-views"} text={"Store view configuration"} /> - Adobe Commerce Admin guide
+
+
+
+
+
+
+
+
+

@@ -14,17 +14,19 @@ import starlightSidebarTopics from 'starlight-sidebar-topics';
 import { remarkBasePathLinks } from './src/plugins/remarkBasePathLinks';
 import { generateRedirects } from './astro.redirects.mjs';
 import { generateSidebar } from './astro.sidebar.mjs';
+import { PRODUCTION_SITE } from './site.config.js';
 
+// NODE_ENV=production makes Vite replace process.env.NODE_ENV in bundled client
+// code with "production", which is what strips React's (and other packages')
+// dev-only warnings/checks from the output. It also gates production-only
+// features here (for example, loading Adobe Launch - see the analytics script
+// below). It's independent of the base path, which every build (stage or prod)
+// sets explicitly via VITE_BASE_PATH, and independent of Pagefind indexing and
+// compression (SKIP_COMPRESSION), neither of which are gated by NODE_ENV.
 const isProduction = process.env.NODE_ENV === 'production';
-const isGitHub = process.env.NODE_ENV === 'github';
 const skipCompression = process.env.SKIP_COMPRESSION === 'true';
 
-// Determine the base path based on the environment
-const basePath = isProduction
-  ? '/developer/commerce/storefront'
-  : isGitHub
-    ? process.env.VITE_GITHUB_BASE_PATH
-    : '';
+const basePath = process.env.VITE_BASE_PATH || '';
 
 const sdkComponentsDir = path.resolve('./sdk/components');
 const sdkComponentFiles = fs.existsSync(sdkComponentsDir)
@@ -52,7 +54,7 @@ async function config() {
     image: {
       service: passthroughImageService(),
     },
-    site: 'https://experienceleague.adobe.com',
+    site: PRODUCTION_SITE,
     base: basePath,
     markdown: {
       remarkPlugins: [remarkBasePathLinks],
@@ -62,18 +64,51 @@ async function config() {
     trailingSlash: 'ignore',
     outDir: './dist',
     build: {
-      inlineStylesheets: 'always',
+      inlineStylesheets: 'auto',
     },
 
     redirects: generateRedirects(basePath),
 
     integrations: [
+      {
+        name: 'mermaid-diagram-mount',
+        hooks: {
+          'astro:config:setup': ({ injectScript }) => {
+            // Bundles with `mermaid-diagram.client` + `mermaid`. Do not use `import … ?url` from a
+            // component — that emits a partial chunk; a `<script>` in MarkdownContent was not
+            // bundled in production.
+            // Dynamic import keeps the main `page.*.js` entry smaller; Mermaid loads as its own chunk.
+            injectScript('page', `void import('/src/components/diagram/mermaid-global-mount.js');`);
+
+            // Same bundling gap as above: a `<script>` in the MarkdownContent override that only
+            // contains bare `import '…'` statements is silently dropped from the production build
+            // (present in dev, absent from every dist chunk). injectScript is unaffected by that gap.
+            injectScript(
+              'page',
+              `import '/src/scripts/term-tooltip-portal.ts'; import '/src/scripts/anchor-link-copy.ts';`,
+            );
+          },
+        },
+      },
       starlight({
         editLink: {
           baseUrl: 'https://github.com/commerce-docs/microsite-commerce-storefront/edit/release/',
         },
 
         head: [
+          // Real User Monitoring (RUM) — non-AEM EDS standalone script.
+          // data-rate="high" → weight 10 → ~1-in-10 pageviews sampled.
+          // CSP requirement: allow https://rum.hlx.page as script-src and connect-src.
+          {
+            tag: 'script',
+            attrs: {
+              defer: true,
+              fetchpriority: 'low',
+              'data-rate': 'high',
+              type: 'text/javascript',
+              src: 'https://rum.hlx.page/.rum/@adobe/helix-rum-js@^2/dist/rum-standalone.js',
+            },
+          },
           // DNS prefetch for the site's own domain
           {
             tag: 'link',
@@ -106,7 +141,6 @@ async function config() {
             content: `
               /* Critical mobile-first styles for instant LCP */
               @media (max-width:50rem){
-                body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Helvetica Neue',Arial,sans-serif}
                 .page{display:flex;flex-direction:column;min-height:100vh}
                 .hero{display:flex;justify-content:center;align-items:center;padding:1.5rem 1rem;width:100%}
                 .hero .stack{flex-direction:column;gap:2rem;text-align:center;align-items:center}
@@ -142,12 +176,20 @@ async function config() {
                     var s = document.createElement('script');
                     s.src = 'https://assets.adobedtm.com/d4d114c60e50/9f881954c8dc/launch-7a902c4895c3.min.js';
                     s.async = true;
+                    s.fetchPriority = 'low';
                     document.head.appendChild(s);
                   }
-                  if ('requestIdleCallback' in window) {
-                    requestIdleCallback(loadLaunch, { timeout: 3000 });
+                  function scheduleLaunch(){
+                    if ('requestIdleCallback' in window) {
+                      requestIdleCallback(loadLaunch, { timeout: 3000 });
+                    } else {
+                      setTimeout(loadLaunch, 2000);
+                    }
+                  }
+                  if (document.readyState === 'complete') {
+                    scheduleLaunch();
                   } else {
-                    setTimeout(loadLaunch, 2000);
+                    window.addEventListener('load', scheduleLaunch, { once: true });
                   }
                   ['pointerdown','keydown','scroll','touchstart'].forEach(function(evt){
                     window.addEventListener(evt, loadLaunch, { once: true, passive: true });
@@ -179,7 +221,13 @@ async function config() {
           starlightHeadingBadges(),
           starlightLinksValidator({
             errorOnFallbackPages: false,
-            errorOnInconsistentLocale: true,
+            // Generated static bundles; `**/` matches base-prefixed URLs (for example, GitHub Pages).
+            exclude: [
+              '**/llms.txt',
+              '**/llms-full.txt',
+              '**/llms-small.txt',
+              '**/_llms-txt/**',
+            ],
           }),
           starlightImageZoom({ showCaptions: false }),
         ],
@@ -198,6 +246,19 @@ async function config() {
           ContentPanel: './src/components/overrides/ContentPanel.astro',
           CardGrid: './src/components/CardGrid.astro',
           Pagination: './src/components/overrides/Pagination.astro',
+          MarkdownContent: './src/components/overrides/MarkdownContent.astro',
+        },
+
+        pagefind: {
+          ranking: {
+            // Starlight's maximum and default value. Pagefind's own default is 1.4.
+            // Ranking improvements on this site come from two other mechanisms:
+            // the h1 weight boost in PageTitle.astro (data-pagefind-weight="300")
+            // and the body de-weighting in MarkdownContent.astro for high-volume
+            // index pages (data-pagefind-weight="0.1"). This value was tuned by
+            // testing and left at 2.0 after those two changes produced better results.
+            termSaturation: 2.0,
+          },
         },
 
         customCss: [
@@ -214,6 +275,7 @@ async function config() {
         logo: {
           src: './src/assets/sitelogo.svg',
           replacesTitle: false,
+          alt: 'Adobe Commerce Storefront Logo',
         },
 
         social: [
@@ -229,6 +291,49 @@ async function config() {
     ],
 
     vite: {
+      plugins: [
+        {
+          // Patch the Vite logger after config is resolved so the filter applies
+          // to all logging paths, including environment-level loggers in Vite 6+.
+          name: 'suppress-known-build-warnings',
+          configResolved(resolvedConfig) {
+            const isKnownSafe = (msg) =>
+              typeof msg === 'string' && (
+                // Public SVG assets used in CSS url() — resolved correctly by the browser
+                // at runtime even though Vite can't resolve them at build time.
+                (msg.includes("didn't resolve at build time") && (
+                  msg.includes('hero-bg-light.svg') ||
+                  msg.includes('hero-bg-dark.svg')
+                )) ||
+                // Empty chunk from starlight-heading-badges — deduplication artifact.
+                (msg.includes('empty chunk') && msg.includes('HeadingBadgesTableOfContents')) ||
+                // Unused import noise from expressive-code packages.
+                (msg.includes('@expressive-code/plugin-text-markers') && msg.includes('never used'))
+              );
+
+            const patchLogger = (logger) => {
+              if (!logger) return;
+              for (const method of ['warn', 'warnOnce']) {
+                const original = logger[method]?.bind(logger);
+                if (original) {
+                  logger[method] = (msg, opts) => { if (!isKnownSafe(msg)) original(msg, opts); };
+                }
+              }
+            };
+
+            // Patch the root logger.
+            patchLogger(resolvedConfig.logger);
+            // Patch each environment logger (Vite 6+). Environment-level loggers are
+            // separate instances; the CSS url() resolution warning is emitted via
+            // environment.logger, so the root logger patch alone may not catch it.
+            if (resolvedConfig.environments) {
+              for (const env of Object.values(resolvedConfig.environments)) {
+                patchLogger(env.logger);
+              }
+            }
+          },
+        },
+      ],
       build: {
         chunkSizeWarningLimit: 1000, // Increase limit to 1MB to reduce noise
         rollupOptions: {
@@ -240,21 +345,17 @@ async function config() {
                 warning.source.includes('expressive-code'))) {
               return;
             }
+            // Suppress empty chunk warning from starlight-heading-badges plugin — the
+            // starlight-toc custom element it re-registers is deduplicated by Rollup.
+            if (warning.code === 'EMPTY_BUNDLE' &&
+              warning.names?.some((n) => n.includes('HeadingBadgesTableOfContents'))) {
+              return;
+            }
             warn(warning);
           }
         }
       },
       logLevel: 'warn',
-      customLogger: {
-        warn(msg, options) {
-          // Suppress specific expressive-code warnings
-          if (msg.includes('@expressive-code/plugin-text-markers') &&
-            msg.includes('never used')) {
-            return;
-          }
-          console.warn(msg, options);
-        }
-      }
     }
   });
 }

@@ -1,35 +1,106 @@
 ---
-title: Boilerplate Reference
-description: Complete technical reference for the AEM Commerce boilerplate project.
+title: Boilerplate overview
+description: What the Commerce boilerplate is, how to run it locally, explore its structure, and keep it customized and current.
 sidebar:
-  label: Overview
   order: 1
 ---
 
-import TableWrapper from '@components/TableWrapper.astro';
 import Link from '@components/Link.astro';
+import Aside from '@components/Aside.astro';
+import Term from '@components/Term.astro';
+import { Steps } from '@astrojs/starlight/components';
+import TableWrapper from '@components/TableWrapper.astro';
 
-Production-ready storefront starter that combines Edge Delivery Services with Commerce drop-in components.
+Building a Commerce storefront from scratch means wiring up hosting, drop-in components, and Commerce APIs yourself. The Commerce boilerplate gives you that foundation already built, so you clone one repository and start customizing right away.
 
-**Repository**: <Link href="https://github.com/hlxsites/aem-boilerplate-commerce" text="hlxsites/aem-boilerplate-commerce" />
+## What is the Commerce boilerplate?
 
-<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 6.0.0</strong>
-</div>
+The Commerce boilerplate is Adobe's supported starter/reference codebase for storefronts on <Term>Edge Delivery Services</Term> (EDS). You clone it from GitHub, connect your Commerce backend, and customize blocks, scripts, and styles in that repository instead of tying together every Commerce integration yourself.
 
-## Technical documentation
+The boilerplate repository lives at <Link href="https://github.com/hlxsites/aem-boilerplate-commerce" text="hlxsites/aem-boilerplate-commerce" />. EDS hosts and publishes your site from that repo. The boilerplate also bundles <Term>Drop-in components</Term> for cart, checkout, product listings, and related Commerce flows so you theme and configure shipped UI rather than building those screens from scratch.
+
+<Aside type="note" title="One supported boilerplate">
+  <Link href="https://github.com/hlxsites/aem-boilerplate-commerce" text="aem-boilerplate-commerce" /> is the only Adobe-supported Commerce starter/reference storefront. Demo storefronts (for example Citisignal) are forks for events or showcases. They often lag behind this repository and are not a safe starting point for your own project.
+</Aside>
+
+## Exploring the code
+
+The tree below shows the main folders plus important files at the repository root. The table links each folder to GitHub so you can open the matching source tree.
+
+```text
+aem-boilerplate-commerce/
+├── blocks/                 # Commerce blocks and content blocks
+├── scripts/
+│   ├── aem.js               # core AEM/Edge Delivery runtime — do not edit
+│   ├── scripts.js           # page load orchestration (eager, lazy, delayed)
+│   ├── commerce.js          # Commerce loading, templates, storefront configuration
+│   ├── delayed.js           # third-party scripts and analytics, loaded after initial render
+│   ├── initializers/        # one initializer file per drop-in (endpoints, labels, and related settings)
+│   └── __dropins__/         # generated drop-in assets from npm install — do not edit
+├── styles/                 # global CSS, lazy-loaded CSS, and font-face declarations
+├── fonts/                  # self-hosted font files
+├── icons/                  # SVG icons used by blocks
+├── tools/                  # the PDP metadata tool
+├── cypress/                # end-to-end tests
+├── build.mjs               # customizes the Commerce data drop-ins fetch (see Customizing blocks)
+├── demo-config.json        # sample storefront configuration; copy to config.json for your project
+└── package.json            # dependencies, scripts, and drop-in install hooks
+```
 
 <TableWrapper nowrap={[0]}>
 
-| Topic | Description |
-|-------|-------------|
-| [Configuration](/boilerplate/configuration/) | Setup options for Commerce backend, drop-ins, and site settings |
+| Directory | Purpose |
+|-----------|---------|
+| <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/blocks/" text="blocks/" /> | Contains Commerce blocks and content blocks, such as header, footer, and cards. |
+| <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/scripts/" text="scripts/" /> | Contains the AEM/Edge Delivery runtime, drop-in initializers, and Commerce utilities. See [Files to keep unchanged](/blocks/customize-blocks/#files-to-keep-unchanged) before you edit anything here. |
+| <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/styles/" text="styles/" /> | Contains global styles, lazy-loaded styles, and font-face declarations. |
+| <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/fonts/" text="fonts/" /> | Contains the self-hosted font files the storefront ships by default. |
+| <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/icons/" text="icons/" /> | Contains the SVG icons blocks use, such as cart and chevron icons. |
+| <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/models/" text="models/" /> | Contains per-block authoring model definitions. |
+| <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/tools/" text="tools/" /> | Contains the product detail page (PDP) metadata tool. |
+| <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/tree/main/cypress/" text="cypress/" /> | Contains the boilerplate's end-to-end test suite. |
 
 </TableWrapper>
 
-## Runtime dependencies
+`demo-config.json` is a sample, not a live configuration. See [Link your repository to Commerce data](/get-started/create-storefront/#link-your-repository-to-commerce-data) to generate your own `config.json`. For `build.mjs` and the rest of the customization layers, see [Where to customize](/blocks/customize-blocks/#where-to-customize) in Customizing blocks.
 
-The boilerplate includes these key runtime packages:
+To understand how documents become rendered commerce experiences at runtime, see [How a page loads](/get-started/architecture/how-a-page-loads/) in [Architecture](/get-started/architecture/). For a worked example of how `blocks/` and `scripts/initializers/` wire a block to a drop-in, see [Blocks and drop-ins](/blocks/blocks-and-dropins/).
+
+## Running locally
+
+If you still need to create the GitHub repository, connect Commerce, and initialize Document Author content, follow [Create a storefront](/get-started/create-storefront/) first.
+
+Run the storefront locally so you can preview changes before you push them. If you already ran `git clone` while following [Create a storefront](/get-started/create-storefront/), start with the `npm install` step below.
+
+<Steps>
+
+1. Install the project dependencies.
+
+   ```bash
+   npm install
+   ```
+
+1. Start the local development server.
+
+   ```bash
+   npm start
+   ```
+
+1. Open `http://localhost:3000` in your browser.
+
+</Steps>
+
+Your storefront appears in the browser at `http://localhost:3000`.
+
+<Aside type="tip">
+If `npm install` fails, confirm that Node.js and npm are installed on your machine. If `npm start` fails, check whether another local server is already using port `3000`.
+</Aside>
+
+**Optional:** Install the `aem` command globally with `npm install -g @adobe/aem-cli` to run the CLI from any directory.
+
+### Key runtime packages
+
+After `npm install`, `package.json` resolves many dependencies. Use this table when you trace dependencies or debug install issues.
 
 <TableWrapper nowrap={[0]}>
 
@@ -42,45 +113,33 @@ The boilerplate includes these key runtime packages:
 
 </TableWrapper>
 
-## Commerce blocks
+## Customizing your storefront
 
-All commerce blocks included in the boilerplate with their drop-in dependencies:
+Styles, blocks, drop-ins, Commerce wiring, and third-party scripts each live in their own layer of the boilerplate. See [Customize blocks](/blocks/customize-blocks/) for which files and layers to change, which to leave alone, and when to isolate your changes in new files.
 
-<TableWrapper nowrap={[0]}>
+## Deploying your storefront
 
-| Block | Drop-ins used |
-|-------|---------------|
-| [Commerce Addresses](/merchants/blocks/commerce-addresses/) | storefront-account |
-| [Commerce Cart](/merchants/blocks/commerce-cart/) | tools, storefront-cart, storefront-wishlist, storefront-quote-management |
-| [Commerce Create Password](/merchants/blocks/commerce-create-password/) | storefront-auth, tools |
-| [Commerce Create Return](/merchants/blocks/commerce-create-return/) | storefront-order, tools |
-| [Commerce Customer Details](/merchants/blocks/commerce-customer-details/) | storefront-order |
-| [Commerce Customer Information](/merchants/blocks/commerce-customer-information/) | storefront-account |
-| [Commerce Forgot Password](/merchants/blocks/commerce-forgot-password/) | storefront-auth, tools |
-| [Commerce Gift Options](/merchants/blocks/commerce-gift-options/) | storefront-cart |
-| [Commerce Login](/merchants/blocks/commerce-login/) | storefront-auth |
-| [Commerce Mini Cart](/merchants/blocks/commerce-mini-cart/) | storefront-cart, tools |
-| [Commerce Order Cost Summary](/merchants/blocks/commerce-order-cost-summary/) | storefront-order |
-| [Commerce Order Header](/merchants/blocks/commerce-order-header/) | tools |
-| [Commerce Order Product List](/merchants/blocks/commerce-order-product-list/) | storefront-order, storefront-cart, tools |
-| [Commerce Order Returns](/merchants/blocks/commerce-order-returns/) | tools, storefront-order |
-| [Commerce Order Status](/merchants/blocks/commerce-order-status/) | storefront-order |
-| [Commerce Orders List](/merchants/blocks/commerce-orders-list/) | storefront-account, tools |
-| [Commerce Return Header](/merchants/blocks/commerce-return-header/) | tools |
-| [Commerce Returns List](/merchants/blocks/commerce-returns-list/) | storefront-order, tools |
-| [Commerce Search Order](/merchants/blocks/commerce-search-order/) | storefront-auth, storefront-order, tools |
-| [Commerce Shipping Status](/merchants/blocks/commerce-shipping-status/) | storefront-order, tools |
-| [Commerce Wishlist](/merchants/blocks/commerce-wishlist/) | storefront-cart, storefront-pdp, storefront-wishlist, storefront-auth, tools |
-| [Product Details](/merchants/blocks/product-details/) | tools, storefront-pdp, storefront-wishlist, storefront-requisition-list |
-| [Product List Page](/merchants/blocks/product-list-page/) | storefront-product-discovery, tools, storefront-wishlist, storefront-requisition-list, storefront-cart |
-| [Product Recommendations](/merchants/blocks/product-recommendations/) | tools, storefront-cart, storefront-recommendations, storefront-wishlist |
+Edge Delivery Services creates preview and production URLs when you push changes:
 
+- Preview: `https://<branch>--<repo>--<owner>.aem.page`
+- Production: `https://<branch>--<repo>--<owner>.aem.live`
 
-</TableWrapper>
+You do not run a separate deployment build command for Edge Delivery. The Edge Delivery pipeline handles page delivery and optimization after you push.
+
+Push your production changes to the `main` branch. Caching and push invalidation only work as intended there, so other branches' `.live` URLs can serve stale content.
+
+## Keeping your storefront current
+
+Track boilerplate changes in the <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/issues?q=label%3Achangelog+is%3Aclosed" text="Boilerplate changelog" /> and [Release notes](/releases/). For guidance on upgrading drop-in components, applying updates, and handling breaking changes, see the [Updates](/boilerplate/updates/) page.
 
 ## Related resources
 
-- [Commerce configuration guide](/setup/configuration/commerce-configuration/) - Configure Commerce backend endpoints and headers
-- [Commerce blocks for merchants](/merchants/blocks/) - Business user guide
-- [Drop-in components](/dropins/all/introduction/) - Drop-in technical documentation
+<TableWrapper nowrap={[0]}>
 
+| Resource | Description |
+|----------|-------------|
+| [Drop-in components](/dropins/all/introduction/) | API reference for each drop-in component. |
+| [Commerce blocks page](/merchants/blocks/) | Business user page for using blocks. |
+| [Universal Editor (deprecated)](/boilerplate/universal-editor/) | Legacy UE instrumentation reference for existing Document Authoring projects. |
+
+</TableWrapper>

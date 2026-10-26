@@ -15,10 +15,6 @@ import { Aside } from '@astrojs/starlight/components';
 
 The Cart drop-in provides API functions that enable you to programmatically control behavior, fetch data, and integrate with Adobe Commerce backend services.
 
-<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 3.1.0</strong>
-</div>
-
 <TableWrapper nowrap={[0]}>
 
 | Function | Description |
@@ -27,17 +23,22 @@ The Cart drop-in provides API functions that enable you to programmatically cont
 | [`applyCouponsToCart`](#applycouponstocart) | Applies or replaces one or more coupons to the cart. |
 | [`applyGiftCardToCart`](#applygiftcardtocart) | Apply a gift card to the current shopping cart. |
 | [`createGuestCart`](#createguestcart) | Creates a new empty cart for a guest user. |
+| [`getAvailableFreeGiftsForCart`](#getavailablefreegiftsforcart) | Fetches the available free-gift offers for the current cart. |
 | [`getCartData`](#getcartdata) | Is mainly used internally by the `initializeCart`() and `refreshCart`() functions. |
-| [`getCountries`](#getcountries) | API function for the drop-in.. |
+| [`getCartDataFromCache`](#getcartdatafromcache) | Returns the current cart data from local storage without making an API call. |
+| [`getCountries`](#getcountries) | API function for the drop-in. |
+| [`getCustomerCartPayload`](#getcustomercartpayload) | Fetches the authenticated customer's cart, merging with any existing guest cart if needed. |
 | [`getEstimatedTotals`](#getestimatedtotals) | Returns estimated totals for cart based on an address. |
 | [`getEstimateShipping`](#getestimateshipping) | Returns the first available shipping method and its estimated cost, based on the provided address. |
-| [`getRegions`](#getregions) | API function for the drop-in.. |
+| [`getGuestCartPayload`](#getguestcartpayload) | Fetches the current guest cart data using the cart ID stored in state. |
+| [`getRegions`](#getregions) | API function for the drop-in. |
 | [`getStoreConfig`](#getstoreconfig) | Returns information about a store's configuration. |
 | [`initializeCart`](#initializecart) | Initializes a guest or customer cart. |
 | [`publishShoppingCartViewEvent`](#publishshoppingcartviewevent) | Publishes a shopping cart view event to the ACDL. |
-| [`refreshCart`](#refreshcart) | Refreshes the cart data.. |
+| [`refreshCart`](#refreshcart) | Refreshes the cart data. |
 | [`removeGiftCardFromCart`](#removegiftcardfromcart) | This function removes a single gift card from the cart. |
 | [`resetCart`](#resetcart) | This function resets the cart drop-in. |
+| [`selectFreeGiftForCart`](#selectfreegiftforcart) | Adds a chosen free gift to the cart for one promotion rule. |
 | [`setGiftOptionsOnCart`](#setgiftoptionsoncart) | `setGiftOptionsOnCart` is a function that sets gift options on the cart. |
 | [`updateProductsFromCart`](#updateproductsfromcart) | Updates cart items by either changing the quantity or removing and adding an item in one step. |
 
@@ -76,7 +77,7 @@ Returns [`CartModel`](#cartmodel) or `null`.
 
 ## applyCouponsToCart
 
-A function that applies or replaces one or more coupons to the cart. The function calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/apply-coupons-to-cart/" text="applyCouponsToCart" /> mutation.
+A function that applies or replaces one or more coupons to the cart. The function calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/apply-coupon/" text="applyCouponsToCart" /> mutation.
 
 ```ts
 const applyCouponsToCart = async (
@@ -104,7 +105,7 @@ Returns [`CartModel`](#cartmodel) or `null`.
 
 ## applyGiftCardToCart
 
-The `applyGiftCardToCart` function is used to apply a gift card to the current shopping cart. It takes the gift card code as an argument and updates the cart with the applied gift card. The function calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/apply-gift-card-to-cart/" text="applyGiftCardToCart" /> mutation.
+The `applyGiftCardToCart` function is used to apply a gift card to the current shopping cart. It takes the gift card code as an argument and updates the cart with the applied gift card. The function calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/apply-giftcard/" text="applyGiftCardToCart" /> mutation.
 
 ```ts
 const applyGiftCardToCart = async (
@@ -144,9 +145,25 @@ Does not emit any drop-in events.
 
 Returns the cart ID for the newly created guest cart: `cartId: string | null`
 
+## getAvailableFreeGiftsForCart
+
+The `getAvailableFreeGiftsForCart` function fetches the available free-gift offers for the current cart. The payload is requested separately from the main cart data, so the heavier product details load only when the cart has free gifts available.
+
+```ts
+const getAvailableFreeGiftsForCart = async (): Promise<AvailableFreeGiftRule[]>
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns an array of `AvailableFreeGiftRule` objects. Returns an empty array when no free gifts are available.
+
 ## getCartData
 
-The `getCartData` function is mainly used internally by the `initializeCart()` and `refreshCart()` functions. If you need detailed information about the current user's shopping cart, a more optimal approach is to listen for `c`art/dat`a` or `c`art/update`d` events so that you do not need to make another network call.
+The `getCartData` function is mainly used internally by the `initializeCart()` and `refreshCart()` functions. If you need detailed information about the current user's shopping cart, a more optimal approach is to listen for `cart/data` or `cart/updated` events so that you do not need to make another network call.
 
 ```ts
 const getCartData = async (): Promise<CartModel | null>
@@ -268,7 +285,7 @@ Returns [`StoreConfigModel`](#storeconfigmodel) or `null`.
 
 ## initializeCart
 
-The `initializeCart` function initializes a guest or customer cart. This function is automatically called during the initialize phase of a dropin's lifecycle. You do not need to call this manually. The function calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/merge-carts/" text="mergeCarts" /> mutation.
+The `initializeCart` function initializes a guest or customer cart. This function is automatically called during the initialize phase of a drop-in's lifecycle. You do not need to call this manually. The function calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/merge/" text="mergeCarts" /> mutation.
 
 ```ts
 const initializeCart = async (): Promise<CartModel | null>
@@ -358,6 +375,42 @@ Does not emit any drop-in events.
 
 Returns [`CartModel`](#cartmodel) or `null`.
 
+## selectFreeGiftForCart
+
+The `selectFreeGiftForCart` function adds a chosen free gift to the cart for one promotion rule. Use it after presenting the shopper with the offers returned by [`getAvailableFreeGiftsForCart`](#getavailablefreegiftsforcart). If the shopper has no cart yet, the function creates a guest cart first.
+
+```ts
+const selectFreeGiftForCart = async (
+  input: {
+    ruleId: number;
+    sku: string;
+    quantity?: number;
+    enteredOptions?: { uid: string; value: string }[];
+    selectedOptions?: string[];
+  }
+): Promise<CartModel | null>
+```
+
+<TableWrapper nowrap={[0]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `ruleId` | `number` | Yes | The identifier of the sales rule that grants the free gift. |
+| `sku` | `string` | Yes | The SKU of the gift product the shopper selected. |
+| `quantity` | `number` | No | The quantity of the gift to add. |
+| `enteredOptions` | `{ uid: string; value: string }[]` | No | Customer-entered option values, such as a personalized message. |
+| `selectedOptions` | `string[]` | No | Selected option value UIDs. For configurable products, pass the configurable option UIDs. For bundle products, pass one `BundleItemOption.uid` per bundle slot. |
+
+</TableWrapper>
+
+### Events
+
+Emits `cart/updated` and `cart/data` with the updated cart. When the gift adds new lines to the cart, also emits `cart/product/added`.
+
+### Returns
+
+Returns [`CartModel`](#cartmodel) or `null`.
+
 ## setGiftOptionsOnCart
 
 <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/cart/mutations/set-gift-options/" text="setGiftOptionsOnCart" /> is a function that sets gift options on the cart. It takes a `giftOptions` parameter.
@@ -407,6 +460,54 @@ const updateProductsFromCart = async (
 ### Events
 
 Emits the [`cart/updated`](/dropins/cart/events/#cartupdated-emits-and-listens) and [`cart/data`](/dropins/cart/events/#cartdata-emits-and-listens) events. Additionally, emits `cart/product/updated` event with the affected items when their quantities are changed. Also publishes add-to-cart or remove-from-cart events to the Adobe Client Data Layer (ACDL).
+
+### Returns
+
+Returns [`CartModel`](#cartmodel) or `null`.
+
+## getCartDataFromCache
+
+The `getCartDataFromCache` function returns the current cart data from local storage without making a network request. This is useful when you need a synchronous read of the last-known cart state.
+
+```ts
+const getCartDataFromCache = (): CartModel | null
+```
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns [`CartModel`](#cartmodel) or `null` if no cart data is cached.
+
+## getCustomerCartPayload
+
+The `getCustomerCartPayload` function fetches the authenticated customer's cart from the backend. If a guest cart exists in state, it is merged into the customer cart before the result is returned. Used internally by `initializeCart`.
+
+```ts
+const getCustomerCartPayload = async (): Promise<CartModel | null>
+```
+
+### Events
+
+Emits the [`cart/merged`](/dropins/cart/events/#cartmerged-emits-and-listens) event when a guest cart is merged into the customer cart.
+
+### Returns
+
+Returns [`CartModel`](#cartmodel) or `null`.
+
+## getGuestCartPayload
+
+The `getGuestCartPayload` function fetches the current guest cart data using the cart ID stored in the drop-in state. Returns `null` if guest carts are disabled or if no cart ID is present. Used internally by `initializeCart`.
+
+```ts
+const getGuestCartPayload = async (): Promise<CartModel | null>
+```
+
+### Events
+
+Does not emit any drop-in events.
 
 ### Returns
 

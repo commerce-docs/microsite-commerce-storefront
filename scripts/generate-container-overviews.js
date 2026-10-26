@@ -37,7 +37,7 @@ const DROPINS_WITH_CONTAINERS = {
     'product-details': { name: 'Product Details', containers: 10 },
     'product-discovery': { name: 'Product Discovery', containers: 4 },
     'recommendations': { name: 'Recommendations', containers: 4 },
-    'user-account': { name: 'User Account', containers: 5 },
+    'user-account': { name: 'User Account', containers: 6 },
     'user-auth': { name: 'User Auth', containers: 3 },
     'wishlist': { name: 'Wishlist', containers: 1 }
 };
@@ -77,10 +77,6 @@ import { Aside } from '@astrojs/starlight/components';
 ## Overview
 
 The **${config.name}** drop-in provides **${config.containers}** pre-built container component${config.containers > 1 ? 's' : ''} for integrating into your storefront.
-
-<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: ${version}</strong>
-</div>
 
 ## What are Containers?
 

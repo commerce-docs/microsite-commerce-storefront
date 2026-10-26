@@ -1,0 +1,312 @@
+<script is:inline>
+  (function () {
+    var KEY = 'sl-recent-searches';
+    var MAX = 8;
+    var MAX_TERM_LENGTH = 150;
+
+    function load() {
+      try {
+        var raw = JSON.parse(localStorage.getItem(KEY) || '[]');
+        // Validate: must be an array of strings within the length cap.
+        if (!Array.isArray(raw)) return [];
+        return raw.filter(function (s) {
+          return typeof s === 'string' && s.length > 0 && s.length <= MAX_TERM_LENGTH;
+        });
+      } catch (e) { return []; }
+    }
+
+    function save(term) {
+      term = term.trim();
+      if (term.length < 2 || term.length > MAX_TERM_LENGTH) return;
+      var list = load().filter(function (s) { return s !== term; });
+      list.unshift(term);
+      try {
+        localStorage.setItem(KEY, JSON.stringify(list.slice(0, MAX)));
+      } catch (e) { /* QuotaExceededError or SecurityError — silently skip */ }
+    }
+
+    // onClear is passed in from setupRecentSearches so the "Clear all" button
+    // can update the shared `panel` reference and show the empty state in-session.
+    function buildPanel(inputEl, onClear) {
+      var searches = load();
+      var panel = document.createElement('div');
+      panel.className = 'sl-rs';
+      panel.setAttribute('role', 'region');
+      panel.setAttribute('aria-label', 'Recent searches');
+
+      var header = document.createElement('div');
+      header.className = 'sl-rs__header';
+
+      var label = document.createElement('span');
+      label.textContent = 'Recent searches';
+      header.appendChild(label);
+
+      if (searches.length) {
+        var clearBtn = document.createElement('button');
+        clearBtn.className = 'sl-rs__clear';
+        clearBtn.textContent = 'Clear all';
+        clearBtn.setAttribute('type', 'button');
+        clearBtn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          if (onClear) onClear();
+        });
+        header.appendChild(clearBtn);
+      }
+
+      panel.appendChild(header);
+
+      if (searches.length) {
+        var chips = document.createElement('div');
+        chips.className = 'sl-rs__chips';
+        searches.forEach(function (term) {
+          var btn = document.createElement('button');
+          btn.className = 'sl-rs__chip';
+          btn.setAttribute('type', 'button');
+          btn.textContent = term;
+          btn.addEventListener('click', function () {
+            inputEl.value = term;
+            inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+            inputEl.focus();
+            panel.style.display = 'none';
+          });
+          chips.appendChild(btn);
+        });
+        panel.appendChild(chips);
+      } else {
+        var empty = document.createElement('p');
+        empty.className = 'sl-rs__empty';
+        empty.textContent = 'Your recent searches will appear here.';
+        panel.appendChild(empty);
+      }
+
+      return panel;
+    }
+
+    // AbortController for the current dialog session. Calling .abort() removes
+    // all session listeners in one call, preventing accumulation across opens.
+    var sessionAbort = null;
+
+    function setupRecentSearches(dialog, inputEl, pagefindEl) {
+      // Append to .dialog-frame, not .pagefind-ui, so Pagefind's DOM
+      // re-renders (triggered by the clear button) can't remove our panel.
+      var frame = dialog.querySelector('.dialog-frame');
+      // Guard: skip if frame is missing or the panel is already showing.
+      if (!frame || frame.querySelector('.sl-rs')) return;
+
+      // Cancel any leftover listeners from a previous session before attaching
+      // new ones. Without this, each dialog open stacks an extra copy of every
+      // listener onto the same persistent inputEl and dialog nodes.
+      if (sessionAbort) sessionAbort.abort();
+      sessionAbort = new AbortController();
+      var signal = sessionAbort.signal;
+
+      // Shared panel reference. refreshPanel keeps it current so that
+      // syncVisibility, onClear, and the keydown handler all target the live node.
+      var panel;
+
+      // Builds a fresh panel, replaces the old one in the DOM, and updates `panel`.
+      function refreshPanel(hidden) {
+        var next = buildPanel(inputEl, onClear);
+        if (hidden) next.style.display = 'none';
+        var old = frame.querySelector('.sl-rs');
+        if (old) old.replaceWith(next);
+        else frame.appendChild(next);
+        panel = next;
+      }
+
+      // Called by the "Clear all" button. Wipes storage, rebuilds to empty state,
+      // then immediately syncs visibility so the panel shows/hides correctly
+      // based on the current input value without waiting for the next input event.
+      function onClear() {
+        localStorage.removeItem(KEY);
+        refreshPanel(false);
+        syncVisibility();
+      }
+
+      // Reference panel directly — avoids a DOM query on every keystroke.
+      function syncVisibility() {
+        panel.style.display = inputEl.value.trim() ? 'none' : '';
+      }
+
+      refreshPanel(false); // Initial render.
+
+      // Native input event (typing).
+      inputEl.addEventListener('input', syncVisibility, { signal: signal });
+
+      // Pagefind's X button clears the input programmatically without firing
+      // a native input event, so we listen for its click separately.
+      var pfClear = pagefindEl.querySelector('.pagefind-ui__search-clear');
+      if (pfClear) {
+        pfClear.addEventListener('click', function () {
+          setTimeout(syncVisibility, 0);
+        }, { signal: signal });
+      }
+
+      inputEl.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && inputEl.value.trim()) {
+          save(inputEl.value);
+          // Rebuild so the saved term appears as a chip. Hidden because the
+          // input still has text; syncVisibility will show it when cleared.
+          refreshPanel(true);
+        }
+      }, { signal: signal });
+
+      dialog.addEventListener('click', function (e) {
+        if (e.target.closest('.pagefind-ui__result-link') && inputEl.value.trim()) {
+          save(inputEl.value);
+        }
+      }, { signal: signal });
+    }
+
+    function attachToDialog(searchDiv, dialog) {
+      var inputEl = searchDiv.querySelector('.pagefind-ui__search-input');
+      var pagefindEl = searchDiv.querySelector('.pagefind-ui');
+
+      if (inputEl && pagefindEl) {
+        setupRecentSearches(dialog, inputEl, pagefindEl);
+        return;
+      }
+
+      // PagefindUI hasn't mounted yet — observe for it with a bounded timeout.
+      var inner;
+      var innerTimer;
+      inner = new MutationObserver(function () {
+        // Dialog was closed before Pagefind mounted — bail out cleanly.
+        if (!dialog.open) { clearTimeout(innerTimer); inner.disconnect(); return; }
+        var inp = searchDiv.querySelector('.pagefind-ui__search-input');
+        var pf = searchDiv.querySelector('.pagefind-ui');
+        if (inp && pf) {
+          clearTimeout(innerTimer); // Cancel the safety timeout — no longer needed.
+          inner.disconnect();
+          setupRecentSearches(dialog, inp, pf);
+        }
+      });
+      inner.observe(searchDiv, { childList: true, subtree: true });
+      innerTimer = setTimeout(function () { inner.disconnect(); }, 5000);
+    }
+
+    function init() {
+      // Remove this IIFE's own listener immediately on every call. If setup
+      // cannot complete yet, we re-add it below so the next navigation retries.
+      // This prevents no-op listeners from accumulating on document: each content
+      // swap (View Transitions) re-executes is:inline, creating a new IIFE and a
+      // new `init`. Without this pattern, every navigation would leave a stale
+      // no-op listener on document even after the dialog guard fires.
+      document.removeEventListener('astro:page-load', init);
+
+      // #starlight__search is a <div> INSIDE the <dialog>, not a wrapper around it.
+      var searchDiv = document.getElementById('starlight__search');
+      if (!searchDiv) {
+        document.addEventListener('astro:page-load', init); // Retry on next nav.
+        return;
+      }
+
+      var dialog = searchDiv.closest('dialog');
+      if (!dialog) {
+        document.addEventListener('astro:page-load', init); // Retry on next nav.
+        return;
+      }
+
+      // Guard against duplicate observer creation across View Transition content
+      // swaps. A data attribute on the persistent dialog element survives DOM swaps
+      // and prevents a second outer MutationObserver from being attached.
+      // No re-add here — setup is permanent once the dialog is found.
+      if (dialog.dataset.slRsReady) return;
+      dialog.dataset.slRsReady = '1';
+
+      var outer = new MutationObserver(function () {
+        if (dialog.open) {
+          attachToDialog(searchDiv, dialog);
+        } else {
+          // Abort all session listeners at once. Panel lives in .dialog-frame.
+          if (sessionAbort) { sessionAbort.abort(); sessionAbort = null; }
+          var frame = dialog.querySelector('.dialog-frame');
+          var panel = frame && frame.querySelector('.sl-rs');
+          if (panel) panel.remove();
+        }
+      });
+
+      outer.observe(dialog, { attributes: true, attributeFilter: ['open'] });
+
+      if (dialog.open) attachToDialog(searchDiv, dialog);
+    }
+
+    document.addEventListener('astro:page-load', init);
+    init();
+  })();
+</script>
+
+<style is:global>
+  .sl-rs {
+    padding: 0.75rem 1.25rem 1rem;
+    border-top: 1px solid var(--sl-color-gray-5);
+  }
+
+  .sl-rs__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 1rem;
+    color: var(--sl-color-gray-3);
+    margin-bottom: 0.6rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .sl-rs__clear {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    color: var(--sl-color-accent);
+    padding: 0;
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  .sl-rs__clear:hover {
+    text-decoration: underline;
+  }
+
+  .sl-rs__clear:focus-visible {
+    outline: 2px solid var(--sl-color-accent);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  .sl-rs__empty {
+    font-size: 0.85rem;
+    color: var(--sl-color-gray-3);
+    margin: 0;
+  }
+
+  .sl-rs__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  .sl-rs__chip {
+    background: var(--sl-color-bg-nav);
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 2rem;
+    padding: 0.25rem 0.8rem;
+    font-size: 1rem;
+    cursor: pointer;
+    color: var(--sl-color-text);
+    line-height: 1.5;
+    transition: background 0.12s, border-color 0.12s;
+  }
+
+  .sl-rs__chip:hover {
+    background: var(--sl-color-gray-6);
+    border-color: var(--sl-color-gray-4);
+  }
+
+  .sl-rs__chip:focus-visible {
+    outline: 2px solid var(--sl-color-accent);
+    outline-offset: 2px;
+  }
+</style>
