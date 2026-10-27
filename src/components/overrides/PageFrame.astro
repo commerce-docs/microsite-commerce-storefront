@@ -33,6 +33,35 @@ const isSplash = routeEntry?.data?.template === "splash";
 <!-- Add cascading expansion feature when sidebar is present -->
 {hasSidebar && <CascadingExpansion />}
 
+<script>
+  const saveSidebarState = () => {
+    const sidebar = document.getElementById("starlight__sidebar");
+    const target = sidebar?.querySelector<HTMLElement>("sl-sidebar-state-persist");
+    if (!sidebar || !target) return;
+
+    try {
+      const open: boolean[] = [];
+      target.querySelectorAll<HTMLElement>("sl-sidebar-restore").forEach((restore) => {
+        const index = Number.parseInt(restore.dataset.index || "", 10);
+        const details = restore.closest("details");
+        if (details && !Number.isNaN(index)) open[index] = details.open;
+      });
+      sessionStorage.setItem("sl-sidebar-state", JSON.stringify({
+        hash: target.dataset.hash,
+        open,
+        scroll: sidebar.scrollTop,
+      }));
+    } catch {}
+  };
+
+  document.addEventListener("click", (event) => {
+    if (event.target instanceof Element && event.target.closest("#starlight__sidebar a[href]")) {
+      saveSidebarState();
+    }
+  });
+  window.addEventListener("pagehide", saveSidebarState);
+</script>
+
 <style>
   .page {
     flex-direction: column;

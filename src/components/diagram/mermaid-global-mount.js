@@ -5,21 +5,25 @@
  * that do not resolve on the CDN.
  */
 
-import { attachMermaidDiagramLifecycle } from './mermaid-diagram.client';
-
 if (typeof document === 'undefined') {
   throw new Error('[Diagram] mermaid-global-mount must only be imported in a browser context.');
 }
 
-// TODO(optimisation): injectScript('page', …) runs this script on every page, not just pages
-// that contain diagrams.  The dynamic import() inside mermaid-diagram.client means the Mermaid
-// bundle is only fetched when a diagram is present, but this DOM scan still executes on every
-// navigation.  A future improvement would be to guard injection behind a build-time flag set
-// only on pages that actually use the <Diagram> component.
-function mountPendingMermaidDiagrams() {
-  for (const el of document.querySelectorAll('.mermaid-diagram[data-pending-mermaid="true"]')) {
-    if (!(el instanceof HTMLElement) || !el.id) continue;
-    if (el.closest('#starlight__search')) continue;
+async function mountPendingMermaidDiagrams() {
+  const diagrams = [...document.querySelectorAll('.mermaid-diagram[data-pending-mermaid="true"]')]
+    .filter((element) => element instanceof HTMLElement && element.id && !element.closest('#starlight__search'));
+  if (!diagrams.length) return;
+
+  let attachMermaidDiagramLifecycle;
+  try {
+    ({ attachMermaidDiagramLifecycle } = await import('./mermaid-diagram.client'));
+  } catch (error) {
+    console.error('[Diagram] Failed to load Mermaid renderer.', error);
+    return;
+  }
+
+  for (const el of diagrams) {
+    if (!el.isConnected || !el.hasAttribute('data-pending-mermaid')) continue;
     el.removeAttribute('data-pending-mermaid');
     attachMermaidDiagramLifecycle({ rootId: el.id });
   }

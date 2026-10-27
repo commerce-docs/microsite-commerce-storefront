@@ -15,10 +15,6 @@ import { Aside } from '@astrojs/starlight/components';
 
 The Company Management drop-in provides **29 API functions** for managing company structures, users, roles, permissions, and credit, enabling complete B2B company administration workflows.
 
-<div style="background-color: var(--sl-color-blue-low); border-left: 4px solid var(--sl-color-blue); padding: 0.75rem 1rem; border-radius: 0.25rem; margin: 1rem 0;">
-<strong>Version: 1.3.0</strong>
-</div>
-
 <TableWrapper nowrap={[0]}>
 
 | Function | Description |
@@ -59,6 +55,7 @@ The Company Management drop-in provides **29 API functions** for managing compan
 | [`isCompanyUserEmailAvailable`](#iscompanyuseremailavailable) | Checks if an email address is available for a new company user. |
 | [`unassignChildCompany`](#unassignchildcompany) | Removes a child company from its parent in the company hierarchy. |
 | [`updateCompany`](#updatecompany) | Updates company profile information with permission-aware field filtering based on user's edit permissions. |
+| [`updateCompanyConfig`](#updatecompanyconfig) | Updates the company address book configuration. Available only to Company Administrators. |
 | [`updateCompanyRole`](#updatecompanyrole) | Updates an existing company role's name, permissions, or assigned users. |
 | [`updateCompanyStructure`](#updatecompanystructure) | Moves a structure node under a new parent in the company structure tree. |
 | [`updateCompanyTeam`](#updatecompanyteam) | Updates a company team's name and/or description. |
@@ -858,6 +855,32 @@ Does not emit any drop-in events.
 ### Returns
 
 Returns `CompanyModel`.
+
+## updateCompanyConfig
+
+Updates the company address book configuration. Maps to the `updateCompanyConfig` GraphQL mutation. This action is admin-only: the drop-in surfaces it only when the current customer's role is a Company Administrator (`isCompanyAdministrator`). It is independent of the `Magento_Company::edit_account` and `Magento_Company::edit_address` ACL permissions used by [`updateCompany`](#updatecompany).
+
+```ts
+const updateCompanyConfig = async (
+  input: UpdateCompanyConfigDto
+): Promise<CompanyModel>
+```
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+|---|---|---|---|
+| `input` | `UpdateCompanyConfigDto` | Yes | Partial config data to update. Can include: `addressBookEnabled` (whether the company address book is enabled) and `customShippingAddressEnabled` (whether custom shipping address entry is allowed when the address book is enabled). |
+
+</TableWrapper>
+
+### Events
+
+Does not emit any drop-in events.
+
+### Returns
+
+Returns the updated `CompanyModel`.
 
 ## updateCompanyRole
 
