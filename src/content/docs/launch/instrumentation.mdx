@@ -15,7 +15,7 @@ import Link from '@components/Link.astro';
 Analytics instrumentation is the process of wiring your storefront so user interaction data reaches Adobe Commerce services (for example, Live Search and Product Recommendations) in the shape those services expect. This topic covers the Adobe Client Data Layer (ACDL), `config.json` analytics settings, and validation—not Adobe Analytics reporting alone.
 
 <Aside type="caution" title="Consent-dependent collection is off by default">
-The boilerplate includes a consent gate, but not a real CMP or consent UI. Before launch, the merchant or SI must connect the CMP to the consent-check flow. Analytics configuration alone does not load the SDK or collector. ACDL and local history recording continue before consent; recommendation requests may also run, but omit stored history and cart data until consent. See [Consent and CMP integration](/setup/analytics/consent/).
+The boilerplate checks for consent, but does not include a production consent management platform (CMP) or consent UI. Before launch, the merchant or system integrator (SI) must connect the CMP to this check. Analytics configuration alone does not load the SDK or collector. ACDL and local history recording continue before consent. Recommendation requests may also run, but exclude stored history and cart data until consent. See [Consent and CMP integration](/setup/analytics/consent/).
 </Aside>
 
 ### Why event collection matters
@@ -61,9 +61,11 @@ The ACDL enables your storefront to:
 The Adobe Commerce boilerplate includes ACDL by default, so you don't need to install it separately. Drop-in components automatically send events to the data layer.
 </Aside>
 
-ACDL remains available before consent for internal events and page contexts. Its contents do not prove that events have been sent to Commerce or AEP; validate collector network requests separately. Pre-consent events are not replayed to the consent-gated collector.
+ACDL remains available before consent for internal events and page contexts. Its contents do not confirm that events have been sent to Commerce or Adobe Experience Platform (AEP). Check collector network requests separately. Pre-consent events are not replayed to the consent-gated collector.
 
-ACDL's runtime memory is separate from the product-view and purchase histories that custom code in `scripts/commerce.js` persists in `localStorage` before consent. The recommendations block excludes those histories from requests until consent; it does not prevent their storage. Boilerplate does not automatically integrate with Adobe Commerce Cookie Restriction Mode or manage `mg_dnt`, and that cookie alone does not block these custom writes. See [Commerce Cookie Restriction Mode and `mg_dnt`](/setup/analytics/consent/#commerce-cookie-restriction-mode-and-mg_dnt) for CMP integration responsibilities.
+ACDL stores events and context in memory while the page runs. Separately, custom code in `scripts/commerce.js` saves product-view and purchase histories in `localStorage` before consent. The recommendations block excludes those histories from requests until consent, but does not prevent their storage.
+
+The boilerplate does not automatically integrate with Adobe Commerce Cookie Restriction Mode or manage `mg_dnt`. That cookie alone does not block these custom history writes. See [Commerce Cookie Restriction Mode and `mg_dnt`](/setup/analytics/consent/#commerce-cookie-restriction-mode-and-mg_dnt) for CMP integration responsibilities.
 
 ## Configuration
 
@@ -271,7 +273,7 @@ The AEP Debugger provides an Events view that you can use to examine the events 
 1. Verify your `config.json` contains all required analytics parameters
 1. Check that store IDs match your Adobe Commerce backend configuration
 1. Ensure the Storefront Events Collector is loading properly
-1. Confirm the CMP resolves the shopper's decision, loads the collector from `scripts/consented.js` only after acceptance and when analytics configuration is present, and dispatches `consent.update` for the recommendation block. The testing query parameter is accepted on any hostname and is not production consent. See [Consent troubleshooting and launch checks](/setup/analytics/consent/#test-and-launch).
+1. Confirm that the CMP integration reads the shopper's decision and dispatches `consent.update` for the recommendation block. The collector in `scripts/consented.js` must load only after acceptance and when analytics configuration is present. The testing query parameter is accepted on any hostname, but is not production consent. See [Consent troubleshooting and launch checks](/setup/analytics/consent/#test-and-launch).
 </Steps>
 
 **Problem**: Invalid event data<br />
