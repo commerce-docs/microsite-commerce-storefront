@@ -90,12 +90,6 @@ const generators = [
         description: 'Business user documentation for blocks (29 pages)',
         estimatedTime: '1-2 minutes'
     },
-    {
-        name: 'Boilerplate Versions',
-        command: 'npm run update-boilerplate-versions',
-        description: 'Update version numbers in boilerplate documentation files',
-        estimatedTime: '< 1 minute'
-    }
 ];
 
 const isDryRun = process.argv.includes('--dry-run');

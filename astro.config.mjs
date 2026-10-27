@@ -103,6 +103,7 @@ async function config() {
             tag: 'script',
             attrs: {
               defer: true,
+              fetchpriority: 'low',
               'data-rate': 'high',
               type: 'text/javascript',
               src: 'https://rum.hlx.page/.rum/@adobe/helix-rum-js@^2/dist/rum-standalone.js',
@@ -140,7 +141,6 @@ async function config() {
             content: `
               /* Critical mobile-first styles for instant LCP */
               @media (max-width:50rem){
-                body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Helvetica Neue',Arial,sans-serif}
                 .page{display:flex;flex-direction:column;min-height:100vh}
                 .hero{display:flex;justify-content:center;align-items:center;padding:1.5rem 1rem;width:100%}
                 .hero .stack{flex-direction:column;gap:2rem;text-align:center;align-items:center}
@@ -176,12 +176,20 @@ async function config() {
                     var s = document.createElement('script');
                     s.src = 'https://assets.adobedtm.com/d4d114c60e50/9f881954c8dc/launch-7a902c4895c3.min.js';
                     s.async = true;
+                    s.fetchPriority = 'low';
                     document.head.appendChild(s);
                   }
-                  if ('requestIdleCallback' in window) {
-                    requestIdleCallback(loadLaunch, { timeout: 3000 });
+                  function scheduleLaunch(){
+                    if ('requestIdleCallback' in window) {
+                      requestIdleCallback(loadLaunch, { timeout: 3000 });
+                    } else {
+                      setTimeout(loadLaunch, 2000);
+                    }
+                  }
+                  if (document.readyState === 'complete') {
+                    scheduleLaunch();
                   } else {
-                    setTimeout(loadLaunch, 2000);
+                    window.addEventListener('load', scheduleLaunch, { once: true });
                   }
                   ['pointerdown','keydown','scroll','touchstart'].forEach(function(evt){
                     window.addEventListener(evt, loadLaunch, { once: true, passive: true });
@@ -207,6 +215,9 @@ async function config() {
           starlightSidebarTopics(
             generateSidebar(),
             {
+              topics: {
+                'how-tos': ['/tutorials/**', '/how-tos/**', '/dropins/*/tutorials/**'],
+              },
               exclude: ['/sdk/**', '/videos/**', '/dropins-b2b/**', '/merchants/storefront-builder/**', '/merchants/edge-delivery-services/**', '/dropins/product-details/tutorials/**', '/get-started/howitallworks/**'],
             }
           ),
@@ -227,6 +238,7 @@ async function config() {
         // Component overrides
         components: {
           CallToAction: './src/components/overrides/CallToAction.astro',
+          Head: './src/components/overrides/Head.astro',
           Footer: './src/components/overrides/Footer.astro',
           Icon: './src/components/overrides/Icon.astro',
           Header: './src/components/overrides/Header.astro',
@@ -284,6 +296,18 @@ async function config() {
 
     vite: {
       plugins: [
+        {
+          name: 'sidebar-topics-custom-icons',
+          enforce: 'pre',
+          resolveId(source, importer) {
+            if (
+              source === '@astrojs/starlight/components' &&
+              importer?.split('?')[0].endsWith('/starlight-sidebar-topics/components/Topics.astro')
+            ) {
+              return path.resolve('./src/components/overrides/SidebarTopicComponents.ts');
+            }
+          },
+        },
         {
           // Patch the Vite logger after config is resolved so the filter applies
           // to all logging paths, including environment-level loggers in Vite 6+.

@@ -468,7 +468,6 @@ function generateContainersMDX(repoName, repoConfig, containers, versionInfo, en
             'DROPIN_PACKAGE': repoConfig.packageName,
             'CONTAINER_NAME': containerInfo.containerName,
             'CONTAINER_DISPLAY_NAME': capitalize(containerInfo.containerName),
-            'DROPIN_VERSION': cleanVersion(version),
             'CONTAINER_DESCRIPTION': splitDescription(description),
             'CONFIGURATIONS_TABLE': configurationsTable,
             'SLOTS_CONTENT': slotsContent,
@@ -721,7 +720,6 @@ function generateOverviewPage(repoName, repoConfig, containerDocs, containersArr
 
     const overviewContent = replacePlaceholders(overviewTemplate, {
         'DROPIN_NAME': repoConfig.displayName,
-        'DROPIN_VERSION': cleanVersion(version),
         'CONTAINERS_LIST': containersTable
     });
 

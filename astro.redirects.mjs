@@ -14,6 +14,34 @@
  */
 export function generateRedirects(basePath) {
     return {
+        '/merchants/edge-delivery-services/content-migration': `${basePath}/how-tos/copy-content-between-projects`,
+        '/merchants/quick-start/content-localization': `${basePath}/how-tos/translate-storefront-content`,
+        '/merchants/content-customizations/personalization': `${basePath}/how-tos/show-targeted-content`,
+        '/merchants/content-customizations/product-recommendations': `${basePath}/how-tos/add-product-recommendations`,
+        '/merchants/content-customizations/terms-and-conditions': `${basePath}/how-tos/add-terms-and-conditions`,
+        '/tutorials': `${basePath}/how-tos`,
+        '/dropins/cart/tutorials/gift-options': `${basePath}/how-tos/gift-options`,
+        '/dropins/cart/tutorials/add-product-lines-to-cart-summary': `${basePath}/how-tos/add-product-lines-to-cart-summary`,
+        '/dropins/cart/tutorials/add-messages-to-mini-cart': `${basePath}/how-tos/add-messages-to-mini-cart`,
+        '/dropins/cart/tutorials/configure-cart-summary': `${basePath}/how-tos/configure-cart-summary`,
+        '/dropins/cart/tutorials/order-summary-lines': `${basePath}/how-tos/order-summary-lines`,
+        '/dropins/cart/tutorials/enable-product-variation-updates-in-cart': `${basePath}/how-tos/enable-product-variation-updates-in-cart`,
+        '/dropins/checkout/tutorials/add-payment-method': `${basePath}/how-tos/add-payment-method`,
+        '/dropins/checkout/tutorials/buy-online-pickup-in-store': `${basePath}/how-tos/buy-online-pickup-in-store`,
+        '/dropins/checkout/tutorials/multi-step': `${basePath}/how-tos/multi-step`,
+        '/dropins/checkout/tutorials/address-integration': `${basePath}/how-tos/address-integration`,
+        '/dropins/checkout/tutorials/validate-shipping-address': `${basePath}/how-tos/validate-shipping-address`,
+        '/dropins/payment-services/tutorials/add-buttons-to-checkout': `${basePath}/how-tos/add-buttons-to-checkout`,
+        '/dropins/payment-services/tutorials/vaulted-cards-in-checkout': `${basePath}/how-tos/vaulted-cards-in-checkout`,
+        '/dropins/product-details/tutorials/notify-me-cta': `${basePath}/how-tos/notify-me-cta`,
+        '/dropins/user-account/tutorials/payment-services-my-account': `${basePath}/how-tos/payment-services-my-account`,
+        '/dropins/user-account/tutorials/customize-layout': `${basePath}/how-tos/customize-layout`,
+        '/dropins/user-account/tutorials/validate-address': `${basePath}/how-tos/validate-address`,
+        '/dropins/wishlist/tutorials/render-additional-wishlist': `${basePath}/how-tos/render-additional-wishlist`,
+        '/dropins/order/tutorials/order-cancellation': `${basePath}/how-tos/order-cancellation`,
+        '/merchants/quick-start/your-first-page': `${basePath}/how-tos/create-commerce-page`,
+        '/merchants/blocks/labels-and-placeholders': `${basePath}/how-tos/change-labels-and-placeholders`,
+
         // ========= CUSTOMIZE REDIRECTS =========
         '/customize/design-tokens': `${basePath}/dropins/all/branding`,
         '/customize/enrich': `${basePath}/dropins/all/enriching`,
@@ -68,9 +96,9 @@ export function generateRedirects(basePath) {
         '/dropins/cart/cart-dictionary': `${basePath}/dropins/cart/dictionary`,
         '/dropins/cart/installation': `${basePath}/dropins/cart/quick-start`,
 
-        // Cart tutorials
-        '/dropins/cart/tutorials/add-inline-messages-to-mini-cart': `${basePath}/dropins/cart/tutorials/add-messages-to-mini-cart`,
-        '/dropins/cart/tutorials/add-overlay-messages-to-mini-cart': `${basePath}/dropins/cart/tutorials/add-messages-to-mini-cart`,
+        // Cart how-tos
+        '/dropins/cart/tutorials/add-inline-messages-to-mini-cart': `${basePath}/how-tos/add-messages-to-mini-cart`,
+        '/dropins/cart/tutorials/add-overlay-messages-to-mini-cart': `${basePath}/how-tos/add-messages-to-mini-cart`,
 
         // Checkout drop-in
         '/dropins/checkout/checkout-introduction': `${basePath}/dropins/checkout`,
@@ -122,8 +150,11 @@ export function generateRedirects(basePath) {
         '/get-started/run-lighthouse': `${basePath}/get-started/performance`,
         '/get-started/overview/': `${basePath}/get-started/`,
         '/get-started/seo': `${basePath}/setup/seo/`,
-        '/get-started/seo/': `${basePath}/setup/seo/`,
-        '/get-started/dropins-mcp': `${basePath}/ai/`,
+        '/get-started/dropins-mcp': `${basePath}/ai/dropins-ai-tools`,
+        '/ai/dropins-mcp': `${basePath}/ai/dropins-ai-tools`,
+        '/reference/dropins-mcp': `${basePath}/reference/dropins-ai-tools`,
+        '/ai/dropins-helper': `${basePath}/ai/dropins-ai-tools`,
+        '/reference/dropins-helper': `${basePath}/reference/dropins-ai-tools`,
 
         // ========= BOILERPLATE REDIRECTS =========
         '/boilerplate/getting-started': `${basePath}/boilerplate`,
@@ -139,7 +170,6 @@ export function generateRedirects(basePath) {
         '/dropins/all/build-custom-features': `${basePath}/blocks/build-custom-features`,
         '/boilerplate/create-commerce-blocks': `${basePath}/blocks/create-commerce-blocks`,
         '/boilerplate/customizing-blocks': `${basePath}/blocks/customize-blocks`,
-        '/boilerplate/universal-editor': `${basePath}/merchants/quick-start/experience-workspace`,
 
         // ========= SETUP & CONFIG REDIRECTS =========
         '/config': `${basePath}/setup/configuration/commerce-configuration`,
@@ -148,17 +178,11 @@ export function generateRedirects(basePath) {
         '/config/gated-content': `${basePath}/setup/configuration/gated-content`,
         '/config/storefront-compatibility': `${basePath}/setup/configuration/storefront-compatibility`,
         '/boilerplate/configuration': `${basePath}/setup/configuration/commerce-configuration`,
-        '/boilerplate/configuration/': `${basePath}/setup/configuration/commerce-configuration`,
         '/setup/configuration/storefront-compatibility/v247': `${basePath}/reference/storefront-compatibility/v247`,
-        '/setup/configuration/storefront-compatibility/v247/': `${basePath}/reference/storefront-compatibility/v247`,
         '/setup/configuration/storefront-compatibility/v248': `${basePath}/reference/storefront-compatibility/v248`,
-        '/setup/configuration/storefront-compatibility/v248/': `${basePath}/reference/storefront-compatibility/v248`,
         '/resources/v247': `${basePath}/reference/storefront-compatibility/v247`,
-        '/resources/v247/': `${basePath}/reference/storefront-compatibility/v247`,
         '/resources/v248': `${basePath}/reference/storefront-compatibility/v248`,
-        '/resources/v248/': `${basePath}/reference/storefront-compatibility/v248`,
         '/setup/configuration/storefront-compatibility-b2b': `${basePath}/setup/configuration/storefront-compatibility/b2b`,
-        '/setup/configuration/storefront-compatibility-b2b/': `${basePath}/setup/configuration/storefront-compatibility/b2b`,
         '/setup/discovery/architecture': `${basePath}/get-started/architecture`,
         '/setup/multistore': `${basePath}/setup/configuration/multistore-setup`,
         '/activate': `${basePath}/setup`,
@@ -189,10 +213,8 @@ export function generateRedirects(basePath) {
         '/merchants/storefront-builder/visual-editor': `${basePath}/merchants/quick-start/experience-workspace`,
         '/merchants/storefront-builder/content-commerce-blocks': `${basePath}/merchants/quick-start/content-commerce-blocks`,
         '/merchants/storefront-builder/page-metadata': `${basePath}/merchants/quick-start/page-metadata`,
-        '/merchants/storefront-builder/page-metadata/': `${basePath}/merchants/quick-start/page-metadata`,
         '/merchants/storefront-builder/section-metadata': `${basePath}/merchants/quick-start/section-metadata`,
-        '/merchants/storefront-builder/section-metadata/': `${basePath}/merchants/quick-start/section-metadata`,
-        '/merchants/storefront-builder/your-first-page': `${basePath}/merchants/quick-start/your-first-page`,
+        '/merchants/storefront-builder/your-first-page': `${basePath}/how-tos/create-commerce-page`,
         '/merchants/storefront-builder/overview/': `${basePath}/merchants/storefront-builder/`,
         '/merchants/storefront-builder/create-your-content/': `${basePath}/merchants/storefront-builder/create-content/`,
 
@@ -210,9 +232,7 @@ export function generateRedirects(basePath) {
 
         // Personalization and Product Recommendations setup guides (blocks → content-customizations)
         '/merchants/blocks/personalization': `${basePath}/merchants/content-customizations/personalization`,
-        '/merchants/blocks/personalization/': `${basePath}/merchants/content-customizations/personalization`,
         '/merchants/blocks/product-recommendations': `${basePath}/merchants/content-customizations/product-recommendations`,
-        '/merchants/blocks/product-recommendations/': `${basePath}/merchants/content-customizations/product-recommendations`,
 
         // Legacy unified index redirects (blocks → b2c for B2C users, blocks → b2b for B2B users)
         // Note: Main /merchants/blocks/ now serves as a landing page with links to both B2C and B2B
@@ -225,7 +245,6 @@ export function generateRedirects(basePath) {
         '/merchants/terms-and-conditions': `${basePath}/merchants/get-started/terms-and-conditions`,
         // IA moved prerendered PDP docs out of get-started; old paths still appear in Search Console
         '/merchants/get-started/prerendered-product-pages': `${basePath}/merchants/content-customizations/prerendered-product-pages`,
-        '/merchants/get-started/prerendered-product-pages/': `${basePath}/merchants/content-customizations/prerendered-product-pages/`,
 
         // Multistore redirects
         '/merchants/get-started/multistore': `${basePath}/setup/configuration/multistore-setup`,
@@ -240,19 +259,15 @@ export function generateRedirects(basePath) {
 
         // Commerce localization tasks moved out of Merchants (developer procedure) into Drop-ins reference
         '/merchants/quick-start/content-localization-commerce-tasks': `${basePath}/dropins/all/commerce-tasks`,
-        '/merchants/quick-start/content-localization-commerce-tasks/': `${basePath}/dropins/all/commerce-tasks/`,
 
         // Placeholder sheets reference moved out of API Reference (resources) into Merchants
         '/resources/placeholders': `${basePath}/merchants/blocks/placeholder-sheets`,
-        '/resources/placeholders/': `${basePath}/merchants/blocks/placeholder-sheets/`,
         // Resources index removed (API Reference); its only content already lived in Merchants
         '/resources': `${basePath}/merchants/blocks/placeholder-sheets`,
-        '/resources/': `${basePath}/merchants/blocks/placeholder-sheets/`,
 
         // ========= MISC REDIRECTS =========
         // Short path / CTA used in older builds or external links; canonical tutorial is create-storefront
         '/create': `${basePath}/get-started/create-storefront`,
-        '/create/': `${basePath}/get-started/create-storefront/`,
         '/faq': `${basePath}/troubleshooting/faq`,
         '/references/configurations': `${basePath}/setup/configuration/commerce-configuration`,
         '/references/requirements': `${basePath}/get-started/architecture`,

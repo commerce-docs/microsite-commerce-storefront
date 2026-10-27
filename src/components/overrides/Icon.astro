@@ -1,34 +1,68 @@
 ---
 import { Icons } from './Icons';
+import { BookOpen, Braces, FileText, Footprints, Rocket, type IconNode } from 'lucide';
+
+const outlineIcons: Partial<Record<keyof typeof Icons, IconNode>> = {
+  'seti:json': Braces,
+  document: FileText,
+  lightbulb: Footprints,
+  'open-book': BookOpen,
+  rocket: Rocket,
+};
 
 interface Props {
   name: keyof typeof Icons;
   label?: string;
   color?: string;
   size?: string;
+  strokeWidth?: number;
+  viewBox?: string;
   class?: string;
   title?: string;
 }
 
-const { name, label, size = '1em', color, title } = Astro.props;
+const {
+  name,
+  label,
+  size = '22px',
+  strokeWidth,
+  viewBox = '0 0 24 24',
+  color,
+  title,
+} = Astro.props;
+const iconNodes = outlineIcons[name];
+const lineWidth = strokeWidth ?? (iconNodes ? 2 : 0);
 const a11yAttrs = label ? ({ 'aria-label': label } as const) : ({ 'aria-hidden': 'true' } as const);
 ---
 
 <svg
   {...a11yAttrs}
   class={Astro.props.class}
-  viewBox="0 0 24 24"
-  fill="currentColor"
-  set:html={Icons[name]}
->
+  data-icon={name}
+  viewBox={viewBox}
+  fill={iconNodes ? 'none' : 'currentColor'}>
   <title>{title}</title>
+  {
+    iconNodes ? (
+      iconNodes.map(([Tag, attributes]) => <Tag {...attributes} />)
+    ) : (
+      <Fragment set:html={Icons[name]} />
+    )
+  }
 </svg>
 
-<style define:vars={{ 'sl-icon-color': color, 'sl-icon-size': size }}>
+<style
+  define:vars={{ 'sl-icon-color': color, 'sl-icon-size': size, 'sl-icon-stroke-width': lineWidth }}
+>
   svg {
     color: var(--sl-icon-color);
     font-size: var(--sl-icon-size, 1em);
-    width: 1em;
-    height: 1em;
+    width: var(--icon-size, 1em);
+    height: var(--icon-size, 1em);
+    flex-shrink: 0;
+    stroke: currentColor;
+    stroke-width: var(--icon-stroke-width, var(--sl-icon-stroke-width));
+    stroke-linecap: round;
+    stroke-linejoin: round;
   }
 </style>

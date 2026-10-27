@@ -133,6 +133,14 @@ const OUTPUT_SMALL = join(projectRoot, 'public/llms-small.txt');
 const OUTPUT_LLMSTXT = join(projectRoot, 'public/llms.txt');
 const OUTPUT_LLMS_TXT_DIR = join(projectRoot, 'public/_llms-txt');
 
+const MERCHANT_HOW_TO_PATHS = new Set([
+  'merchants/edge-delivery-services/content-migration',
+  'merchants/quick-start/content-localization',
+  'merchants/content-customizations/personalization',
+  'merchants/content-customizations/product-recommendations',
+  'merchants/content-customizations/terms-and-conditions',
+]);
+
 /**
  * Thematic bundles (paths relative to src/content/docs, no extension).
  * Filters are mutually exclusive except where noted; together they cover all doc pages.
@@ -165,8 +173,8 @@ const LLMS_TXT_BUNDLES = [
   {
     slug: 'how-tos',
     label: 'How-tos',
-    blurb: 'Task-focused how-to guides',
-    filter: p => p.startsWith('how-tos/')
+    blurb: 'Step-by-step storefront tasks for authors and developers',
+    filter: p => p.startsWith('how-tos/') || p.includes('/how-tos/') || MERCHANT_HOW_TO_PATHS.has(p)
   },
   {
     slug: 'licensing',
@@ -192,31 +200,31 @@ const LLMS_TXT_BUNDLES = [
     blurb: 'Cross-drop-in concepts, shared APIs, and indexes for B2C and B2B drop-ins',
     filter: p =>
       (p.startsWith('dropins/all/') || p === 'dropins/index' || p === 'dropins-b2b/index') &&
-      !p.includes('/tutorials/')
+      !p.includes('/how-tos/')
   },
   {
     slug: 'dropins-cart',
     label: 'Cart drop-in',
     blurb: 'Cart drop-in containers, slots, events, and customization APIs',
-    filter: p => p.startsWith('dropins/cart/') && !p.includes('/tutorials/')
+    filter: p => p.startsWith('dropins/cart/') && !p.includes('/how-tos/')
   },
   {
     slug: 'dropins-checkout',
     label: 'Checkout drop-in',
     blurb: 'Checkout drop-in containers, slots, events, and customization APIs',
-    filter: p => p.startsWith('dropins/checkout/') && !p.includes('/tutorials/')
+    filter: p => p.startsWith('dropins/checkout/') && !p.includes('/how-tos/')
   },
   {
     slug: 'dropins-order',
     label: 'Order drop-in',
     blurb: 'Order management, order confirmation, and returns drop-in reference',
-    filter: p => p.startsWith('dropins/order/') && !p.includes('/tutorials/')
+    filter: p => p.startsWith('dropins/order/') && !p.includes('/how-tos/')
   },
   {
     slug: 'dropins-pdp',
     label: 'Product details drop-in',
     blurb: 'Product details page drop-in containers, slots, and APIs',
-    filter: p => p.startsWith('dropins/product-details/') && !p.includes('/tutorials/')
+    filter: p => p.startsWith('dropins/product-details/') && !p.includes('/how-tos/')
   },
   {
     slug: 'dropins-account-auth',
@@ -224,7 +232,7 @@ const LLMS_TXT_BUNDLES = [
     blurb: 'User account and user authentication drop-in reference',
     filter: p =>
       (p.startsWith('dropins/user-account/') || p.startsWith('dropins/user-auth/')) &&
-      !p.includes('/tutorials/')
+      !p.includes('/how-tos/')
   },
   {
     slug: 'dropins-catalog',
@@ -234,7 +242,7 @@ const LLMS_TXT_BUNDLES = [
       (p.startsWith('dropins/product-discovery/') ||
         p.startsWith('dropins/recommendations/') ||
         p.startsWith('dropins/personalization/')) &&
-      !p.includes('/tutorials/')
+      !p.includes('/how-tos/')
   },
   {
     slug: 'dropins-wishlist-payments',
@@ -242,13 +250,13 @@ const LLMS_TXT_BUNDLES = [
     blurb: 'Wishlist and payment services drop-in reference',
     filter: p =>
       (p.startsWith('dropins/wishlist/') || p.startsWith('dropins/payment-services/')) &&
-      !p.includes('/tutorials/')
+      !p.includes('/how-tos/')
   },
   {
     slug: 'dropins-b2b-quote',
     label: 'B2B quote management drop-in',
     blurb: 'Quote management drop-in containers, slots, events, and APIs for B2B',
-    filter: p => p.startsWith('dropins-b2b/quote-management/') && !p.includes('/tutorials/')
+    filter: p => p.startsWith('dropins-b2b/quote-management/') && !p.includes('/how-tos/')
   },
   {
     slug: 'dropins-b2b-company',
@@ -257,7 +265,7 @@ const LLMS_TXT_BUNDLES = [
     filter: p =>
       (p.startsWith('dropins-b2b/company-management/') ||
         p.startsWith('dropins-b2b/company-switcher/')) &&
-      !p.includes('/tutorials/')
+      !p.includes('/how-tos/')
   },
   {
     slug: 'dropins-b2b-purchasing',
@@ -267,13 +275,7 @@ const LLMS_TXT_BUNDLES = [
       (p.startsWith('dropins-b2b/purchase-order/') ||
         p.startsWith('dropins-b2b/quick-order/') ||
         p.startsWith('dropins-b2b/requisition-list/')) &&
-      !p.includes('/tutorials/')
-  },
-  {
-    slug: 'tutorials-reference',
-    label: 'Tutorials',
-    blurb: 'Step-by-step tutorials under drop-ins (cart, checkout, order, account, product details)',
-    filter: p => p.includes('/tutorials/')
+      !p.includes('/how-tos/')
   },
   {
     slug: 'blocks-reference',
@@ -285,7 +287,7 @@ const LLMS_TXT_BUNDLES = [
     slug: 'merchants-authoring',
     label: 'Merchants and authoring',
     blurb: 'Quick start, content, localization, storefront builder, and content customizations (excluding block reference pages)',
-    filter: p => p.startsWith('merchants/') && !p.startsWith('merchants/blocks/')
+    filter: p => p.startsWith('merchants/') && !p.startsWith('merchants/blocks/') && !MERCHANT_HOW_TO_PATHS.has(p)
   },
   {
     slug: 'sdk-reference',
@@ -294,7 +296,7 @@ const LLMS_TXT_BUNDLES = [
     filter: p => p.startsWith('sdk/')
   },
   // Excluded: videos/ pages are descriptions of video content with no actionable text for AI tools;
-  // the corresponding step-by-step content lives in tutorials-reference.
+  // the corresponding step-by-step content lives in how-tos.
   // {
   //   slug: 'videos',
   //   label: 'Videos',
@@ -1096,6 +1098,13 @@ function generate() {
       }),
       files
     );
+    if (bundle.slug === 'how-tos') {
+      writeFileSync(
+        join(OUTPUT_LLMS_TXT_DIR, 'tutorials-reference.txt'),
+        readFileSync(outPath, 'utf-8'),
+        'utf-8'
+      );
+    }
   }
 
   console.log('Successfully generated llms context files.');
