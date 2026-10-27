@@ -70,18 +70,18 @@ Add your AEP credentials to the `analytics` section of your <Link href="/setup/c
 }
 ```
 
-When both `aep-ims-org-id` and `aep-datastream-id` are configured, the storefront automatically:
+When consent is granted and both `aep-ims-org-id` and `aep-datastream-id` are configured, the storefront automatically:
 - Enables event forwarding to Adobe Experience Platform
 - Configures the AEP context with your credentials
 - Begins sending commerce events to the Experience Platform Edge Network
 
 <Aside type="caution" title="Consent gating">
-Analytics runs from `scripts/consented.js`, which loads only after the shopper grants consent. By default the boilerplate declines consent, so no events are sent until you integrate a consent management platform. For testing, append `?consent=accept` to the URL to load consented scripts.
+Analytics runs from `scripts/consented.js`, which loads only after the consent check confirms acceptance. Credentials alone do not enable forwarding. Before launch, connect the merchant's consent management platform (CMP) to replace the placeholder consent check. The placeholder accepts `?consent=accept` and its documented equivalents on any hostname. Because anyone can change this query parameter, do not use it as production consent. See [Consent and CMP integration](/setup/analytics/consent/).
 </Aside>
 
 ### Method 2: Direct Script Configuration (Alternative)
 
-Alternatively, you can configure AEP directly in your `scripts/consented.js` file:
+Alternatively, you can configure AEP directly in your `scripts/consented.js` file, which loads only after consent is granted. Do not add references to the removed `getConsent` or topic API. The boilerplate does not fully handle revocation (withdrawing consent). Implement and test any merchant-specific revocation requirements separately.
 
 ```js
 window.adobeDataLayer.push(
@@ -93,7 +93,7 @@ window.adobeDataLayer.push(
   },
   {
     eventForwardingContext: {
-      aep: true
+      aep: !document.prerendering
     }
   }
 );
@@ -117,11 +117,11 @@ Using the configuration file (Method 1) is recommended because it:
 
 - **`aep-ims-org-id`**: Identifies your Adobe organization for routing events to the correct Experience Platform environment
 - **`aep-datastream-id`**: Specifies the datastream configuration that determines how events are processed and where they are sent
-- **Automatic event forwarding**: When both values are present, the storefront automatically enables `eventForwardingContext.aep` and configures the `aepContext`
+- **Automatic event forwarding**: When analytics loads after consent and both values are present, the storefront enables `eventForwardingContext.aep` and configures the `aepContext`. The boilerplate does not fully handle revocation. Add and test merchant-specific controls if required.
 
 ## Storefront events
 
-Once configured, your storefront automatically sends the following types of events to Adobe Experience Platform:
+After configuration and consent, your storefront sends the following types of events to Adobe Experience Platform:
 
 - **Shopping events**: Cart updates and views (`addToCart`, `removeFromCart`, `shoppingCartView`), page views (`pageView`, `productPageView`), checkout (`startCheckout`, `completeCheckout`) and more.
 - **Customer profile events**: Customer login (`signIn`), customer logout (`signOut`), create account (`createAccount`), edit account (`editAccount`).
@@ -179,7 +179,7 @@ Ensure events contain the expected commerce data fields and customer identifiers
 
 If data is not flowing as expected:
 
-- **Verify credentials**: Double-check your IMS Organization ID and Datastream ID
+- **Verify credentials**: Verify your IMS Organization ID and Datastream ID
 - **Check datastream configuration**: Ensure your datastream is properly configured to route to Adobe Experience Platform
 - **Review browser network tab**: Look for failed requests to Adobe Experience Platform endpoints
 - **Validate Adobe Data Layer**: Confirm the Adobe Data Layer is properly initialized before your AEP configuration
