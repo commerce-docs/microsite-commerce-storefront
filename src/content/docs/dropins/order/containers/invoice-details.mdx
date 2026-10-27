@@ -18,7 +18,7 @@ The `InvoiceDetails` container displays one invoice associated with an order. It
   Use a release of `@dropins/storefront-order` that exports `InvoiceDetails` and supports the PDF
   options described here. Invoice retrieval uses the authenticated customer's orders; an invoice
   reference alone does not provide access to another customer's invoice. The invoice query also
-  requires a Storefront Compatibility endpoint with the status and invoice-item tax fields: SCP
+  requires a Storefront Compatibility (SCP) endpoint with the status and invoice-item tax fields:
   4.7.21, 4.8.33, or 4.9.8, or a later compatible patch on that release line. Deploy the compatible
   backend schema before using this drop-in version; an older schema rejects the query.
 </Aside>
@@ -74,7 +74,9 @@ Provide `orderData` or receive an [`order/data`](/dropins/order/events/#orderdat
 
 The container shows a loader during retrieval, a not-found alert if the invoice is absent from the order, and a separate error alert if retrieval fails.
 
-The status is read from the selected invoice, not inferred from the parent order. Each item's tax is read from its GraphQL `tax_amount`: zero is displayed as zero, while `null` is shown as unavailable. The detail view does not estimate item tax from order prices.
+The status is read from the selected invoice, not inferred from the parent order. Status styling is case-insensitive: Paid uses positive styling, Pending uses warning styling, and Canceled uses alert styling. Unrecognized statuses use neutral styling.
+
+Each item's tax is read from its GraphQL `tax_amount`. The detail view and PDF format a reported zero as a monetary amount, such as `$0.00`, and show an em dash for unavailable tax (`null`). Neither view estimates item tax from order prices or the aggregate invoice tax total.
 
 ## Example
 
@@ -114,6 +116,8 @@ export default async function decorate(block) {
 
 The built-in download creates a portrait A4 PDF in the browser and loads the renderer when the customer requests it. The filename is `invoice-<invoice-number>.pdf`, with unsupported filename characters replaced by hyphens. The container does not store PDFs on the server.
 
+The PDF header includes the invoice number, invoice status, order number, and order date when available.
+
 To add branding, supply `getInvoicePdfBranding` in the render options. Return an object with any of these fields:
 
 <OptionsTable
@@ -145,6 +149,10 @@ await orderRenderer.render(InvoiceDetails, {
 ```
 
 This branding is supplied by the host application. The renderer does not fetch the PDF logo or address configured in Adobe Commerce Admin. If your host loads an image from a different origin to create a data URL, that origin must allow the image request.
+
+The renderer preserves the logo's aspect ratio within a maximum width of 36 mm and height of 18 mm. The logo, company details, and invoice information use separate header areas. Header text wraps, and the header expands to keep it above the address panels.
+
+Missing or invalid logos do not reserve an empty logo column. An invalid logo produces a console warning, and PDF generation continues without the image.
 
 To use a backend document service instead, supply `onDownloadPdf` and implement the download in that callback. Do not pass an empty callback: it disables the built-in download.
 
