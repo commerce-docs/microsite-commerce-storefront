@@ -100,9 +100,7 @@ The Commerce Boilerplate team moved most of the complex Commerce logic into npm-
 - **Reduced conflicts**: Fewer files in your project means fewer merge conflicts when updating
 - **Consistent behavior**: All storefronts benefit from the same tested, optimized Commerce logic
 
-## Upgrade strategies
-
-### Consent-gating migration
+## Consent-gating migration
 
 When adopting the consent-gating update, review the storefront integration code as well as npm packages. The Commerce Events SDK and collector are loaded only after consent; ACDL and local product and purchase history recording continue before consent. Recommendation requests may still run before consent and may include the current product SKU or explicitly authored `currentsku` and `currentprice` values, but do not include stored viewing or purchase history, cart SKUs, or shopper-derived pricing.
 
@@ -111,6 +109,8 @@ Move customized consent-dependent `delayed.js` logic to `scripts/consented.js`, 
 The boilerplate does not persist consent preferences or implement a complete revocation flow. Recommendation history is recorded locally before consent but withheld from recommendation requests until consent; after consent, stored history may be used. Without consent, analytics collection is off and behavior-based recommendations may be less personalized, although recommendation requests themselves remain available.
 
 Follow [Consent and CMP integration](/setup/analytics/consent/#migrate-customized-delayed-scripts) for the consent event and migration guidance. Validate the CMP integration in staging, brief support and go-live teams about the behavior change, and deploy the code and documentation together.
+
+## Upgrade strategies
 
 <Options label="Strategy">
 <Option>
@@ -211,6 +211,8 @@ When you need integration layer improvements or new features that require change
    A storefront repo created from the Commerce boilerplate template is not a GitHub fork of the boilerplate, but you can still add an `upstream` remote and merge or cherry-pick using the same Git operations.
 
    Focus your review on key files like `scripts/commerce.js` and the `scripts/initializers/` directory where most Commerce-specific updates occur.
+
+   When applying a consent-gating update, also review custom tracking logic in `scripts/delayed.js`. Move consent-dependent scripts to `scripts/consented.js`, keep the consent-check flow in place, and validate the merchant's CMP integration. See [Consent-gating migration](#consent-gating-migration) for the required behavior and migration steps.
 
 1. **Identify changes to include**
 
