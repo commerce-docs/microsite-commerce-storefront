@@ -1,0 +1,165 @@
+---
+title: Make your first change
+description: Learn how to change a shared color in your Adobe Commerce storefront, verify it in a local preview, and check the CSS before sharing your work.
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import Aside from '@components/Aside.astro';
+import Link from '@components/Link.astro';
+
+Change the color of a content link in your local storefront by editing its stylesheet. The stylesheet uses CSS. After the edit, you'll check the result in your browser and review the code.
+
+Before you begin, open your storefront project in your editor and keep its local development server running. For this exercise, choose a content page with an ordinary text link. If you need help with setup, see [Run your storefront locally](/get-started/run-locally/).
+
+The exercise is complete when the link has the intended color and the stylesheet check passes. It checks a local styling change, not the backend connection or checkout.
+
+## Record the starting point
+
+Check the existing work before editing so you can tell which changes belong to this exercise. Use a second terminal in your storefront directory, leaving the development server running in the first.
+
+<Steps>
+
+1. Review the files that already have changes.
+
+   ```bash
+   git status --short
+   git diff HEAD -- styles/styles.css
+   ```
+
+   Use `git status` to see which files have changed, then use the second command to inspect staged and unstaged stylesheet edits since the last commit. Keep a record of those edits so you can distinguish them from this exercise, and leave the existing work in place.
+
+1. Run the stylesheet check before making a change.
+
+   ```bash
+   npx stylelint styles/styles.css
+   ```
+
+   Stylelint checks CSS rules and formatting. The current template already includes it as a development dependency, so you can run the check without installing another tool. A passing check exits without reporting violations. If it fails now, save the output and work with your team to resolve the errors before continuing.
+
+</Steps>
+
+## Find the shared color
+
+In `styles/styles.css`, your storefront defines design tokens: named values that several styles can reuse. One of these, `--color-brand-500`, is shared by ordinary content links and several button styles in the current template, so changing it can affect more than one element.
+
+In CSS, this design token is a custom property, and styles read its value with `var(--color-brand-500)`. The `:root` selector defines values on the page's root element, while the same rule assigns them to elements with the `.dropin-design` class. Keep both selectors and the other tokens unchanged.
+
+Because the color is shared, treat this as a local learning exercise rather than a production branding decision.
+
+<Steps>
+
+1. Open `styles/styles.css` in your editor.
+
+   Find the existing `:root, .dropin-design` rule near the beginning of the file.
+
+1. Find the `--color-brand-500` declaration inside that rule.
+
+   The current template starts with `#454545`, but your project may already use a different value. Record that existing value so you can restore it if needed.
+
+   If your project already uses the exercise color, `#0057b8`, choose a different team-approved test color. Substitute it for `#0057b8` in this exercise and keep a note for the AI-assisted exercise.
+
+1. Right-click a text link in the main content of your local page and choose **Inspect**.
+
+   Choose a paragraph link rather than a control inside cart, checkout, or another drop-in. Inspecting it opens the browser's developer tools with that element selected.
+
+1. Find the link's active `color` declaration in the **Styles** panel.
+
+   Look for `color: var(--color-brand-500)` from `styles/styles.css`. A crossed-out declaration means another rule takes priority. If a different style controls the color, choose another content link or ask your team which rule to use.
+
+1. Note the final `color` value in the **Computed** panel.
+
+   This panel shows the browser's final color, so the template's `#454545` may appear as the equivalent `rgb(69, 69, 69)`. If your browser uses different labels, look for its equivalent style and computed-value views.
+
+</Steps>
+
+## Change the token
+
+Update the existing declaration, rather than adding another rule or replacing the entire list of tokens.
+
+<Steps>
+
+1. Replace only the value of `--color-brand-500` in `styles/styles.css`.
+
+   ```css title="styles/styles.css (inside the existing token rule)"
+   /* Keep the other declarations in this rule unchanged. */
+   --color-brand-500: #0057b8;
+   ```
+
+   Because the sample shows one declaration rather than a complete stylesheet, change its value in place, leaving the surrounding rule and its other tokens unchanged.
+
+   This exercise only changes the color to blue, so you do not need to change JavaScript, install a package, or modify Commerce configuration.
+
+1. Save the file.
+
+1. Return to the local page and check the content link.
+
+   The development server enables automatic reloading by default. If the browser has not updated, reload the local page.
+
+</Steps>
+
+With the pointer away from the link, it should now use `#0057b8`, which the **Computed** panel may show as `rgb(0, 87, 184)`. If you chose another test color, check for that value instead. The shared token can also change other controls, not only this link.
+
+To compare the two states, hover the link. Its hover color should remain the same because it uses `--color-brand-600`, which you have not edited. You can practice changing that token with an agent in [Make a change with AI](/ai/develop-with-ai/).
+
+## Verify and review
+
+Check the visible result and the changed code before sharing your work.
+
+<Steps>
+
+1. Check the same page on your team's remote preview.
+
+   Your local edit does not change that site. If the remote page already uses blue, compare the stylesheet values rather than relying on the color alone.
+
+1. Check the changed file in a second terminal.
+
+   From your storefront directory, run:
+
+   ```bash
+   git diff HEAD -- styles/styles.css
+   ```
+
+   Compare this output with the changes you recorded at the start. The only new edit should be the token value. Keep any changes that were already present.
+
+1. Check the stylesheet with the project's CSS linter.
+
+   ```bash
+   npx stylelint styles/styles.css
+   ```
+
+   The check should still pass. If it reports an error, compare the output with your starting result and correct any problem introduced by the token edit. Run the check again after correcting it, leaving unrelated styles unchanged.
+
+</Steps>
+
+You have completed the exercise when the local link uses your new color, the code review shows the intended edit, and the stylesheet check passes. You can then keep the exercise local without pushing to a shared branch, or follow your team's review process before publishing.
+
+## If the color does not change
+
+- Confirm the browser address is your local preview, not the team's remote preview.
+- Confirm the file you edited belongs to the directory where the local server is running.
+- Check that the token appears in the existing rule, rather than in a comment.
+- Inspect the link with your browser's developer tools. A block-specific style may override the shared color. Choose an ordinary content link that uses `--color-brand-500`, or ask your team which style controls the element.
+
+<Aside type="note">
+  These paths and token names match the current storefront template. If your project has changed its
+  styling structure, follow its existing conventions rather than recreating the template's rules.
+</Aside>
+
+## Undo only the exercise
+
+To undo only this exercise, restore the original `--color-brand-500` value you recorded in `styles/styles.css`, then save the file. After saving, check that the local page shows the original color and review the changed lines to confirm that your earlier work is still present. Leave the rest of the stylesheet unchanged.
+
+Keep your new color if you want to use it in the AI-assisted exercise.
+
+## Continue with AI tools
+
+For the recommended next learning exercise, practice planning and reviewing a styling change with an agent. If needed, [install and verify the AI tools](/ai/), then continue with [Make a change with AI](/ai/develop-with-ai/).
+
+## More help on this topic
+
+- [Customize blocks](/blocks/customize-blocks/) explains where to make broader styling and behavior changes.
+- <Link
+    href="https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/styles/styles.css"
+    text="Default storefront stylesheet"
+  />
+  shows the current token definitions and their uses.
