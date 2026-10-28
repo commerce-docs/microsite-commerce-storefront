@@ -208,6 +208,10 @@ export function generateSidebar() {
           items: [
             { label: 'Getting started as an author', link: '/merchants/quick-start/' },
             {
+              label: 'Create your first commerce page',
+              link: '/how-tos/create-commerce-page/',
+            },
+            {
               label: 'Storefront authoring tools',
               link: '/merchants/quick-start/create-content/',
             },
@@ -525,7 +529,6 @@ export function generateSidebar() {
               label: 'Pages and blocks',
               collapsed: true,
               items: [
-                { label: 'Create a commerce page', link: '/how-tos/create-commerce-page/' },
                 { label: 'Build a category page manually', link: '/how-tos/manual-category-page/' },
                 { label: 'Add a block to a page', link: '/how-tos/add-block-to-page/' },
                 { label: 'Add page metadata', link: '/how-tos/add-page-metadata/' },
