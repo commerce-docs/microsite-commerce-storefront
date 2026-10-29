@@ -194,15 +194,77 @@ For the full lists, see the <Link href="https://experienceleague.adobe.com/en/do
 
 </details>
 
-## Estimate content requests per page view
+## Pages that use more content requests
 
-Measure one page view in your browser's developer tools to find its content requests per view. If your storefront is live and you want site-wide numbers without developer tools, ask your Adobe team or Adobe Customer Support for a usage report.
+Extra pages and content data files add usage. Filtering products, adding to the cart, and moving through checkout use Commerce API calls, which don't count.
+
+### Prerendered pages
+
+To make navigation faster, the storefront asks browsers such as Chrome and Edge to load linked pages in advance, for example when the pointer rests on a product link.
+
+- *Never opened:* The prerendered page counts the same as a page view, even though the shopper never sees it.
+- *Opened later:* The browser shows the prerendered copy, so the page counts only once.
+
+Home, category, and search pages have many links that can trigger prerendering. Your storefront team can adjust the speculation rules in `head.html`.
+
+#### Example: one category page
+
+A shopper opens a category page, hovers over products A and B, and then opens B. Both prerenders finish, and each page uses 1.2 content requests.
+
+<TableWrapper highlightLast totalRow>
+
+| Page | What the shopper does | Content requests |
+| ---- | --------------------- | ---------------: |
+| Category page | Opens it | 1.2 |
+| Product A | Hovers, never opens | 1.2 |
+| Product B | Hovers, then opens the prerendered copy, which counts once | 1.2 |
+| Total | Two page views and one unopened prerender | 3.6 |
+
+</TableWrapper>
+
+- *Counted once:* Product B was prerendered and then opened, so it counts once.
+- *Still counted:* Product A was never seen, but its prerender counts.
+- *Not a forecast:* This short journey shows the counting rule. To estimate your storefront's average, [measure unopened prerendered pages](#unopened-prerendered-pages).
+
+### Account and sign-in pages
+
+When the browser loads one page and then redirects to another, both pages count:
+
+- *Signed out:* Opening an account page, such as the address book, redirects the shopper to sign-in.
+- *Signed in:* Opening the sign-in page redirects the shopper to the account page.
+
+### Custom content blocks
+
+Blocks that load extra content add requests for each file:
+
+- *Spreadsheet or index:* Each adds 0.2 content requests per view.
+- *Full HTML page:* Each adds 1 content request. Files ending in `.plain.html` are fragments and don't count.
+
+To find the pages that use the most, [measure content requests per page view](#content-requests-per-page-view) on one page of each type: home, category, product, content, cart, checkout, and account.
+
+## Measure your storefront
+
+Each measurement fills one field in the [forecast calculator](#forecast-usage). If your storefront is live and you want site-wide numbers without developer tools, ask your Adobe team or Adobe Customer Support for a usage report.
+
+<TableWrapper>
+
+| Measure | Tool | Calculator field |
+| ------- | ---- | ---------------- |
+| [Content requests per page view](#content-requests-per-page-view) | Console script or Network panel | Content requests per view |
+| [Unopened prerendered pages](#unopened-prerendered-pages) | Application panel, Speculations | Extra prerendered pages per page view |
+| [Other traffic](#other-traffic) (optional) | CDN or server logs | Headroom for other traffic |
+
+</TableWrapper>
+
+Only production traffic counts toward your allowance. Before launch, measure on a preview or staging site with your planned production code and settings.
+
+### Content requests per page view
+
+Measure one page view in your browser's developer tools.
 
 <Steps>
 
 1. Open a page on your storefront in Chrome or Edge.
-
-   Only production traffic counts toward your allowance. If your site isn't live yet, see [Forecast usage](#forecast-usage).
 
     <Diagram caption="The examples on this page use this Adobe demo product page.">
        ![Demo storefront product page for the Pride at Adobe t-shirt, with product images, price, quantity selector, and Add to Cart button, followed by content cards, a team photo, product recommendations, and the footer.](./images/product-page.webp)
@@ -347,7 +409,8 @@ Use this method to check individual requests, or if the script shows a warning.
 </TabItem>
 </Tabs>
 
-### Example calculation
+<details>
+<summary>Worked example: the demo product page</summary>
 
 For the product page in the screenshots, these steps result in about 1.2 content requests per view:
 
@@ -364,44 +427,17 @@ For the product page in the screenshots, these steps result in about 1.2 content
 
 </TableWrapper>
 
-## Pages that use more content requests
+</details>
 
-Extra pages and content data files add usage. Filtering products, adding to the cart, and moving through checkout use Commerce API calls, which don't count.
+### Unopened prerendered pages
 
-### Prerendered pages
-
-To make navigation faster, the storefront asks browsers such as Chrome and Edge to load linked pages in advance, for example when the pointer rests on a product link.
-
-- *Never opened:* The prerendered page counts the same as a page view, even though the shopper never sees it.
-- *Opened later:* The browser shows the prerendered copy, so the page counts only once.
-
-Home, category, and search pages have many links that can trigger prerendering. Your storefront team can adjust the speculation rules in `head.html`.
-
-### Account and sign-in pages
-
-When the browser loads one page and then redirects to another, both pages count:
-
-- *Signed out:* Opening an account page, such as the address book, redirects the shopper to sign-in.
-- *Signed in:* Opening the sign-in page redirects the shopper to the account page.
-
-### Custom content blocks
-
-Blocks that load extra content add requests for each file:
-
-- *Spreadsheet or index:* Each adds 0.2 content requests per view.
-- *Full HTML page:* Each adds 1 content request. Files ending in `.plain.html` are fragments and don't count.
-
-To find the pages that use the most, run the estimate on one page of each type: home, category, product, content, cart, checkout, and account.
-
-## Measure prerendered pages
-
-A page that the browser prerenders counts even if the shopper never opens it. Measure these unopened pages across a browsing session to estimate how much they add to your forecast.
+A page that the browser prerenders counts even if the shopper never opens it. Count these unopened pages across a browsing session.
 
 <Steps>
 
-1. Open a category page on your storefront in Chrome or Edge, and open developer tools.
+1. Open a category page on your storefront in Chrome or Edge. In developer tools, select the <b>Application</b> tab. Under <b>Background services</b>, select <b>Speculative loads</b> > <b>Speculations</b>, and then reload the page.
 
-1. Select the <b>Application</b> tab. Under <b>Background services</b>, select <b>Speculative loads</b>, and then select <b>Speculations</b>. Reload the page to list the links that the browser can prerender, initially shown as <b>Not triggered</b>.
+   The list shows the links that the browser can prerender, marked <b>Not triggered</b>.
 
 1. Browse as a shopper would, resting the pointer on product links. A completed prerender shows <b>Ready</b>.
 
@@ -409,38 +445,13 @@ A page that the browser prerenders counts even if the shopper never opens it. Me
      ![Chrome DevTools Application panel with Speculative loads and Speculations selected, showing one product URL with status Ready and four other URLs with status Not triggered.](./images/prerender-measurement.png)
    </Diagram>
 
-1. Before opening the next page, count the <b>Ready</b> rows, excluding the link you'll open. Skip <b>Not triggered</b> rows. If other statuses appear, include canceled prerenders as described in *Canceled and repeated prerenders* below.
+1. Before opening the next page, add the <b>Ready</b> rows to your running total of unopened pages, excluding the link you'll open. If other statuses appear, see *Canceled and repeated prerenders* below.
 
-1. Add the count to your running total of unopened pages, then click the link to the next page. The list now shows that page's speculations.
+1. Open the next page. The list updates to show that page's links. Repeat steps 2 and 3 for about 10 page views.
 
-1. Repeat steps 3 through 5 until you've recorded counts for about 10 page views.
-
-1. Divide the total of unopened pages by the number of page views you sampled. Enter the result in the <b>Extra prerendered pages per page view</b> field in the [forecast calculator](#forecast-usage).
+1. Divide your total by the number of page views. Enter the result in the <b>Extra prerendered pages per page view</b> field in the [forecast calculator](#forecast-usage).
 
 </Steps>
-
-To use the result, see [Forecast usage](#forecast-usage).
-
-### Example: one category page
-
-A shopper opens a category page, hovers over products A and B, and then opens B. Both prerenders finish, and each page uses 1.2 content requests.
-
-<TableWrapper highlightLast totalRow>
-
-| Page | What the shopper does | Content requests |
-| ---- | --------------------- | ---------------: |
-| Category page | Opens it | 1.2 |
-| Product A | Hovers, never opens | 1.2 |
-| Product B | Hovers, then opens the prerendered copy, which counts once | 1.2 |
-| Total | Two page views and one unopened prerender | 3.6 |
-
-</TableWrapper>
-
-- *Counted once:* Product B was prerendered and then opened, so it counts once.
-- *Still counted:* Product A was never seen, but its prerender counts.
-- *Running total:* Add one unopened page.
-- *Not a forecast:* This short journey shows the counting rule. Use a longer session to estimate your average.
-- *Tunable:* Prerendering makes the next page appear faster. Your storefront team can adjust it in `head.html`.
 
 <details>
 <summary>Canceled and repeated prerenders</summary>
@@ -464,6 +475,17 @@ Add these statuses to your unopened total, except for the link you open next:
 
 </details>
 
+### Other traffic
+
+CDN or server logs show counted traffic that analytics misses, such as unrecognized bots and monitoring tools. This measurement is optional. Without it, agree on a headroom value with your storefront team.
+
+- *Separate:* Split page views, unopened prerenders, and other traffic for the same period.
+- *Exclude:* Remove requests that AEM doesn't count, such as static assets and recognized crawlers.
+- *Size headroom from what's left:* The gap between logs and analytics can include prerenders you already entered, so it isn't automatically your headroom.
+- *Other platforms:* Their logs can identify traffic sources, but their raw request counts aren't an AEM estimate.
+
+For example, 12,000 other content requests ÷ 120,000 forecast from page views and prerenders = 10% headroom. Enter 10 in the <b>Headroom for other traffic (%)</b> field.
+
 ## Forecast usage
 
 The calculator estimates content requests for a period, such as a month. Gather four inputs:
@@ -473,30 +495,15 @@ The calculator estimates content requests for a period, such as a month. Gather 
 | Input | Where to get it |
 | ----- | --------------- |
 | Page views | Migrating: your current site's analytics. New business: traffic projections. Don't use another platform's request counts, because its pages load content differently. |
-| Content requests per view | Your [page-only estimates](#estimate-content-requests-per-page-view). Cache-disabled results reflect first-time visitors. Repeat visitors make fewer requests. |
-| Extra prerendered pages per page view | Your result from [Measure prerendered pages](#measure-prerendered-pages). It's a page count, not content requests. The calculator converts it and keeps it separate from your page-only estimate. |
-| Headroom for other traffic | A percentage for unrecognized bots, monitoring tools, and visits that analytics misses. Without measured data, agree on a value with your storefront team. |
+| Content requests per view | Your [page view measurements](#content-requests-per-page-view). Cache-disabled results reflect first-time visitors. Repeat visitors make fewer requests. |
+| Extra prerendered pages per page view | Your [unopened prerendered pages](#unopened-prerendered-pages) result. It's a page count, not content requests. The calculator converts it and keeps it separate from your page-only estimate. |
+| Headroom for other traffic | A percentage for unrecognized bots, monitoring tools, and visits that analytics misses. See [Other traffic](#other-traffic). |
 
 </TableWrapper>
 
-- *Before launch:* Measure on a preview or staging site with your planned production code and settings.
-- *Not built yet:* Start with values from the <Link href="https://www.aemshop.net/" text="demo storefront" />.
+If you haven't built your storefront yet, start with values from the <Link href="https://www.aemshop.net/" text="demo storefront" />.
 
 <ContentRequestCalculator />
 
 - *Review:* Check the forecast with your storefront team, including planned load tests and uptime monitoring.
 - *Measured usage:* After launch, your Adobe team or Adobe Customer Support can provide a usage report to compare with this forecast.
-
-<details>
-<summary>Use logs to estimate other traffic</summary>
-
-CDN or server logs show traffic that analytics misses.
-
-- *Separate:* Split page views, unopened prerenders, and other traffic for the same period.
-- *Exclude:* Remove requests that AEM doesn't count, such as static assets and recognized crawlers.
-- *Size headroom from what's left:* The gap between logs and analytics can include prerenders you already entered, so it isn't automatically your headroom.
-- *Other platforms:* Their logs can identify traffic sources, but their raw request counts aren't an AEM estimate.
-
-For example, 12,000 other content requests ÷ 120,000 forecast from page views and prerenders = 10% headroom.
-
-</details>
