@@ -4,16 +4,32 @@ description: Learn which storefront requests count toward your content request a
 slug: setup/launch/content-requests
 ---
 
-import { Aside, Steps } from '@astrojs/starlight/components';
+import { Aside, Steps, Tabs, TabItem } from '@astrojs/starlight/components';
+import ContentRequestCalculator from '@components/ContentRequestCalculator.astro';
 import Diagram from '@components/Diagram.astro';
 import Link from '@components/Link.astro';
 import TableWrapper from '@components/TableWrapper.astro';
 
-Content requests and page views do not have a one-to-one relationship. Learn which requests count, estimate content requests per page view, and use those estimates to plan for launch.
+A page view and a content request aren't the same thing. On the demo storefront, loading a standard page uses 1 to 1.2 content requests, before extra usage from unopened prerendered pages or automated traffic. Use this page to see what counts, forecast your usage, and compare your forecast with what Adobe measures.
+
+## At a glance
+
+- <b>Start with a baseline of 1 to 1.2 per page view:</b> This covers loading a standard demo storefront page, before extra usage from unopened prerendered pages or automated traffic.
+- <b>What counts:</b> Each page that a shopper opens counts as 1. Every 5 content data files, such as the list of banners to show on product pages, count as 1.
+- <b>What doesn't count:</b> Product details, prices, search, cart, checkout, and accounts. Images, styles, and scripts. Well-known search, social, and AI crawlers.
+- <b>Prerendering adds usage:</b> Pages loaded in advance count even if the shopper never opens them. Include these unopened pages when forecasting, especially on category and search pages. A prerendered page that the shopper then opens counts only once.
+- <b>Other traffic that adds more:</b> AI agents and bots that AEM doesn't recognize, and monitoring tools.
+- <b>Your forecast:</b> Enter your expected page views in the [forecast calculator](#forecast-usage).
+
+<Aside type="note" title="How Adobe measures your usage">
+
+Adobe counts the pages and data files that its network delivers from your production storefront. Your analytics and your estimates don't change that count. Use the estimates on this page to plan. To see measured usage and what contributes most to it, ask your Adobe team or Adobe Customer Support for a usage report.
+
+</Aside>
 
 ## Page views vs. content requests
 
-When a shopper views a page, the browser makes many requests, but only some count toward your content request allowance. The page HTML and some JSON data files count. Most other requests don't. For example, one product page view adds up to 1.2 content requests:
+When a shopper views a page, the browser makes many requests, but only the page and some data files count. For example, one product page view adds up to 1.2 content requests:
 
 <Diagram adaptColors
    type="mermaid"
@@ -57,26 +73,85 @@ When a shopper views a page, the browser makes many requests, but only some coun
    `}
 />
 
-## Counted requests
+## Does it count?
 
-Your storefront delivers pages through Edge Delivery Services, part of Adobe Experience Manager (AEM), so AEM's counting rules apply. These rules describe how Adobe counts traffic that passes through the Adobe-managed content delivery network (CDN). If your storefront uses its own CDN, ask your Adobe team how to report your usage.
+Your storefront delivers pages through Edge Delivery Services, part of Adobe Experience Manager (AEM), so AEM's counting rules apply. These rules cover traffic through the Adobe-managed content delivery network (CDN). If your storefront uses its own CDN, ask your Adobe team how to report your usage.
 
-AEM counts successful responses, with status codes `100-299`, unless an [exclusion](#excluded-requests) applies. According to the <Link href="https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/using-cloud-manager/license-dashboard#what-is-a-content-request" text="AEM counting definition" />, these storefront requests count toward your allowance:
+<TableWrapper>
+
+| When this happens | Counts? | Content requests |
+| ----------------- | ------- | ---------------: |
+| A shopper opens a page | Yes | 1 |
+| A page shows content that authors manage in a spreadsheet or index, such as product banners, store lists, or blog listings | Yes | 0.2 for each file |
+| A shopper browses products, sees prices, searches, filters, uses the cart, checks out, or manages an account | No | 0 |
+| A page loads images, styles, scripts, the navigation, or the footer | No | 0 |
+| The browser prerenders a page, and the shopper never opens it | Yes | Same as opening the page |
+| The browser prerenders a page, and the shopper then opens it | Once | Same as opening the page, not counted again |
+| A shopper's browser blocks analytics | Yes | Same as any page view |
+| A well-known search, social, or AI crawler visits | No | 0 |
+| An AI agent, script, or bot that AEM doesn't recognize visits | Yes | Same as a shopper |
+| An uptime monitor checks a page | Yes, unless it sends `HEAD` requests | 1 for each check |
+| A mobile app or partner feed reads data files from your storefront domain | Yes | 0.2 for each file |
+| A visitor gets a redirect or an error | No | 0 |
+
+</TableWrapper>
+
+### Keep automated traffic from counting
+
+Not all AI traffic is excluded. AEM excludes automated traffic only when it recognizes a well-known bot. To keep your own automated traffic from using your allowance:
+
+- *Monitoring:* Set uptime and health checks to send `HEAD` requests, which don't count.
+- *Load tests and scripts:* Run them on your preview or staging site, because only production traffic counts.
+- *Proxies and CDNs:* Pass the original user agent to AEM, so AEM can recognize well-known bots.
+
+### Counting rules in detail
+
+Your storefront team can use these details to check individual requests.
+
+<details>
+<summary>Requests that count</summary>
+
+AEM counts successful responses, with status codes `100-299`, unless an exclusion applies. According to the <Link href="https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/using-cloud-manager/license-dashboard#what-is-a-content-request" text="AEM counting definition" />, these storefront requests count toward your allowance:
 
 <TableWrapper>
 
 | Request type | How it counts |
 | ------------ | ------------- |
 | HTML responses | Each HTML response, such as the page itself, counts as 1 content request. |
-| JSON responses | Every 5 JSON responses count as 1 content request. For example, `enrichment.json` lists the extra content that the storefront adds to product and category pages. |
+| JSON responses | Every 5 JSON responses count as 1 content request. |
 | Cached responses | Count the same as responses that aren't cached. |
-| Prefetched pages | Count when loaded, even if the shopper never opens the page. |
-| Automated traffic | Requests from scripts, test tools, and monitoring services, such as load tests and uptime checks, count unless [excluded](#excluded-requests). |
+| Prefetched and prerendered pages | Count when loaded, even if the shopper never opens the page. See [Pages that use more content requests](#pages-that-use-more-content-requests). |
+| Automated traffic | Requests from scripts, test tools, monitoring services, and AI agents that AEM doesn't recognize count. |
 | Visits that analytics doesn't record | Count, because AEM counts the content it delivers, even when a shopper's browser blocks analytics. |
 
 </TableWrapper>
 
-## Excluded requests
+</details>
+
+<details>
+<summary>JSON files that count</summary>
+
+JSON files hold data that a page reads after it loads. On the demo storefront's home, category, and product pages, only one JSON file counts: the enrichment index. Your storefront can add more when your team builds features that read published content.
+
+To plan usage, read the first and last columns. The middle column names the file that your storefront team sees.
+
+<TableWrapper>
+
+| Business use | File your storefront team sees | Content requests per view |
+| ------------ | ------------------- | ------------------------: |
+| Banners, size guides, and promotions on product and category pages | The enrichment index, `enrichment.json`, which lists the content to show on each product or category page | 0.2 |
+| Lists that authors keep in a spreadsheet, such as store locations, FAQs, or a promotions calendar | One published spreadsheet for each list that a custom block displays | 0.2 for each spreadsheet |
+| Editorial listing pages, such as a blog or lookbook | A custom index of articles. `query-index.json` is excluded, but indexes with other names, such as `enrichment.json`, count. | 0.2 for each index |
+| Other apps that read your site's content, such as a mobile app, kiosk, or partner feed | Any JSON file that the app downloads from your storefront domain | 0.2 for each file, even though no shopper views a page |
+
+</TableWrapper>
+
+Product details, prices, search results, carts, checkout, and accounts come from Commerce API calls, which don't count toward your content request allowance.
+
+</details>
+
+<details>
+<summary>Requests that don't count</summary>
 
 These storefront requests don't count toward your allowance:
 
@@ -85,37 +160,154 @@ These storefront requests don't count toward your allowance:
 | Request type | What to look for |
 | ------------ | ---------------- |
 | Static assets | Images, style sheets, and JavaScript files. |
-| HTML fragments | URLs ending in `.plain.html`, such as `nav.plain.html`. Fragments loaded from their page URL, such as `/fragments/promo`, [count normally](#counted-requests). |
+| HTML fragments | URLs ending in `.plain.html`, such as `nav.plain.html`. Fragments loaded from their page URL, such as `/fragments/promo`, count normally. |
 | Placeholder files | JSON files in a `placeholders/` folder, such as `/placeholders/cart.json`. These files hold the text labels that drop-in components display. |
 | Common Edge Delivery JSON files | `placeholders.json`, `placeholder.json`, `query-index.json`, `form-data.json`, and `config.json`. |
-| Redirects and errors | Status codes `300` and above, such as `301` or `404`. The page that a redirect leads to [counts normally](#counted-requests). |
+| Redirects and errors | Status codes `300` and above, such as `301` or `404`. The page that a redirect leads to counts normally. |
 | Commerce API calls | Requests routed directly to Adobe Commerce without reaching AEM, such as `graphql` and `cs-graphql`. Calls to other services that don't reach AEM are also excluded. |
 
 </TableWrapper>
 
-AEM also excludes recognized search, social, and AI crawlers, DDoS attacks that it detects and blocks, and health checks that use `HEAD` requests. For other exclusions and ways to manage usage, see the <Link href="https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/using-cloud-manager/content-requests" text="AEM content request rules" />. Some exclusions on this page, such as HTML fragments, placeholder files, and `config.json`, aren't listed in the AEM documentation yet.
+AEM also excludes DDoS attacks that it detects and blocks, and health checks that use `HEAD` requests. For other exclusions and ways to manage usage, see the <Link href="https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/using-cloud-manager/content-requests" text="AEM content request rules" />. Some exclusions on this page, such as HTML fragments, placeholder files, and `config.json`, aren't listed in the AEM documentation yet.
+
+</details>
+
+<details>
+<summary>Bots, crawlers, and AI agents</summary>
+
+AEM identifies bots by the user agent, the name that a browser or bot sends with each request.
+
+<TableWrapper>
+
+| Visitor | Counts? | Examples from AEM's lists |
+| ------- | ------- | ------------------------- |
+| Well-known search engine and social media crawlers | No | Googlebot, Bingbot, Applebot, Facebook, and Pinterest |
+| Well-known AI crawlers | No | ChatGPT, Claudebot, Perplexity, and Gemini Deep Research |
+| AI agents and automation that AEM doesn't recognize | Yes | An AI agent that identifies itself as a regular browser, headless Chrome, and scripts that use tools such as curl or Python Requests |
+| Monitoring tools that send `GET` requests | Yes | UptimeRobot, Amazon Route 53 health checks, and Site24x7 |
+
+</TableWrapper>
+
+- *AI agents that browse for a person:* An AI assistant that opens pages on a shopper's behalf can look like a regular browser, so its requests can count.
+- *Proxies and CDNs:* Recognized bots can count if a proxy or CDN in front of your storefront doesn't pass the original user agent to AEM.
+
+For the full lists, see the <Link href="https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/using-cloud-manager/content-requests#server-side-collection-rules" text="AEM server-side collection rules" />.
+
+</details>
 
 ## Estimate content requests per page view
 
-Use your browser's developer tools to estimate content requests for one page view on your storefront.
+Measure one page view in your browser's developer tools to find its content requests per view. If your storefront is live and you want site-wide numbers without developer tools, ask your Adobe team or Adobe Customer Support for a usage report.
 
 <Steps>
 
-1. Open a page on your production site in your browser.
+1. Open a page on your storefront in Chrome or Edge.
 
-   Only production traffic counts toward your allowance.
+   Only production traffic counts toward your allowance. If your site isn't live yet, see [Forecast usage](#forecast-usage).
 
     <Diagram caption="The examples on this page use this Adobe demo product page.">
        ![Demo storefront product page for the Pride at Adobe t-shirt, with product images, price, quantity selector, and Add to Cart button, followed by content cards, a team photo, product recommendations, and the footer.](./images/product-page.webp)
     </Diagram>
 
-1. Open your browser's developer tools and then select the <b>Network</b> tab.
+1. Open your browser's developer tools, select the <b>Network</b> tab, select <b>Disable cache</b>, and then reload the page.
 
-1. Select <b>Disable cache</b> and then reload the page.
+   Disabling the cache shows the requests a first-time visitor makes. To include shopper actions in your estimate, interact with the page now.
 
-   Disabling the cache shows the requests a first-time visitor makes. To include shopper actions in your estimate, interact with the page now, before you record your counts.
+</Steps>
 
-1. In the <b>Filter</b> box, enter the following filter. Replace `www.example.com` with your storefront's domain.
+Next, count the requests. The script does the counting for you. The Network panel lets you check each request yourself.
+
+<Tabs>
+<TabItem label="Run the script">
+
+The script reads the requests that the browser already recorded for the page and applies the counting rules on this page. It doesn't change the page or send data anywhere.
+
+<Steps>
+
+1. Select the <b>Console</b> tab, copy the following script, paste it, and press Enter.
+
+   ```js title="Console" collapse={2-54}
+   (async () => {
+     const [page] = performance.getEntriesByType('navigation');
+     if (!page?.contentType?.includes('html')) {
+       console.warn('This browser does not report response types. Use a current version of Chrome or Edge.');
+       return;
+     }
+     console.log('Waiting for the page to finish loading...');
+     const loading = '[data-section-status]:not([data-section-status="loaded"]), '
+       + '[data-block-status]:not([data-block-status="loaded"])';
+     const start = Date.now();
+     let quietSince = start;
+     let lastCount = 0;
+     while (Date.now() - quietSince < 2000) {
+       if (Date.now() - start > 30000) {
+         console.warn('The page was still loading after 30 seconds. The results might be incomplete.');
+         break;
+       }
+       const count = performance.getEntriesByType('resource').length;
+       if (count !== lastCount || document.querySelector(loading)) {
+         lastCount = count;
+         quietSince = Date.now();
+       }
+       await new Promise((resolve) => setTimeout(resolve, 250));
+     }
+     const resources = performance.getEntriesByType('resource');
+     if (resources.length >= 250) {
+       console.warn('The browser might not have recorded every request. Check the results in the Network panel.');
+     }
+     const excluded = [
+       [/\.plain\.html$/, 'HTML fragment'],
+       [/\/placeholders\//, 'Placeholder file'],
+       [/\/(placeholders?|query-index|form-data|config)\.json$/, 'Common Edge Delivery JSON file'],
+       [/graphql$/, 'Commerce API call'],
+     ];
+     const rows = [];
+     let html = 0;
+     let json = 0;
+     for (const entry of [page, ...resources]) {
+       if (!entry.name.startsWith(location.origin)) continue;
+       let type = '';
+       if (entry.contentType.includes('html')) type = 'HTML';
+       if (entry.contentType.includes('json')) type = 'JSON';
+       if (!type) continue;
+       const { pathname } = new URL(entry.name);
+       const reason = entry.responseStatus >= 300
+         ? 'Redirect or error'
+         : excluded.find(([pattern]) => pattern.test(pathname))?.[1];
+       if (!reason && type === 'HTML') html += 1;
+       if (!reason && type === 'JSON') json += 1;
+       rows.push({ request: pathname, type, counted: reason ? `No: ${reason}` : 'Yes' });
+     }
+     console.table(rows);
+     const total = Math.round((html + json / 5) * 100) / 100;
+     console.log(`Content requests per page view: ${html} HTML + ${json} JSON ÷ 5 = ${total}`);
+   })();
+   ```
+
+   If Chrome warns you about pasting, type `allow pasting`, press Enter, and then paste the script again.
+
+1. Read the result at the end of the console output.
+
+   The script waits until the page stops loading content, which can take a few seconds after the page appears. The table lists each HTML and JSON request from your storefront's domain and whether it counts. The last line shows the total, such as `Content requests per page view: 1 HTML + 1 JSON ÷ 5 = 1.2`.
+
+</Steps>
+
+<Aside type="tip" title="Reuse the script">
+
+To run the script on several pages, save it once as a snippet in the <b>Sources</b> panel, under <b>Snippets</b>. On each page, reload with the cache disabled, open the snippet, and press Ctrl+Enter (Cmd+Enter on macOS). The result appears in the console.
+
+</Aside>
+
+The script finds Commerce API calls by URLs that end in `graphql`. If your storefront routes Commerce requests through other paths, check those requests in the Network panel. The script measures only the current page, so it doesn't include [pages that the browser prerenders](#pages-that-use-more-content-requests).
+
+</TabItem>
+<TabItem label="Count in the Network panel">
+
+Use this method to check individual requests, or if the script shows a warning.
+
+<Steps>
+
+1. In the <b>Network</b> tab, enter the following filter in the <b>Filter</b> box. Replace `www.example.com` with your storefront's domain.
 
    ```text showLineNumbers=false
    domain:www.example.com mime-type:text/html
@@ -139,7 +331,7 @@ Use your browser's developer tools to estimate content requests for one page vie
      ![Chrome DevTools Network panel with the request list filtered to JSON responses from www.aemshop.net. Thirteen responses with status 200 are listed: 6 placeholder files, such as global.json and cart.json, the enrichment.json index, and 6 graphql and cs-graphql requests.](./images/json-requests.png)
    </Diagram>
 
-1. Subtract requests that match the [exclusions](#excluded-requests):
+1. Subtract requests that don't count:
 
    - *Redirects and errors:* a <em>Status</em> value of `300` or higher, such as `301` or `404`.
    - *HTML fragments:* names ending in `.plain.html`, such as `nav.plain.html`.
@@ -152,6 +344,9 @@ Use your browser's developer tools to estimate content requests for one page vie
 1. Divide the remaining JSON count by 5 and add it to the remaining HTML count to get the content requests per page view.
 
 </Steps>
+
+</TabItem>
+</Tabs>
 
 ### Example calculation
 
@@ -170,16 +365,112 @@ For the product page in the screenshots, these steps result in about 1.2 content
 
 </TableWrapper>
 
+## Pages that use more content requests
+
+Extra pages and content data files add usage. Filtering products, adding to the cart, and moving through checkout use Commerce API calls, which don't count.
+
+### Prerendered pages
+
+To make navigation faster, the storefront asks browsers such as Chrome and Edge to load linked pages in advance, for example when the pointer rests on a product link.
+
+- *Never opened:* The prerendered page counts the same as a page view, even though the shopper never sees it.
+- *Opened later:* The browser shows the prerendered copy, so the page counts only once.
+
+Home, category, and search pages have many links that can trigger prerendering. Your storefront team can adjust the speculation rules in `head.html`.
+
+### Account and sign-in pages
+
+When the browser loads one page and then redirects to another, both pages count:
+
+- *Signed out:* Opening an account page, such as the address book, redirects the shopper to sign-in.
+- *Signed in:* Opening the sign-in page redirects the shopper to the account page.
+
+### Custom content blocks
+
+Blocks that load extra content add requests for each file:
+
+- *Spreadsheet or index:* Each adds 0.2 content requests per view.
+- *Full HTML page:* Each adds 1 content request. Files ending in `.plain.html` are fragments and don't count.
+
+To find the pages that use the most, run the estimate on one page of each type: home, category, product, content, cart, checkout, and account.
+
+## Measure prerendered pages
+
+A page that the browser prerenders counts even if the shopper never opens it. Measure these unopened pages across a browsing session to estimate how much they add to your forecast.
+
+<Steps>
+
+1. Open a category page on your storefront in Chrome or Edge, and open developer tools.
+
+1. Select the <b>Application</b> tab. Under <b>Background services</b>, select <b>Speculative loads</b>, and then select <b>Speculations</b>. Reload the page to list the links that the browser can prerender, initially shown as <b>Not triggered</b>.
+
+1. Browse as a shopper would, resting the pointer on product links. A completed prerender shows <b>Ready</b>.
+
+1. Before opening the next page, count the <b>Ready</b> rows, excluding the link you'll open. Skip <b>Not triggered</b> rows. If other statuses appear, include canceled prerenders as described in *Canceled and repeated prerenders* below.
+
+1. Add the count to your running total of unopened pages, then click the link to the next page. The list now shows that page's speculations.
+
+1. Repeat steps 3 through 5 until you've recorded counts for about 10 page views.
+
+1. Divide the total of unopened pages by the number of page views you sampled. Enter the result in the <b>Extra prerendered pages per page view</b> field in the [forecast calculator](#forecast-usage).
+
+</Steps>
+
+For example, six unopened pages across 10 sampled page views gives 6 ÷ 10 = 0.6 extra prerendered pages per page view. At a baseline of 1.2 content requests per view, the calculator adds 0.6 x 1.2 = 0.72 content requests per view.
+
+### Example: one category page
+
+This example illustrates the counting rule, not typical shopper usage. A shopper opens a category page, rests the pointer on product A and then product B, and opens product B. Assume both product pages finish prerendering and each page uses 1.2 content requests.
+
+The browser shows the prerendered copy of product B, so opening it doesn't add another page request. Product A remains unopened, but its prerender still counts.
+
+<TableWrapper highlightLast totalRow>
+
+| Page requested | What the shopper does | Content requests |
+| -------------- | --------------------- | ---------------: |
+| Category page | Opens the page | 1.2 |
+| Product A | Hovers over the link but never opens the page | 1.2 |
+| Product B | Hovers over the link, then opens the prerendered page | 1.2 |
+| Total for the journey | Two page views and one unopened prerender | 3.6 |
+
+</TableWrapper>
+
+Across these two page views, the average is 3.6 ÷ 2 = 1.8 content requests per view. Add the one unopened page to your running total. Use a longer browsing session to estimate your storefront's average rather than treating this example as a forecast.
+
+<details>
+<summary>Canceled and repeated prerenders</summary>
+
+With the storefront's moderate prerender setting, Chrome keeps up to two prerendered pages at a time. Resting on another link can cancel an older prerender to make room. The canceled page still counts because the browser already requested it. Include these rows in your unopened total, except for the link you open next:
+
+- <b>Prefetch fallback ready:</b> The browser keeps the page's HTML but drops the rest of the prerendered page.
+- <b>Failure:</b> Include the row only if its details say the prerender was "canceled due to starting a new non-eager prerender." Skip failures with other reasons.
+
+If you rest on a canceled link again, the browser can load it again, but the list still shows it only once. Treat the count as a minimum. If cancellation happens before the page loads its data files, that page uses 1 content request instead of 1.2.
+
+</details>
+
 ## Forecast usage
 
-Multiply each page's content requests per view by its expected views for your forecast period, then add the totals. For example, 10,000 views of the product page at 1.2 content requests per view use about 12,000 content requests.
+Estimate content requests for a chosen period, such as a month. The calculator combines requests from page views, unopened prerendered pages, and headroom for other traffic. Prepare these four inputs:
 
-The result is a starting forecast for shopper traffic. Before launch, review expected traffic and planned automated checks, such as load tests and uptime monitoring, with your storefront team.
+- *Page views:* Enter expected views for each page type for the same period. If you're migrating, use page views from your current site's analytics. For a new business, use traffic projections. Don't use another platform's request counts, because its pages can load content differently.
+- *Content requests per view:* Replace the demo values with your [page-only estimates](#estimate-content-requests-per-page-view), which exclude unopened prerenders. Measurements with the browser cache disabled reflect a first-time visitor. Repeat visitors can make fewer requests because their browsers cache some files.
+- *Extra prerendered pages per page view:* Use your result from [Measure prerendered pages](#measure-prerendered-pages) on the same site. Keep this separate from the page-only estimate so unopened pages aren't counted twice.
+- *Headroom for other traffic:* Add a percentage for counted traffic not already covered by page views or prerenders, such as unrecognized bots, monitoring tools, and visits that analytics misses. Agree on a planning allowance with your storefront team when measured data isn't available.
 
-<Aside type="note" title="Estimated versus measured usage">
+Before launch, take the measurements on a preview or staging site with the code and settings planned for production. If you haven't built your storefront yet, use the <Link href="https://www.aemshop.net/" text="demo storefront" /> as an initial baseline.
 
-Your estimate reflects one test visit. Repeat visitors can make fewer requests, because their browsers cache some files.
+<ContentRequestCalculator />
 
-For a site-wide comparison, ask your Adobe team or Adobe Customer Support to review measured usage, including eligible automated traffic. A top usage report shows what contributes most to your content request volume.
+Review the forecast and its assumptions with your storefront team, including planned load tests and uptime monitoring.
 
-</Aside>
+<details>
+<summary>Use logs to estimate other traffic</summary>
+
+CDN or server logs can help identify traffic that analytics misses. Ask your storefront team to separate page views, unopened prerenders, and other traffic for the same period. Exclude requests that AEM doesn't count, such as static assets and recognized crawlers.
+
+Use only the remaining traffic not already included in the page-view and prerender estimates to size headroom. The gap between logged requests and analytics views isn't automatically a headroom percentage: it can include prerenders already entered separately. Logs from another platform can help identify traffic sources, but their raw request counts aren't an AEM usage estimate.
+
+For example, if page views and prerenders account for 120,000 forecast content requests, and other counted traffic is expected to add 12,000, use 12,000 ÷ 120,000 = 10% headroom.
+
+</details>

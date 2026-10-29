@@ -1,0 +1,215 @@
+---
+/**
+ * Forecast calculator for content requests.
+ *
+ * Usage:
+ *   <ContentRequestCalculator />
+ */
+
+const pageTypes = [
+  { id: 'home', label: 'Home page', views: 20000, perView: 1 },
+  { id: 'category', label: 'Category pages', views: 50000, perView: 1.2 },
+  { id: 'product', label: 'Product pages', views: 100000, perView: 1.2 },
+  { id: 'other', label: 'All other pages', views: 30000, perView: 1 },
+];
+---
+
+<content-request-calculator>
+  <form class="crc" aria-describedby="crc-help">
+    <p id="crc-help" class="crc-help">
+      Replace the example values with your own. The values for content requests per view come from the demo storefront.
+    </p>
+
+    <div class="crc-grid" role="group" aria-label="Page views and content requests per view">
+      <span class="crc-head">Page type</span>
+      <span class="crc-head">Page views</span>
+      <span class="crc-head">Content requests per view</span>
+      {
+        pageTypes.map((type) => (
+          <>
+            <span class="crc-label" id={`crc-${type.id}-label`}>{type.label}</span>
+            <input
+              type="number"
+              min="0"
+              step="1000"
+              inputmode="numeric"
+              name={`${type.id}-views`}
+              value={type.views}
+              aria-labelledby={`crc-${type.id}-label crc-views-label`}
+              data-views
+            />
+            <input
+              type="number"
+              min="0"
+              step="0.1"
+              inputmode="decimal"
+              name={`${type.id}-per-view`}
+              value={type.perView}
+              aria-labelledby={`crc-${type.id}-label crc-per-view-label`}
+              data-per-view
+            />
+          </>
+        ))
+      }
+      <span id="crc-views-label" hidden>page views</span>
+      <span id="crc-per-view-label" hidden>content requests per view</span>
+    </div>
+
+    <div class="crc-adjust">
+      <label>
+        <span>Extra prerendered pages per page view</span>
+        <input type="number" min="0" step="0.1" inputmode="decimal" name="prerender" value="0" />
+      </label>
+      <label>
+        <span>Headroom for other traffic (%)</span>
+        <input type="number" min="0" step="5" inputmode="numeric" name="headroom" value="0" />
+      </label>
+    </div>
+
+    <output class="crc-result" aria-live="polite">
+      <span class="crc-total" data-total>Turn on JavaScript to use the calculator.</span>
+      <span class="crc-breakdown" data-breakdown></span>
+    </output>
+  </form>
+</content-request-calculator>
+
+<style>
+  content-request-calculator {
+    display: block;
+    margin: 1.5rem 0;
+  }
+
+  .crc {
+    padding: 1.25rem;
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 0.5rem;
+    background: var(--sl-color-gray-7, var(--sl-color-gray-6));
+  }
+
+  .crc-help {
+    margin: 0 0 1rem;
+    color: var(--sl-color-gray-2);
+    font-size: var(--sl-text-sm);
+  }
+
+  .crc-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr);
+    gap: 0.5rem 0.75rem;
+    align-items: center;
+  }
+
+  .crc-head {
+    font-size: var(--sl-text-xs);
+    font-weight: 600;
+    color: var(--sl-color-gray-3);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  .crc-label {
+    color: var(--sl-color-white);
+  }
+
+  .crc input {
+    width: 100%;
+    margin: 0;
+    padding: 0.4rem 0.5rem;
+    border: 1px solid var(--sl-color-gray-4);
+    border-radius: 0.25rem;
+    background: var(--sl-color-black);
+    color: var(--sl-color-white);
+    font: inherit;
+  }
+
+  .crc input:focus-visible {
+    outline: 2px solid var(--sl-color-accent);
+    outline-offset: 1px;
+  }
+
+  .crc-adjust {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+    gap: 0.75rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--sl-color-gray-5);
+  }
+
+  .crc-adjust label {
+    display: grid;
+    gap: 0.25rem;
+    margin: 0;
+    color: var(--sl-color-gray-2);
+    font-size: var(--sl-text-sm);
+  }
+
+  .crc-result {
+    display: grid;
+    gap: 0.25rem;
+    margin-top: 1rem;
+    padding: 0.75rem 1rem;
+    border-left: 4px solid var(--sl-color-green);
+    border-radius: 0.25rem;
+    background: var(--sl-color-green-low);
+  }
+
+  .crc-total {
+    font-size: var(--sl-text-lg);
+    font-weight: 600;
+    color: var(--sl-color-white);
+  }
+
+  .crc-breakdown {
+    color: var(--sl-color-gray-2);
+    font-size: var(--sl-text-sm);
+  }
+</style>
+
+<script>
+  const format = new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 });
+  const formatRate = new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 });
+
+  const read = (input: HTMLInputElement | null) => {
+    const value = Number(input?.value);
+    return Number.isFinite(value) && value > 0 ? value : 0;
+  };
+
+  class ContentRequestCalculator extends HTMLElement {
+    connectedCallback() {
+      const form = this.querySelector('form');
+      if (!form) return;
+      form.addEventListener('submit', (event) => event.preventDefault());
+      form.addEventListener('input', () => this.update());
+      this.update();
+    }
+
+    update() {
+      const views = [...this.querySelectorAll<HTMLInputElement>('[data-views]')].map(read);
+      const perView = [...this.querySelectorAll<HTMLInputElement>('[data-per-view]')].map(read);
+      const prerenderRate = read(this.querySelector('[name="prerender"]'));
+      const headroomPct = read(this.querySelector('[name="headroom"]'));
+
+      const totalViews = views.reduce((sum, value) => sum + value, 0);
+      const pageViews = views.reduce((sum, value, i) => sum + value * perView[i], 0);
+      const averagePerView = totalViews ? pageViews / totalViews : 0;
+      const prerendered = totalViews * prerenderRate * averagePerView;
+      const headroom = (pageViews + prerendered) * (headroomPct / 100);
+      const total = pageViews + prerendered + headroom;
+
+      const totalEl = this.querySelector('[data-total]');
+      const breakdownEl = this.querySelector('[data-breakdown]');
+      if (!totalEl || !breakdownEl) return;
+
+      totalEl.textContent = `About ${format.format(total)} content requests`;
+      breakdownEl.textContent = [
+        `From page views: ${format.format(pageViews)}`,
+        `From prerendered pages: ${format.format(prerendered)}`,
+        `From headroom: ${format.format(headroom)}`,
+        `Average per page view: ${formatRate.format(totalViews ? total / totalViews : 0)}`,
+      ].join(' · ');
+    }
+  }
+
+  customElements.define('content-request-calculator', ContentRequestCalculator);
+</script>
