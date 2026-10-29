@@ -205,7 +205,9 @@ To make navigation faster, the storefront asks browsers such as Chrome and Edge 
 - *Never opened:* The prerendered page counts the same as a page view, even though the shopper never sees it.
 - *Opened later:* The browser shows the prerendered copy, so the page counts only once.
 
-Home, category, and search pages have many links that can trigger prerendering. Your storefront team can adjust the speculation rules in `head.html`.
+Home, category, and search pages have many links that can trigger prerendering.
+
+Prerendering is a configurable performance choice. Your storefront team can adjust which links qualify and when prerendering starts, or remove the storefront's prerender rule in `head.html`. Compare navigation speed and content request usage when changing these settings. See the <Link href="https://developer.chrome.com/docs/web-platform/prerender-pages#the-speculation-rules-api" text="Chrome speculation rules documentation" />.
 
 #### Example: one category page
 
@@ -251,7 +253,7 @@ Each measurement fills one field in the [forecast calculator](#forecast-usage). 
 | Measure | Tool | Calculator field |
 | ------- | ---- | ---------------- |
 | [Content requests per page view](#content-requests-per-page-view) | Console script or Network panel | Content requests per view |
-| [Unopened prerendered pages](#unopened-prerendered-pages) | Application panel, Speculations | Extra prerendered pages per page view |
+| [Unopened prerendered pages](#unopened-prerendered-pages) | Application panel, Speculations | Unopened prerendered pages per page view |
 | [Other traffic](#other-traffic) (optional) | CDN or server logs | Headroom for other traffic |
 
 </TableWrapper>
@@ -449,16 +451,16 @@ A page that the browser prerenders counts even if the shopper never opens it. Co
 
 1. Open the next page. The list updates to show that page's links. Repeat steps 2 and 3 for about 10 page views.
 
-1. Divide your total by the number of page views. Enter the result in the <b>Extra prerendered pages per page view</b> field in the [forecast calculator](#forecast-usage).
+1. Divide your total by the number of page views. Enter the result in the <b>Unopened prerendered pages per page view</b> field in the [forecast calculator](#forecast-usage).
 
 </Steps>
 
 <details>
 <summary>Canceled and repeated prerenders</summary>
 
-With the storefront's moderate prerender setting, Chrome keeps up to two prerendered pages at a time. A new hover can cancel an older prerender, but the canceled page still counts.
+With the storefront's moderate prerender setting, Chrome keeps up to two prerendered pages at a time. A new hover can cancel an older prerender, but any content requests already used still count.
 
-Add these statuses to your unopened total, except for the link you open next:
+Use these statuses as a guide to your unopened total. Exclude the link you open next only if the browser reuses its loaded copy.
 
 <TableWrapper>
 
@@ -466,9 +468,11 @@ Add these statuses to your unopened total, except for the link you open next:
 | ------ | --------- |
 | Prefetch fallback ready | Yes. The browser kept the page's HTML. |
 | Failure, with the reason "canceled due to starting a new non-eager prerender" | Yes |
-| Failure, with any other reason | No |
+| Failure, with any other reason | Check delivered requests. HTML and JSON responses can count even if prerendering fails. |
 
 </TableWrapper>
+
+AEM counts qualifying HTML and JSON responses, not whether the browser finishes prerendering. See the <Link href="https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/using-cloud-manager/content-requests#server-side-collection-rules" text="AEM server-side collection rules" />.
 
 - *Repeated hovers:* A canceled link can load again but appears only once. Treat your count as a minimum.
 - *Early cancellation:* If canceled before data files load, the page uses 1 content request instead of 1.2.
@@ -496,10 +500,13 @@ The calculator estimates content requests for a period, such as a month. Gather 
 | ----- | --------------- |
 | Page views | Migrating: your current site's analytics. New business: traffic projections. Don't use another platform's request counts, because its pages load content differently. |
 | Content requests per view | Your [page view measurements](#content-requests-per-page-view). Cache-disabled results reflect first-time visitors. Repeat visitors make fewer requests. |
-| Extra prerendered pages per page view | Your [unopened prerendered pages](#unopened-prerendered-pages) result. It's a page count, not content requests. The calculator converts it and keeps it separate from your page-only estimate. |
+| Unopened prerendered pages per page view | Your [unopened prerendered pages](#unopened-prerendered-pages) result. It's a page count, not content requests. The calculator converts it and keeps it separate from your page-only estimate. |
 | Headroom for other traffic | A percentage for unrecognized bots, monitoring tools, and visits that analytics misses. See [Other traffic](#other-traffic). |
 
 </TableWrapper>
+
+- *Prerender estimate:* The calculator uses the average content requests per view across your forecast page views for each extra prerendered page. Actual usage can differ if those pages load more or fewer counted files.
+- *Partial loads:* Prefetch fallbacks and early cancellations may load only HTML. That adds 1 content request, rather than the example's 1.2.
 
 If you haven't built your storefront yet, start with values from the <Link href="https://www.aemshop.net/" text="demo storefront" />.
 
