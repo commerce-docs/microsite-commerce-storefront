@@ -102,7 +102,6 @@ function ensureMermaidInitialized(): void {
   mermaidInitialized = true;
   mermaid.initialize({
     startOnLoad: false,
-    layout: 'dagre',
     theme: 'base',
     themeVariables: {
       background: '#ffffff',
