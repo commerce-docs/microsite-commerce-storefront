@@ -24,17 +24,18 @@ export function generateSidebar() {
           label: 'Getting started',
           collapsed: false,
           items: [
-            { label: 'Overview', link: '/get-started/' },
-            { label: 'Prerequisites', link: '/get-started/before-you-start/' },
-            { label: 'Backend options', link: '/get-started/backends/' },
+            { label: 'Getting started as a developer', link: '/get-started/' },
             { label: 'Create a storefront', link: '/get-started/create-storefront/' },
+            { label: 'Run your storefront locally', link: '/get-started/run-locally/' },
+            { label: 'Make your first change', link: '/get-started/first-change/' },
+            { label: 'Install the AI tools', link: '/ai/' },
+            { label: 'Make a change with AI', link: '/ai/develop-with-ai/' },
           ],
         },
         {
           label: 'AI tools',
-          collapsed: false,
+          collapsed: true,
           items: [
-            { label: 'Install the AI tools', link: '/ai/' },
             { label: 'Boilerplate skills', link: '/ai/boilerplate-skills/' },
             { label: 'Dropins AI tools', link: '/ai/dropins-ai-tools/' },
             { label: 'Wayfinder', link: '/ai/wayfinder/' },
@@ -54,6 +55,16 @@ export function generateSidebar() {
               link: '/get-started/architecture/commerce-services-and-backends/',
             },
             { label: 'Event bus', link: '/dropins/all/events/' },
+          ],
+        },
+        {
+          label: 'Project setup',
+          collapsed: true,
+          items: [
+            { label: 'Prerequisites', link: '/get-started/before-you-start/' },
+            { label: 'Backend options', link: '/get-started/backends/' },
+            { label: 'Storefront configuration', link: '/setup/configuration/commerce-configuration/' },
+            { label: 'Verify your storefront setup', link: '/get-started/verify-setup/' },
           ],
         },
         {
@@ -124,7 +135,6 @@ export function generateSidebar() {
           collapsed: true,
           items: [
             { label: 'Overview', link: '/setup/configuration/' },
-            { label: 'Storefront configuration', link: '/setup/configuration/commerce-configuration/' },
             {
               label: 'Compatibility Package',
               collapsed: true,
@@ -153,6 +163,7 @@ export function generateSidebar() {
           collapsed: true,
           items: [
             { label: 'Overview', link: '/setup/launch/' },
+            { label: 'Consent and CMP integration', link: '/setup/analytics/consent/' },
             { label: 'Adobe Experience Platform', link: '/setup/analytics/adobe-experience-platform/' },
             { label: 'Analytics instrumentation', link: '/setup/analytics/instrumentation/' },
             { label: 'Browser compatibility', link: '/get-started/browser-compatibility/' },
@@ -173,7 +184,7 @@ export function generateSidebar() {
             {
               label: 'Troubleshooting',
               collapsed: true,
-              autogenerate: { directory: '/troubleshooting/' },
+              items: [{ autogenerate: { directory: 'troubleshooting' } }],
             },
           ],
         },
@@ -195,9 +206,13 @@ export function generateSidebar() {
           label: 'Getting started',
           collapsed: false,
           items: [
-            { label: 'Overview', link: '/merchants/quick-start/' },
+            { label: 'Getting started as an author', link: '/merchants/quick-start/' },
             {
-              label: 'What is Commerce Storefront?',
+              label: 'Create your first commerce page',
+              link: '/how-tos/create-commerce-page/',
+            },
+            {
+              label: 'Storefront authoring tools',
               link: '/merchants/quick-start/create-content/',
             },
             { label: 'How a page comes together', link: '/merchants/quick-start/content-model/' },
@@ -530,12 +545,11 @@ export function generateSidebar() {
           label: 'Author How-tos',
           collapsed: false,
           items: [
-            { label: 'Browse All', link: '/how-tos/#for-authors' },
+            { label: 'Browse All', link: '/how-tos/#how-tos-for-authors' },
             {
               label: 'Pages and blocks',
               collapsed: true,
               items: [
-                { label: 'Create a commerce page', link: '/how-tos/create-commerce-page/' },
                 { label: 'Build a category page manually', link: '/how-tos/manual-category-page/' },
                 { label: 'Add a block to a page', link: '/how-tos/add-block-to-page/' },
                 { label: 'Add page metadata', link: '/how-tos/add-page-metadata/' },
@@ -579,7 +593,7 @@ export function generateSidebar() {
           label: 'Developer How-tos',
           collapsed: false,
           items: [
-            { label: 'Browse All', link: '/how-tos/#for-developers' },
+            { label: 'Browse All', link: '/how-tos/#how-tos-for-developers' },
             {
               label: 'Product and category pages',
               collapsed: true,

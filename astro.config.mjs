@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import react from '@astrojs/react';
+import { unified } from '@astrojs/markdown-remark';
 import { defineConfig, passthroughImageService } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import starlightImageZoom from 'starlight-image-zoom';
@@ -57,7 +58,7 @@ async function config() {
     site: PRODUCTION_SITE,
     base: basePath,
     markdown: {
-      remarkPlugins: [remarkBasePathLinks],
+      processor: unified({ remarkPlugins: [remarkBasePathLinks] }),
       syntaxHighlight: { type: 'shiki', excludeLangs: ['mermaid'] },
       shikiConfig: { theme: 'css-variables' },
     },
@@ -302,7 +303,7 @@ async function config() {
           resolveId(source, importer) {
             if (
               source === '@astrojs/starlight/components' &&
-              importer?.split('?')[0].endsWith('/starlight-sidebar-topics/components/Topics.astro')
+              /\/starlight-sidebar-topics\/(?:dist\/)?components\/Topics\.astro$/.test(importer?.split('?')[0] ?? '')
             ) {
               return path.resolve('./src/components/overrides/SidebarTopicComponents.ts');
             }
@@ -354,6 +355,11 @@ async function config() {
         chunkSizeWarningLimit: 1000, // Increase limit to 1MB to reduce noise
         rollupOptions: {
           onwarn(warning, warn) {
+            if (warning.code === 'MODULE_LEVEL_DIRECTIVE' &&
+              warning.id?.includes('/react-compiler-runtime/dist/') &&
+              warning.message.includes('"use no memo"')) {
+              return;
+            }
             // Suppress warnings about unused imports from expressive-code packages
             if (warning.code === 'UNUSED_EXTERNAL_IMPORT' &&
               warning.source &&
