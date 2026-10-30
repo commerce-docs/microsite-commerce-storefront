@@ -374,16 +374,16 @@ Some configuration options can be set to enable or disable certain boilerplate f
 
 - **`commerce-assets-enabled`** - Boolean flag to enable or disable AEM Assets within the storefront
 - **`commerce-b2b-enabled`** - Boolean flag to enable or disable B2B-related global and shared logic within the storefront. When enabled, this flag is passed to the Auth initializer as `customerPermissionRoles: true` to enable customer role permissions API. This flag controls B2B functionality at the authentication and authorization level, enabling the drop-in to fetch B2B customer role permissions automatically on initialization and re-fetch when authentication state changes. See the [User Auth initialization documentation](/dropins/user-auth/initialization/) for details.
-- **`commerce-companies-enabled`** - Boolean flag to enable or disable Commerce B2B company features within the storefront. This flag controls company-specific features such as company management, company structure, and company-related blocks.
+- **`commerce-companies-enabled`** - Boolean flag for two company features in the storefront. When set to `true`, the storefront loads the Company Switcher in the header for signed-in customers. When set to `false`, the [Create Company](/merchants/blocks/commerce-company-create/) block sends shoppers to the account or sign-in page instead of showing the registration form. Other company blocks do not read this flag. Set this flag explicitly. If you leave it out, the storefront doesn't load the Company Switcher.
 
 <Aside type="note" title="B2B Configuration Flags">
 **Understanding the difference:**
 
 - **`commerce-b2b-enabled`** - Controls B2B functionality at the authentication and authorization level. When set to `true`, this flag enables the customer role permissions API in the Auth drop-in (via the `customerPermissionRoles` parameter), which automatically fetches B2B customer role permissions including purchase order and company management capabilities. This configuration is required for B2B features to work properly. See the [User Authentication changelog](/releases/changelog/user-authentication/) for implementation details.
 
-- **`commerce-companies-enabled`** - Controls company-specific features and blocks. This flag enables or disables company management features, company structure, and company-related commerce blocks.
+- **`commerce-companies-enabled`** - Controls the Company Switcher and the Create Company redirect. It does not turn other company blocks on or off.
 
-**Relationship:** `commerce-b2b-enabled` is required for B2B features as it enables the authentication system. `commerce-companies-enabled` controls company features, which require `commerce-b2b-enabled` to be `true`.
+**Relationship:** `commerce-b2b-enabled` is required for B2B features as it enables the authentication system. The code that reads `commerce-companies-enabled` does not check `commerce-b2b-enabled`.
 
 For a complete B2B storefront with company features, set both flags to `true`:
 ```json
@@ -392,6 +392,8 @@ For a complete B2B storefront with company features, set both flags to `true`:
   "commerce-companies-enabled": true
 }
 ```
+
+The sample `demo-config.json` file on the <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/tree/b2b" text="b2b branch of the storefront repository" /> sets `commerce-companies-enabled` to `false` and doesn't include `commerce-b2b-enabled`. If you copied that file to create your `config.json`, set both values to `true`.
 
 **Implementation:** To use `commerce-b2b-enabled` in your storefront, read it from config in your Auth initializer and pass it to the Auth drop-in:
 
