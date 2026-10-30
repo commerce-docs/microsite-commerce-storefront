@@ -14,7 +14,8 @@ This is an Astro/Starlight documentation repository. Documentation pages live in
 ## Beginner audience and plain language
 
 - Write for a beginning developer. Prefer simple words, short connected sentences, and one idea per sentence.
-- Define unfamiliar terms and spell out acronyms on first use. Keep product terms such as drop-in and Adobe Commerce consistent.
+- Define unfamiliar terms and explain unfamiliar acronyms on first use. Keep product terms such as drop-in and Adobe Commerce consistent.
+- Never spell out AI. Keep other common acronyms abbreviated, including on first use.
 - Explain why a procedure matters before giving steps. Give each step one action, name the file for each code block, include required imports, and explain every placeholder.
 - After non-trivial code, explain the important lines briefly. Show what success looks like and address the most likely error.
 - Start tutorials and how-to pages with the concrete result the reader will have. Do not begin with a warning or a description of the page structure.
