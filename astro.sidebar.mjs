@@ -184,7 +184,7 @@ export function generateSidebar() {
             {
               label: 'Troubleshooting',
               collapsed: true,
-              items: [{ autogenerate: { directory: 'troubleshooting' } }],
+              autogenerate: { directory: '/troubleshooting/' },
             },
           ],
         },
