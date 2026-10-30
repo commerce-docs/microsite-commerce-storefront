@@ -9,8 +9,7 @@ export default {
     // Themes
     themes: ['github-light', 'github-dark'],
 
-    // Inline styles to ensure callout numbers work in production
-    emitExternalStylesheet: false,
+    emitExternalStylesheet: true,
 
     // Style overrides
     styleOverrides: {
@@ -22,8 +21,11 @@ export default {
     // Default properties for all code blocks
     defaultProps: {
         // Disable window frames for all code blocks
-        frame: 'auto',
+        frame: 'none',
         // Enable line numbers for all code blocks by default
         showLineNumbers: true,
+        overridesByLang: {
+            'bash,sh,zsh,terminal,text,markdown': { showLineNumbers: false }
+        }
     },
 }
