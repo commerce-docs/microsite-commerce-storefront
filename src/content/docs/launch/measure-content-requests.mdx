@@ -12,27 +12,35 @@ import TableWrapper from '@components/TableWrapper.astro';
 
 Measure your storefront, then forecast its usage. For what counts as a content request, see [Content requests overview](/setup/launch/content-requests/).
 
-## Measure your storefront
+## Quick start
 
-Each measurement fills one field in the [forecast calculator](#forecast-usage).
+The forecast calculator uses these inputs:
 
 <TableWrapper>
 
-| Measure | Tool | Calculator field |
-| ------- | ---- | ---------------- |
-| [Content requests per page view](#content-requests-per-page-view) | Console script or Network panel | Content requests per view |
-| [Unopened prerendered pages](#unopened-prerendered-pages) | Application panel, Speculations | Unopened prerendered pages per page view |
-| [Other traffic](#other-traffic) (optional) | CDN or server logs | Headroom for other traffic |
+| Input | How to get it |
+| ----- | ------------- |
+| Monthly page views by page type | Existing-site analytics or traffic projections |
+| Content requests per page view | Measure representative pages in Chrome or Edge |
+| Unopened prerenders per page view | Observe speculative loads while browsing as a shopper |
+| Headroom for other traffic (optional) | Compare CDN or server logs with analytics |
 
 </TableWrapper>
 
-Only production traffic counts toward your allowance. Before launch, measure on a preview or staging site with your planned production code and settings.
+## Measure content requests per page view
 
-## Content requests per page view
+Measure a representative page of each type to estimate the content requests per page view for your forecast. Page types to measure include home, category, product, content, cart, checkout, and account pages.
 
-To find the pages that use the most, measure one page of each type in your browser's developer tools: home, category, product, content, cart, checkout, and account. The calculator has rows for home, category, and product pages. For *All other pages*, average your remaining results.
+Use the results in the [forecast calculator](#forecast-usage):
 
-Measure account pages while signed in. When you're signed out, an account page sends you to the sign-in page, and you measure only the sign-in page. For how both pages count, see [Account and sign-in pages](#account-and-sign-in-pages).
+- *Home, category, and product pages:* Enter each measurement in its matching row.
+- *All other pages:* Enter the average of your remaining measurements.
+
+<Aside type="note" title="Account pages">
+
+Sign in before measuring an account page. Otherwise, the page sends you to sign-in, and you measure the sign-in page instead. For how both pages count, see [Account and sign-in pages](#account-and-sign-in-pages).
+
+</Aside>
 
 <Steps>
 
@@ -183,7 +191,7 @@ Use this method to check individual requests, or if the script shows a warning.
 </TabItem>
 </Tabs>
 
-## Example summary
+### Example summary
 
 The demo product pages each use 1.2 content requests per view:
 
@@ -248,54 +256,39 @@ For example, your logs show 120,000 content requests from page views and prerend
 
 ## Forecast usage
 
-The calculator estimates monthly content requests from four inputs. For how Adobe compares usage with your monthly allowance over 12 months, see [Content requests overview](/setup/launch/content-requests/).
+Use your current site's analytics or traffic projections for monthly page views, then enter the measurements from the sections above. Don't use another platform's request counts, because its pages load content differently.
 
-<Diagram
-  adaptColors
-  caption="How the calculator combines your inputs. Each line matches a line in the calculator result."
->
-  ![The calculator adds three lines. From page views equals 10,000 page views times 1.2 content requests per view, which is 12,000. From prerendered pages equals 10,000 page views times 0.4 unopened prerendered pages per page view times 1.2 content requests per view, which is 4,800. From headroom equals 12,000 plus 4,800, which is 16,800, times 10% headroom for other traffic, which is 1,680. The total is about 18,480 content requests.](./images/forecast-formula.png)
-</Diagram>
-
-- *Monthly page views:* If you're migrating, use your current site's analytics. For a new business, use traffic projections. Don't use another platform's request counts, because its pages load content differently.
-- *Repeat visitors:* Your cache-disabled measurements reflect first-time visitors. Repeat visitors make fewer requests, so your forecast may run a little high.
-- *Prerender estimate:* The calculator multiplies your unopened-page rate by your average content requests per view. For example, 4 unopened pages across 10 page views is a rate of 0.4 pages. At 1.2 content requests per view, prerenders add 0.4 × 1.2 = 0.48 content requests per page view. Actual usage differs if prerendered pages load more or fewer counted files.
-- *Partial loads:* A canceled prerender may load only the HTML, which adds 1 content request rather than 1.2.
-
-If you haven't built your storefront yet, start with values from the <Link href="https://www.aemshop.net/" text="demo storefront" />.
-
-## Content request calculator
-
-Replace all example values with your own. The values for content requests per view come from the content request measurements from the demo storefront.
+Replace the example values with your own. If your storefront isn't built yet, use the example measurements from the <Link href="https://www.aemshop.net/" text="demo storefront" /> as a starting point.
 
 <ContentRequestCalculator />
 
+<Diagram
+  adaptColors
+  caption="The three columns use the calculator's default values. Read each calculation from top to bottom."
+>
+  ![Three side-by-side columns using the calculator's default values. From page views is 200,000 times 1.15, giving 230,000. From prerendered pages is 200,000 times 0.4 times 1.15, giving 92,000. From headroom is 322,000 times 10%, giving 32,200. The three results combine below the columns into about 354,200 content requests per month.](./images/forecast-formula.png)
+</Diagram>
+
+<Aside type="note" title="Forecast assumptions">
+
+- *Repeat visitors:* Measurements taken with caching disabled can overestimate requests from repeat visits.
+- *Prerenders:* The estimate uses your average content requests per view. Actual usage varies with the pages prerendered and whether they finish loading.
+
+</Aside>
+
 ## Counting rules in detail
 
-Use these details to check individual requests. For a summary, see [Key takeaways](/setup/launch/content-requests/#key-takeaways).
+For how HTML and JSON requests count, see the <Link href="https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/using-cloud-manager/license-dashboard#what-is-a-content-request" text="AEM counting definition" />. For response codes, caching, bots, monitoring, and other exclusions, see the <Link href="https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/using-cloud-manager/content-requests#server-side-collection-rules" text="AEM server-side collection rules" />.
 
-<details>
-<summary>Requests that count</summary>
+### Storefront-specific exclusions
 
-According to the <Link href="https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/using-cloud-manager/license-dashboard#what-is-a-content-request" text="AEM counting definition" />, AEM counts successful responses, with status codes `100-299`, unless an exclusion applies:
+- *HTML fragments:* Files ending in `.plain.html`, such as `nav.plain.html`, don't count. Fragments loaded from their page URL, such as `/fragments/promo`, count normally.
+- *Placeholder and common Edge Delivery JSON files:* JSON files in a `placeholders/` folder, plus `placeholders.json`, `placeholder.json`, `query-index.json`, `form-data.json`, and `config.json`, don't count.
+- *Commerce API calls:* Requests sent directly to Adobe Commerce, such as `graphql` and `cs-graphql`, or to other services without reaching AEM, don't count.
 
-<TableWrapper>
+Some of these file exclusions aren't listed in the AEM documentation yet.
 
-| Request type | How it counts |
-| ------------ | ------------- |
-| HTML responses | 1 content request each, such as the page itself. |
-| JSON responses | 1 content request for every 5. |
-| Cached responses | Same as uncached responses. |
-| Prefetched and prerendered pages | Count when loaded, even if never opened. Counted once if the shopper then opens the page. See [Prerendered pages](/setup/launch/content-requests/#prerendered-pages). |
-| Automated traffic | Scripts, test tools, monitoring services, and AI agents that AEM doesn't recognize. |
-| Visits that analytics doesn't record | Count, because AEM counts delivered content, even when a browser blocks analytics. |
-
-</TableWrapper>
-
-</details>
-
-<details>
-<summary>JSON files that count</summary>
+### JSON files that count
 
 JSON files hold data that a page reads after it loads. On the demo storefront's home, category, and product pages, only one JSON file counts: the enrichment index. Your storefront can add more when your team builds features that read published content.
 
@@ -311,51 +304,6 @@ JSON files hold data that a page reads after it loads. On the demo storefront's 
 </TableWrapper>
 
 Product details, prices, search results, carts, checkout, and accounts come from Commerce API calls, which don't count toward your content request allowance.
-
-</details>
-
-<details>
-<summary>Requests that don't count</summary>
-
-<TableWrapper>
-
-| Request type | What to look for |
-| ------------ | ---------------- |
-| Static assets | Images, style sheets, and JavaScript files. |
-| HTML fragments | URLs ending in `.plain.html`, such as `nav.plain.html`. Fragments loaded from their page URL, such as `/fragments/promo`, count normally. |
-| Placeholder files | JSON files in a `placeholders/` folder, such as `/placeholders/cart.json`. These files hold the text labels that drop-in components display. |
-| Common Edge Delivery JSON files | `placeholders.json`, `placeholder.json`, `query-index.json`, `form-data.json`, and `config.json`. |
-| Redirects and errors | Status codes `300` and above, such as `301` or `404`. The page that a redirect leads to counts normally. |
-| Commerce API calls | Requests sent directly to Adobe Commerce, such as `graphql` and `cs-graphql`, or to other services without reaching AEM. |
-
-</TableWrapper>
-
-AEM also excludes detected DDoS attacks and `HEAD` health checks. For other exclusions and ways to manage usage, see the <Link href="https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/using-cloud-manager/content-requests" text="AEM content request rules" />. Some exclusions on this page, such as HTML fragments, placeholder files, and `config.json`, aren't listed in the AEM documentation yet.
-
-</details>
-
-<details>
-<summary>Bots, crawlers, and AI agents</summary>
-
-AEM identifies bots by the user agent, the name that a browser or bot sends with each request.
-
-<TableWrapper>
-
-| Visitor | Counts? | Examples from AEM's lists |
-| ------- | ------- | ------------------------- |
-| Well-known search engine and social media crawlers | No | Googlebot, Bingbot, Applebot, Facebook, and Pinterest |
-| Well-known AI crawlers | No | ChatGPT, Claudebot, Perplexity, and Gemini Deep Research |
-| AI agents and automation that AEM doesn't recognize | Yes | An AI agent that identifies itself as a regular browser, headless Chrome, and scripts that use tools such as curl or Python Requests |
-| Monitoring tools that send `GET` requests | Yes | UptimeRobot, Amazon Route 53 health checks, and Site24x7 |
-
-</TableWrapper>
-
-- *AI agents that browse for a person:* An AI assistant that opens pages on a shopper's behalf can look like a regular browser, so its requests can count.
-- *Proxies and CDNs:* Recognized bots can count if a proxy or CDN in front of your storefront doesn't pass the original user agent to AEM.
-
-For the full lists, see the <Link href="https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/using-cloud-manager/content-requests#server-side-collection-rules" text="AEM server-side collection rules" />.
-
-</details>
 
 ## Account and sign-in pages
 
@@ -375,8 +323,4 @@ Blocks that load extra content add requests for each file:
 
 ## Keep automated traffic from counting
 
-AEM excludes automated traffic only from well-known bots. To keep your own automated traffic from using your allowance:
-
-- *Monitoring:* Set uptime and health checks to send `HEAD` requests, which don't count.
-- *Load tests and scripts:* Run them on your preview or staging site, because only production traffic counts.
-- *Proxies and CDNs:* Pass the original user agent to AEM, so AEM can recognize well-known bots.
+For monitoring and proxy settings, see the <Link href="https://experienceleague.adobe.com/en/docs/experience-manager-cloud-service/content/implementing/using-cloud-manager/content-requests#implementation-techniques-to-manage-content-requests" text="AEM guidance for managing content requests" />. Run load tests and scripts on your preview or staging site, because only production traffic counts.
