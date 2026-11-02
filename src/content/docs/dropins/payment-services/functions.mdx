@@ -43,12 +43,17 @@ The Payment Services drop-in provides API functions that enable you to programma
 <TableWrapper nowrap={[0]}>
 | Function | Description |
 |----------|-------------|
-| [submitCreditCard](#submitcreditcard) | Validates and submits the currently-rendered [CreditCard](/dropins/payment-services/containers/credit-card/) form. |
+| [submitCreditCard](#submitcreditcard) | Submits payment for a new credit or debit card or the selected saved card. |
 </TableWrapper>
 
 ## submitCreditCard
 
-Validates and submits the currently-rendered [CreditCard](/dropins/payment-services/containers/credit-card/) form, placing the payment order for the cart identified by the latest [cart/data](/dropins/cart/events/#cartdata-emits-and-listens) event. That event must have fired at least once with the shopper's cart before calling this function.
+Submits payment for the selected credit or debit card:
+
+- With `PaymentMethodCode.CREDIT_CARD`, validates and submits the rendered [CreditCard](/dropins/payment-services/containers/credit-card/) form.
+- With `PaymentMethodCode.VAULT`, submits the selected saved card without requiring a new-card form. Use [VaultedCreditCard](/dropins/payment-services/containers/vaulted-credit-card/) to display the saved card details.
+
+Wait for Payment Services to finish initializing before calling this function. The latest `checkout/updated` event must contain `selectedPaymentMethod.code`. If no update has fired, the function uses `checkout/initialized` instead. For saved-card payments, the function reads the cart ID from the latest [cart/data](/dropins/cart/events/#cartdata-emits-and-listens) event, which must have fired with the shopper's cart.
 
 ```ts
 function submitCreditCard(): Promise<void>
@@ -59,8 +64,12 @@ The returned promise resolves only when the payment flow finishes successfully. 
 <TableWrapper nowrap={[1]}>
 | Condition | `PaymentServicesError.code` |
 |-----------|-----------------------------|
-| The page has no rendered [CreditCard](/dropins/payment-services/containers/credit-card/) form to submit. | `"payment-services/credit-card-form-not-rendered"` |
+| Payment Services has not finished initializing. | `"payment-services/dropin-not-initialized"` |
+| The selected payment method is neither `PaymentMethodCode.CREDIT_CARD` nor `PaymentMethodCode.VAULT`. | `"payment-services/unsupported-payment-method"` |
+| The selected payment method is missing, or a saved-card payment has no cart ID. | `"payment-services/missing-cart-data"` |
+| A new-card payment has no rendered [CreditCard](/dropins/payment-services/containers/credit-card/) form to submit. | `"payment-services/credit-card-form-not-rendered"` |
 | The rendered [CreditCard](/dropins/payment-services/containers/credit-card/) form has one or more invalid fields. The first invalid field is focused automatically. | `"payment-services/credit-card-form-invalid"` |
+| Another payment failure has no more specific error code. | `"payment-services/unknown-error"` |
 </TableWrapper>
 
 ### Events
