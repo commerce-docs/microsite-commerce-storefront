@@ -86,17 +86,45 @@ const mermaid = mermaidApi as unknown as MermaidApi;
 
 let mermaidInitialized = false;
 
+// System fonts only: SVGs rendered through <img> cannot load web fonts.
+const MERMAID_FONT_FAMILY =
+  'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+
+// Round only square corners so stadium and rounded shapes keep their own radii.
+const MERMAID_THEME_CSS = `
+  .node rect:not([rx]), .node rect[rx="0"] { rx: 8px; ry: 8px; }
+  .cluster rect { rx: 12px; ry: 12px; stroke-width: 1.5px; }
+  rect.actor, rect.note { rx: 8px; ry: 8px; }
+`;
+
 function ensureMermaidInitialized(): void {
   if (mermaidInitialized) return;
   mermaidInitialized = true;
   mermaid.initialize({
     startOnLoad: false,
-    theme: 'default',
+    theme: 'base',
     themeVariables: {
       background: '#ffffff',
+      fontFamily: MERMAID_FONT_FAMILY,
+      primaryColor: '#eef4fc',
+      primaryBorderColor: '#7f9ccb',
+      primaryTextColor: '#1d2939',
+      secondaryColor: '#f4f6f9',
+      tertiaryColor: '#ffffff',
+      lineColor: '#7d8a9c',
+      textColor: '#1d2939',
+      clusterBkg: '#f8fafc',
+      clusterBorder: '#7d8a9c',
+      edgeLabelBackground: '#ffffff',
+      noteBkgColor: '#fff8e1',
+      noteBorderColor: '#e0c36c',
+    },
+    themeCSS: MERMAID_THEME_CSS,
+    flowchart: {
+      subGraphTitleMargin: { top: 12, bottom: 4 },
     },
     securityLevel: 'strict',
-    fontFamily: 'Arial, sans-serif',
+    fontFamily: MERMAID_FONT_FAMILY,
   });
 }
 
