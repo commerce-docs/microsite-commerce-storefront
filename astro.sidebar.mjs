@@ -1203,6 +1203,7 @@ export function generateSidebar() {
           label: 'Release Notes',
           items: [
             { label: 'Overview', link: '/releases/' },
+            { label: 'October 2026 suite', link: '/releases/2026-10/' },
             { label: 'September 2026 suite', link: '/releases/2026-09/' },
             { label: 'July 2026 suite', link: '/releases/2026-07/' },
             { label: 'June 2026 suite', link: '/releases/2026-06/' },
