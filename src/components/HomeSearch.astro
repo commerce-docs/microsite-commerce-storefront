@@ -9,6 +9,7 @@
 // We use Pagefind's documented JS API (pagefind.js) and render results into
 // our own themed markup, rather than the @pagefind/default-ui widget, so the
 // results inherit the site's design tokens and carry no third-party CSS.
+const PAGEFIND_API = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/pagefind/pagefind.js`;
 ---
 
 <div class='home-search' data-home-search>
@@ -65,41 +66,24 @@
   <div class='home-search__status' role='status' aria-live='polite' data-home-search-status></div>
 </div>
 
-<script>
-  type PagefindResultData = {
-    url: string;
-    excerpt: string;
-    meta?: { title?: string };
-  };
-  type PagefindModule = {
-    init?: () => Promise<void>;
-    debouncedSearch: (
-      term: string
-    ) => Promise<{ results: { data: () => Promise<PagefindResultData> }[] } | null>;
-  };
-
+<script is:inline define:vars={{ PAGEFIND_API }}>
   const MAX_RESULTS = 8;
 
-  // Mirror Starlight's own bundlePath computation so we share its source of
-  // truth for where Pagefind lives, base path included.
-  const base = import.meta.env.BASE_URL.replace(/\/$/, '');
-  const PAGEFIND_API = `${base}/pagefind/pagefind.js`;
+  const root = document.querySelector('[data-home-search]');
+  const form = root?.querySelector('[data-home-search-form]');
+  const input = root?.querySelector('[data-home-search-input]');
+  const panel = root?.querySelector('[data-home-search-panel]');
+  const list = root?.querySelector('[data-home-search-list]');
+  const empty = root?.querySelector('[data-home-search-empty]');
+  const notice = root?.querySelector('[data-home-search-notice]');
+  const status = root?.querySelector('[data-home-search-status]');
 
-  const root = document.querySelector<HTMLElement>('[data-home-search]');
-  const form = root?.querySelector<HTMLFormElement>('[data-home-search-form]');
-  const input = root?.querySelector<HTMLInputElement>('[data-home-search-input]');
-  const panel = root?.querySelector<HTMLElement>('[data-home-search-panel]');
-  const list = root?.querySelector<HTMLUListElement>('[data-home-search-list]');
-  const empty = root?.querySelector<HTMLElement>('[data-home-search-empty]');
-  const notice = root?.querySelector<HTMLElement>('[data-home-search-notice]');
-  const status = root?.querySelector<HTMLElement>('[data-home-search-status]');
-
-  let pagefindPromise: Promise<PagefindModule | null> | null = null;
+  let pagefindPromise = null;
   let activeIndex = -1;
 
   /** Open Starlight's existing search modal — the automatic fallback. */
-  function openStarlightModal(): boolean {
-    const trigger = document.querySelector<HTMLButtonElement>('button[data-open-modal]');
+  function openStarlightModal() {
+    const trigger = document.querySelector('button[data-open-modal]');
     if (trigger) {
       trigger.click();
       return true;
@@ -113,13 +97,13 @@
    * null when the bundle is absent (dev or a moved path), which is the signal
    * to fall back to the modal.
    */
-  function ensurePagefind(): Promise<PagefindModule | null> {
+  function ensurePagefind() {
     if (!pagefindPromise) {
       pagefindPromise = (async () => {
         try {
           // Import Pagefind's JS API directly, the way Starlight does. A
           // missing bundle throws here and we fall back to the modal.
-          const mod = (await import(/* @vite-ignore */ PAGEFIND_API)) as PagefindModule;
+          const mod = await import(PAGEFIND_API);
           await mod.init?.();
           return mod;
         } catch {
@@ -130,7 +114,7 @@
     return pagefindPromise;
   }
 
-  function closePanel(): void {
+  function closePanel() {
     if (!panel || !input) return;
     panel.hidden = true;
     input.setAttribute('aria-expanded', 'false');
@@ -139,13 +123,13 @@
   }
 
   /** Announce result counts politely for screen-reader users. */
-  function announce(message: string): void {
+  function announce(message) {
     if (status) status.textContent = message;
   }
 
   /** Dev builds ship no Pagefind index, so surface the notice instead of
    * failing silently. The notice element only exists under `astro dev`. */
-  function showNotice(): void {
+  function showNotice() {
     if (!panel || !notice || !input || !list || !empty) return;
     list.innerHTML = '';
     activeIndex = -1;
@@ -156,9 +140,9 @@
     announce(notice.textContent?.trim() ?? '');
   }
 
-  function setActive(next: number): void {
+  function setActive(next) {
     if (!list || !input) return;
-    const options = Array.from(list.querySelectorAll<HTMLElement>('[role="option"]'));
+    const options = Array.from(list.querySelectorAll('[role="option"]'));
     if (options.length === 0) return;
     activeIndex = (next + options.length) % options.length;
     options.forEach((opt, i) => {
@@ -179,7 +163,7 @@
    * keeping Pagefind's <mark> highlights on the remainder. Also trims a stray
    * leading space from windows that start just after the title's separator.
    */
-  function stripLeadingExcerptTitle(excerptHtml: string, title?: string): string {
+  function stripLeadingExcerptTitle(excerptHtml, title) {
     const wrapper = document.createElement('div');
     wrapper.innerHTML = excerptHtml;
 
@@ -240,7 +224,7 @@
     return (wrapper.textContent ?? '').trim() ? wrapper.innerHTML : excerptHtml;
   }
 
-  function renderResults(results: PagefindResultData[]): void {
+  function renderResults(results) {
     if (!list || !panel || !input || !empty) return;
     list.innerHTML = '';
     activeIndex = -1;
@@ -286,7 +270,7 @@
     announce(`${results.length} result${results.length === 1 ? '' : 's'} available.`);
   }
 
-  async function runSearch(term: string): Promise<void> {
+  async function runSearch(term) {
     if (!term) {
       closePanel();
       return;
@@ -335,8 +319,8 @@
       event.preventDefault();
       setActive(activeIndex - 1);
     } else if (event.key === 'Enter') {
-      const active = list?.querySelector<HTMLAnchorElement>('.is-active .home-search__result');
-      const first = list?.querySelector<HTMLAnchorElement>('.home-search__result');
+      const active = list?.querySelector('.is-active .home-search__result');
+      const first = list?.querySelector('.home-search__result');
       const target = active ?? first;
       if (target) {
         event.preventDefault();
@@ -361,7 +345,7 @@
   });
 
   document.addEventListener('click', (event) => {
-    if (root && !root.contains(event.target as Node)) closePanel();
+    if (root && !root.contains(event.target)) closePanel();
   });
 </script>
 

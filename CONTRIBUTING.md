@@ -91,9 +91,10 @@ The site navigation is configured in `astro.sidebar.mjs`. When adding new pages,
 
 Choose the right content type for your documentation:
 
-### 1. **How-tos** (`/dropins/[component]/tutorials/`)
+### 1. **How-tos** (`/how-tos/`)
 
 **When to use:** Task-oriented instructions for solving a specific problem (Diataxis how-to guides)
+Use **how-to** for one topic and **how-tos** for the collection, including guided examples. Do not create a separate Tutorials collection.
 **Structure:**
 
 - Clear objective statement
@@ -379,7 +380,7 @@ prerequisites: # List of prerequisites
 Starlight renders `time` next to the page title (`PageTitle.astro`). Some readers use it to plan; others skip a page when the value looks long.
 
 - Treat `time` as optional. Prefer it only when a short, credible estimate helps (for example a true quick start under about fifteen minutes).
-- For long tutorials or dense guides, omit `time` so the title does not advertise a large number that can discourage reading.
+- For long how-tos or dense guides, omit `time` so the title does not advertise a large number that can discourage reading.
 - If you use `time`, use a string such as `~10 minutes` for consistency with existing topics.
 
 ## Markdown & Components
@@ -585,6 +586,14 @@ import TableWrapper from '@components/TableWrapper.astro';
 - Include both light and dark mode versions when possible
 - Keep file sizes reasonable (< 1MB for screenshots)
 
+### Diagrams in dark mode
+
+For a simple diagram with a white background and dark labels, add the `adaptColors` prop to its `<Diagram>` component. The component uses the same image in both themes. It slightly increases contrast in light mode and changes the white background to dark gray in dark mode. The zoomed image follows the same colors, and print uses the light appearance.
+
+Use this option only after checking the image in both themes and in the zoomed view. Filters change every pixel, so do not use it for screenshots, photographs, or diagrams that require exact colors. Mermaid diagrams are unchanged.
+
+Check normal text for a contrast ratio of at least 4.5:1 against its background. Meaningful lines and icons need at least 3:1. The filter does not guarantee that every diagram meets these Web Content Accessibility Guidelines (WCAG) contrast requirements. If colors still fail, adjust the source diagram or use a separately designed dark version.
+
 ### Screenshots
 
 **Best Practices:**
@@ -774,7 +783,7 @@ git push origin b2b-documentation
 
 ### Adding a New Tutorial
 
-1. **Choose the right location** (e.g., `/src/content/docs/dropins/cart/tutorials/`)
+1. **Choose the right location** (e.g., `/src/content/docs/how-tos/`)
 2. **Create the file** with descriptive name
 3. **Add required frontmatter**
 4. **Write the tutorial** following the tutorial structure
@@ -1073,4 +1082,3 @@ For questions about this guide or documentation processes, contact:
 
 _Last updated: [Current Date]_
 _Version: 1.0_
-
