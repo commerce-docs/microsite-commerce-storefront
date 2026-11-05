@@ -1,0 +1,332 @@
+---
+/**
+ * Forecast calculator for content requests.
+ *
+ * Usage:
+ *   <ContentRequestCalculator />
+ */
+
+const pageTypes = [
+  { id: 'home', label: 'Home page', views: 20000, perView: 1 },
+  { id: 'category', label: 'Category pages', views: 50000, perView: 1.2 },
+  { id: 'product', label: 'Product pages', views: 100000, perView: 1.2 },
+  { id: 'other', label: 'All other pages', views: 30000, perView: 1 },
+];
+---
+
+<content-request-calculator>
+  <form class='crc' aria-labelledby='crc-title' aria-describedby='crc-help'>
+    <div class='crc-grid' role='group' aria-label='Page views and content requests per view'>
+      <span class='crc-head'>Page type</span>
+      <span class='crc-head'>Monthly page views</span>
+      <span class='crc-head'>Content requests per view</span>
+      {pageTypes.map((type) => (
+        <>
+          <span class='crc-label' id={`crc-${type.id}-label`}>
+            {type.label}
+          </span>
+          <input
+            type='number'
+            min='0'
+            step='1000'
+            inputmode='numeric'
+            name={`${type.id}-views`}
+            value={type.views}
+            aria-labelledby={`crc-${type.id}-label crc-views-label`}
+            data-views
+          />
+          <input
+            type='number'
+            min='0'
+            step='0.1'
+            inputmode='decimal'
+            name={`${type.id}-per-view`}
+            value={type.perView}
+            aria-labelledby={`crc-${type.id}-label crc-per-view-label`}
+            data-per-view
+          />
+        </>
+      ))}
+      <span id='crc-views-label' hidden>
+        monthly page views
+      </span>
+      <span id='crc-per-view-label' hidden>
+        content requests per view
+      </span>
+    </div>
+
+    <div class='crc-adjust'>
+      <label>
+        <span id='crc-prerender-label'>Unopened prerendered pages per page view</span>
+        <input
+          type='number'
+          min='0'
+          step='0.1'
+          inputmode='decimal'
+          name='prerender'
+          value='0.4'
+          aria-labelledby='crc-prerender-label'
+          aria-describedby='crc-prerender-help'
+        />
+        <span id='crc-prerender-help' class='crc-field-help'>
+          Enter your measured average. For example, 2 unopened prerendered pages across 10 page
+          views is 0.2. This is a page count. The calculator converts it to content requests.
+        </span>
+      </label>
+      <label>
+        <span id='crc-headroom-label'>Headroom for other traffic (%)</span>
+        <input
+          type='number'
+          min='0'
+          step='5'
+          inputmode='numeric'
+          name='headroom'
+          value='10'
+          aria-labelledby='crc-headroom-label'
+          aria-describedby='crc-headroom-help'
+        />
+        <span id='crc-headroom-help' class='crc-field-help'>
+          Covers traffic that analytics misses (unrecognized bots and monitoring tools). If the
+          total content requests is 322,000, then 10% for extra traffic is 32,200 more content
+          requests.
+        </span>
+      </label>
+    </div>
+
+    <output class='crc-result' aria-live='polite'>
+      <span class='crc-total' data-total>
+        Turn on JavaScript to use the calculator.
+      </span>
+    </output>
+
+    <div class='crc-cards'>
+      <div class='crc-card'>
+        <span class='crc-card-label'>From page views</span>
+        <span class='crc-card-value' data-page-views>
+          —
+        </span>
+        <span class='crc-card-math' data-page-views-math></span>
+      </div>
+      <div class='crc-card'>
+        <span class='crc-card-label'>From prerendered pages</span>
+        <span class='crc-card-value' data-prerendered>
+          —
+        </span>
+        <span class='crc-card-math' data-prerendered-math></span>
+      </div>
+      <div class='crc-card'>
+        <span class='crc-card-label'>From headroom</span>
+        <span class='crc-card-value' data-headroom>
+          —
+        </span>
+        <span class='crc-card-math' data-headroom-math></span>
+      </div>
+    </div>
+  </form>
+</content-request-calculator>
+
+<style>
+  content-request-calculator {
+    display: block;
+    margin: 1.5rem 0;
+  }
+
+  .crc {
+    padding: 1.25rem;
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 0.5rem;
+    background: var(--sl-color-gray-7, var(--sl-color-gray-6));
+  }
+
+  .crc-title {
+    margin: 0 0 0.5rem;
+    font-size: var(--sl-text-lg);
+    font-weight: 700;
+    color: var(--sl-color-white);
+  }
+
+  .crc-help {
+    margin: 0 0 1rem;
+    color: var(--sl-color-gray-2);
+    font-size: var(--sl-text-sm);
+  }
+
+  .crc-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr);
+    gap: 0.5rem 0.75rem;
+    align-items: center;
+  }
+
+  .crc-head {
+    font-size: var(--sl-text-xs);
+    font-weight: 600;
+    color: var(--sl-color-gray-3);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  .crc-label {
+    color: var(--sl-color-white);
+  }
+
+  .crc input {
+    width: 100%;
+    margin: 0;
+    padding: 0.4rem 0.5rem;
+    border: 1px solid var(--sl-color-gray-4);
+    border-radius: 0.25rem;
+    background: var(--sl-color-black);
+    color: var(--sl-color-white);
+    font: inherit;
+  }
+
+  .crc input:focus-visible {
+    outline: 2px solid var(--sl-color-accent);
+    outline-offset: 1px;
+  }
+
+  .crc-adjust {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+    align-items: start;
+    gap: 0.75rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--sl-color-gray-5);
+  }
+
+  .crc-adjust label {
+    display: grid;
+    gap: 0.25rem;
+    margin: 0;
+    color: var(--sl-color-gray-2);
+    font-size: var(--sl-text-sm);
+  }
+
+  .crc-field-help {
+    font-size: var(--sl-text-xs);
+    line-height: 1.5;
+  }
+
+  .crc-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+  }
+
+  .crc-card {
+    display: grid;
+    align-content: start;
+    gap: 0.25rem;
+    margin: 0;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--sl-color-gray-5);
+    border-top: 4px solid var(--sl-color-accent);
+    border-radius: 0.375rem;
+    background: var(--sl-color-black);
+  }
+
+  .crc-card-label {
+    font-size: var(--sl-text-xs);
+    font-weight: 600;
+    color: var(--sl-color-gray-2);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  .crc-card-value {
+    font-size: var(--sl-text-2xl);
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--sl-color-white);
+  }
+
+  .crc-card-math {
+    margin: 0;
+    font-size: var(--sl-text-xs);
+    color: var(--sl-color-gray-2);
+  }
+
+  .crc-result {
+    display: grid;
+    gap: 0.25rem;
+    margin-top: 1rem;
+    padding: 0.75rem 1rem;
+    border-left: 4px solid var(--sl-color-green);
+    border-radius: 0.25rem;
+    background: var(--sl-color-green-low);
+  }
+
+  .crc-total {
+    font-size: var(--sl-text-lg);
+    font-weight: 600;
+    color: var(--sl-color-white);
+  }
+</style>
+
+<script>
+  const format = new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 });
+  const formatRate = new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 });
+
+  const read = (input: HTMLInputElement | null) => {
+    const value = Number(input?.value);
+    return Number.isFinite(value) && value > 0 ? value : 0;
+  };
+
+  class ContentRequestCalculator extends HTMLElement {
+    connectedCallback() {
+      const form = this.querySelector('form');
+      if (!form) return;
+      form.addEventListener('submit', (event) => event.preventDefault());
+      form.addEventListener('input', () => this.update());
+      this.update();
+    }
+
+    update() {
+      const views = [...this.querySelectorAll<HTMLInputElement>('[data-views]')].map(read);
+      const perView = [...this.querySelectorAll<HTMLInputElement>('[data-per-view]')].map(read);
+      const prerenderRate = read(this.querySelector('[name="prerender"]'));
+      const headroomPct = read(this.querySelector('[name="headroom"]'));
+
+      const totalViews = views.reduce((sum, value) => sum + value, 0);
+      const pageViews = views.reduce((sum, value, i) => sum + value * perView[i], 0);
+      const averagePerView = totalViews ? pageViews / totalViews : 0;
+      const prerendered = totalViews * prerenderRate * averagePerView;
+      const headroom = (pageViews + prerendered) * (headroomPct / 100);
+      const total = pageViews + prerendered + headroom;
+
+      const totalEl = this.querySelector('[data-total]');
+      if (!totalEl) return;
+
+      totalEl.textContent = `About ${format.format(total)} content requests per month`;
+
+      const cards: [string, number, string][] = [
+        [
+          'page-views',
+          pageViews,
+          `${format.format(totalViews)} page views × ${formatRate.format(averagePerView)} average per view`,
+        ],
+        [
+          'prerendered',
+          prerendered,
+          `${format.format(totalViews)} page views × ${formatRate.format(prerenderRate)} × ${formatRate.format(averagePerView)}`,
+        ],
+        [
+          'headroom',
+          headroom,
+          `${format.format(pageViews + prerendered)} content requests × ${formatRate.format(headroomPct)}%`,
+        ],
+      ];
+      for (const [name, value, math] of cards) {
+        const valueEl = this.querySelector(`[data-${name}]`);
+        const mathEl = this.querySelector(`[data-${name}-math]`);
+        if (valueEl) valueEl.textContent = format.format(value);
+        if (mathEl) mathEl.textContent = math;
+      }
+    }
+  }
+
+  customElements.define('content-request-calculator', ContentRequestCalculator);
+</script>
