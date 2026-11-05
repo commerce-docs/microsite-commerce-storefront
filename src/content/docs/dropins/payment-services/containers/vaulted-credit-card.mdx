@@ -1,0 +1,64 @@
+---
+title: VaultedCreditCard container
+description: Learn how to display saved credit or debit card details with the VaultedCreditCard container in the Payment Services drop-in.
+sidebar:
+  label: VaultedCreditCard
+---
+
+import TableWrapper from '@components/TableWrapper.astro';
+
+The `VaultedCreditCard` container displays details of a vaulted (saved) credit or debit card. Use it to display a saved card in checkout without asking the shopper to enter the card details again.
+
+This container displays card details only. To submit a payment with the selected saved card, use [`submitCreditCard`](/dropins/payment-services/functions/#submitcreditcard). For the checkout integration, see [Use vaulted cards in checkout](/how-tos/vaulted-cards-in-checkout/).
+
+## Configuration
+
+<TableWrapper nowrap={[0]}>
+
+| Option | Type | Req? | Description |
+|---|---|---|---|
+| `tokenDetails` | `string` | Yes | A JSON string containing the saved card details. In the checkout `StoredMethods` slot, pass `ctx.details` unchanged. |
+
+</TableWrapper>
+
+The container reads these fields from the JSON object:
+
+<TableWrapper nowrap={[0]}>
+
+| Field | Type | Description |
+|---|---|---|
+| `type` | `string` | Card type: `CREDIT`, `DEBIT`, `PREPAID`, `STORE`, or `FSA`. |
+| `brand` | `string` | Card brand, such as `VISA` or `MASTERCARD`. Brand matching is case-insensitive. |
+| `maskedCC` | `string` | The last four digits of the card number. Must contain exactly four digits. |
+| `cardholderName` | `string` | Cardholder's name. |
+| `billingAddress` | `object` | Billing address with optional string fields: `address_line_1`, `address_line_2`, `city`, `country_code`, `region`, and `postal_code`. |
+
+</TableWrapper>
+
+Unrecognized card types, brands, and invalid field values are omitted. If `tokenDetails` is invalid JSON or does not contain an object, the container logs a warning and renders without those details.
+
+## Slots
+
+This container does not expose any customizable slots.
+
+## Usage
+
+The following example displays sample saved-card details:
+
+```js
+import VaultedCreditCard from '@dropins/storefront-payment-services/containers/VaultedCreditCard.js';
+import { render as PaymentServices } from '@dropins/storefront-payment-services/render.js';
+
+const cardElement = document.createElement('div');
+document.body.append(cardElement);
+
+await PaymentServices.render(VaultedCreditCard, {
+  tokenDetails: JSON.stringify({
+    type: 'CREDIT',
+    brand: 'VISA',
+    maskedCC: '1111',
+  }),
+})(cardElement);
+```
+
+In checkout, replace the sample JSON string with `ctx.details` from the `StoredMethods` slot. The container parses the string to display the saved card. It does not select the payment method or place an order.
