@@ -812,6 +812,13 @@ export function generateSidebar() {
               items: [
                 { label: 'Overview', link: '/dropins/product-details/' },
                 { label: 'Quick Start', link: '/dropins/product-details/quick-start/' },
+                {
+                  label: 'How-Tos',
+                  collapsed: true,
+                  items: [
+                    { label: 'Render customizable options', link: '/dropins/product-details/tutorials/render-customizable-options/' },
+                  ],
+                },
                 { label: 'Initialization', link: '/dropins/product-details/initialization/' },
                 { label: 'Functions', link: '/dropins/product-details/functions/' },
                 { label: 'Events', link: '/dropins/product-details/events/' },
@@ -824,6 +831,7 @@ export function generateSidebar() {
                   items: [
                     { label: 'Overview', link: '/dropins/product-details/containers/' },
                     { label: 'ProductAttributes', link: '/dropins/product-details/containers/product-attributes/' },
+                    { label: 'ProductCustomizableOptions', link: '/dropins/product-details/containers/product-customizable-options/' },
                     { label: 'ProductDescription', link: '/dropins/product-details/containers/product-description/' },
                     { label: 'ProductDetails container (deprecated)', link: '/dropins/product-details/containers/product-details/' },
                     { label: 'ProductDownloadableOptions', link: '/dropins/product-details/containers/product-downloadable-options/' },
@@ -1293,6 +1301,7 @@ export function generateSidebar() {
           label: 'Release Notes',
           items: [
             { label: 'Overview', link: '/releases/' },
+            { label: 'October 2026 suite', link: '/releases/2026-10/' },
             { label: 'September 2026 suite', link: '/releases/2026-09/' },
             { label: 'July 2026 suite', link: '/releases/2026-07/' },
             { label: 'June 2026 suite', link: '/releases/2026-06/' },
