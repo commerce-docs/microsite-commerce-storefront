@@ -1247,7 +1247,7 @@ function toMerchantTableKey(str) {
 function getB2BBlockTitles(blockName) {
     // Remove 'commerce-' prefix for matching
     const name = blockName.replace('commerce-', '');
-    
+
     // B2B block title transformations
     const b2bTitles = {
         // Purchase Order blocks
@@ -1264,16 +1264,16 @@ function getB2BBlockTitles(blockName) {
         'b2b-po-history-log': { title: 'Purchase Order History Log', label: 'PO History Log' },
         'b2b-po-require-approval-purchase-orders': { title: 'Purchase Orders Requiring Approval', label: 'POs Requiring Approval' },
         'b2b-po-status': { title: 'Purchase Order Status', label: 'PO Status' },
-        
+
         // Quote Management blocks
         'b2b-negotiable-quote': { title: 'Negotiable Quote', label: 'Negotiable Quote' },
         'b2b-negotiable-quote-template': { title: 'Negotiable Quote Template', label: 'Quote Template' },
         'b2b-quote-checkout': { title: 'Quote Checkout', label: 'Quote Checkout' },
-        
+
         // Requisition List blocks
         'b2b-requisition-list': { title: 'Requisition Lists', label: 'Requisition Lists' },
         'b2b-requisition-list-view': { title: 'Requisition List View', label: 'List View' },
-        
+
         // Company Management blocks
         'company-accept-invitation': { title: 'Accept Company Invitation', label: 'Accept Invitation' },
         'company-create': { title: 'Create Company', label: 'Create Company' },
@@ -1282,13 +1282,13 @@ function getB2BBlockTitles(blockName) {
         'company-roles-permissions': { title: 'Company Roles and Permissions', label: 'Roles & Permissions' },
         'company-structure': { title: 'Company Structure', label: 'Company Structure' },
         'company-users': { title: 'Company Users', label: 'Company Users' },
-        
+
         // Checkout & Account blocks
         'account-nav': { title: 'Account Navigation', label: 'Account Navigation' },
         'checkout-success': { title: 'Checkout Success', label: 'Checkout Success' },
         'customer-company': { title: 'Customer Company', label: 'Customer Company' },
     };
-    
+
     return b2bTitles[name] || null;
 }
 
@@ -1427,7 +1427,7 @@ function generateSectionMetadataTable(blockName) {
     output += `</table>\n\n`;
 
     output += `<Aside type="tip" title="Learn more">\n\n`;
-    output += `See the [Section Metadata guide](/merchants/quick-start/section-metadata/) for all available values and the [Page Metadata guide](/merchants/quick-start/page-metadata/) for SEO and caching options.\n\n`;
+    output += `See the [Section Metadata guide](/merchants/blocks/section-metadata/) for all available values and the [Page Metadata guide](/merchants/blocks/page-metadata/) for SEO and caching options.\n\n`;
     output += `</Aside>\n\n`;
 
     return output;
@@ -1729,7 +1729,7 @@ function extractCommerceBlocks(boilerplatePath) {
         const sidebarLabel = b2bTitles?.label || blockName.replace('commerce-', '').split('-').map(word =>
             word.charAt(0).toUpperCase() + word.slice(1)
         ).join(' ');
-        
+
         blocks.push({
             name: blockName,
             displayName: displayName,
