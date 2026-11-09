@@ -30,9 +30,10 @@ The `ProductList` container provides the following configuration options:
     ['userViewHistory', 'any[]', 'No', 'User View History for recommendation context.'],
     ['routeProduct', 'function', 'No', 'Callback function that returns a product URL.'],
     ['hideHeading', 'boolean', 'No', 'Hide recommendations heading text.'],
+    ['showRatings', 'boolean', 'No', 'Shows star ratings and review counts on recommendation cards. Defaults to `false`. See [Show star ratings](#show-star-ratings).'],
     ['initialData', 'object', 'No', 'Pre-loaded recommendation data to avoid initial fetch.'],
     ['pagePlacement', 'string', 'No', 'Identifies the placement of the recommendations unit on the page (for example, `product-list`). Used for ACDL analytics event tracking.'],
-    ['slots', 'object', 'No', 'Slots for customizing heading, thumbnail, price, title, SKU, and footer.'],
+    ['slots', 'object', 'No', 'Slots for customizing heading, thumbnail, price, rating, title, SKU, and footer.'],
   ]}
 />
 
@@ -101,6 +102,7 @@ export interface ProductListProps extends HTMLAttributes<HTMLDivElement> {
     };
   };
   hideHeading?: boolean;
+  showRatings?: boolean;
   routeProduct?: (item: Item) => string;
   cartSkus?: string[];
   userPurchaseHistory?: any[];
@@ -116,6 +118,9 @@ export interface ProductListProps extends HTMLAttributes<HTMLDivElement> {
       item: Item;
     }>;
     Price?: SlotProps<{
+      item: Item;
+    }>;
+    Rating?: SlotProps<{
       item: Item;
     }>;
     Thumbnail?: SlotProps<{
@@ -158,6 +163,16 @@ export interface Item {
   queryType: string;
   itemType: string;
   inStock?: boolean;
+  attributes?: ItemAttribute[];
+  // Average rating on a 0-5 scale. Undefined when the product has no valid review summary.
+  rating?: number;
+  // Number of approved reviews.
+  reviewCount?: number;
+}
+
+export interface ItemAttribute {
+  name: string;
+  value: unknown;
 }
 
 interface ItemImage {
@@ -199,9 +214,32 @@ The `ProductList` container supports the following slots:
 * **Title** - Customize the product title display
 * **Sku** - Customize the SKU display
 * **Price** - Customize the price display
+* **Rating** - Customize the star rating display when `showRatings` is `true`
 * **Thumbnail** - Customize the product image display
 
 Each slot receives context data relevant to its purpose, allowing for highly customizable product displays.
+
+## Show star ratings
+
+Recommendation cards can show each product's average star rating and approved review count, between the product image and the product name. Ratings are off by default. Set `showRatings` to `true` to turn them on.
+
+The drop-in reads two Catalog Service product attributes from the recommendation data:
+
+- **`ac_rating_summary`**: The average rating from `0` to `100`. The drop-in divides it by 20 and saves the 0–5 value as `item.rating`.
+- **`ac_review_count`**: The number of approved reviews, saved as `item.reviewCount`.
+
+A card shows no rating when either attribute is missing or invalid, or when the product has no approved reviews. For how review data reaches the catalog, see the [Ratings and Reviews overview](/dropins/ratings-reviews/#how-it-works).
+
+```js
+provider.render(ProductList, {
+  recId: 'recommendation-unit-1',
+  routeProduct: (item) => `/products/${item.urlKey}`,
+  // Ratings are off unless you turn them on.
+  showRatings: true,
+})(block);
+```
+
+The drop-in renders ratings with the SDK `StarRating` component. Use the `Rating` slot to change how the rating looks. The slot receives the card's `item`, including `item.rating` and `item.reviewCount`, and renders only for cards that have a rating.
 
 ## Example configuration
 

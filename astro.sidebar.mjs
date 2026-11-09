@@ -272,6 +272,7 @@ export function generateSidebar() {
               items: [
                 { label: 'Product Details', link: '/merchants/blocks/product-details/' },
                 { label: 'Product List Page', link: '/merchants/blocks/product-list-page/' },
+                { label: 'Product Reviews', link: '/merchants/blocks/product-reviews/' },
               ],
             },
             {
@@ -839,6 +840,7 @@ export function generateSidebar() {
                     { label: 'ProductOptions', link: '/dropins/product-details/containers/product-options/' },
                     { label: 'ProductPrice', link: '/dropins/product-details/containers/product-price/' },
                     { label: 'ProductQuantity', link: '/dropins/product-details/containers/product-quantity/' },
+                    { label: 'ProductRating', link: '/dropins/product-details/containers/product-rating/' },
                     { label: 'ProductShortDescription', link: '/dropins/product-details/containers/product-short-description/' },
                   ],
                 },
@@ -865,6 +867,29 @@ export function generateSidebar() {
                     { label: 'Facets', link: '/dropins/product-discovery/containers/facets/' },
                     { label: 'SortBy', link: '/dropins/product-discovery/containers/sort-by/' },
                     { label: 'Pagination', link: '/dropins/product-discovery/containers/pagination/' },
+                  ],
+                },
+              ],
+            },
+            {
+              label: 'Ratings and Reviews',
+              collapsed: true,
+              items: [
+                { label: 'Overview', link: '/dropins/ratings-reviews/' },
+                { label: 'Quick Start', link: '/dropins/ratings-reviews/quick-start/' },
+                { label: 'Initialization', link: '/dropins/ratings-reviews/initialization/' },
+                { label: 'Functions', link: '/dropins/ratings-reviews/functions/' },
+                { label: 'Events', link: '/dropins/ratings-reviews/events/' },
+                { label: 'Slots', link: '/dropins/ratings-reviews/slots/' },
+                { label: 'Styles', link: '/dropins/ratings-reviews/styles/' },
+                { label: 'Dictionary', link: '/dropins/ratings-reviews/dictionary/' },
+                {
+                  label: 'Containers',
+                  collapsed: true,
+                  items: [
+                    { label: 'Overview', link: '/dropins/ratings-reviews/containers/' },
+                    { label: 'Review', link: '/dropins/ratings-reviews/containers/review/' },
+                    { label: 'Pagination', link: '/dropins/ratings-reviews/containers/pagination/' },
                   ],
                 },
               ],

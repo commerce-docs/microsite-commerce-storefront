@@ -261,6 +261,71 @@ await provider.render(SearchResults, {
 })(block);
 ```
 
+### Show star ratings on product cards
+
+Product listing and search result cards can show each product's average star rating and approved review count, for example *4.5 (12)*. The product listing block adds the rating after the product name through the `ProductName` slot and renders it with the SDK `StarRating` component.
+
+The rating comes from two Catalog Service product attributes:
+
+- **`ac_rating_summary`**: The average rating from `0` to `100`. Divide by 20 for 0–5 stars.
+- **`ac_review_count`**: The number of approved reviews.
+
+Both attributes need the `visible_in_plp` storefront role to appear in listing results. For how review data reaches the catalog, see the [Ratings and Reviews overview](/dropins/ratings-reviews/#how-it-works).
+
+```js title="blocks/product-list-page/product-list-page.js"
+import { render as provider } from '@dropins/storefront-product-discovery/render.js';
+import SearchResults from '@dropins/storefront-product-discovery/containers/SearchResults.js';
+import { StarRating, provider as UI } from '@dropins/tools/components.js';
+
+// ac_rating_summary is a 0-100 percentage; products without ac_review_count get no rating.
+const getReviewSummary = (product) => {
+  const getValue = (name) => product.attributes?.find((attr) => attr.name === name)?.value;
+  const reviewCount = Number.parseInt(getValue('ac_review_count'), 10);
+  if (!Number.isSafeInteger(reviewCount) || reviewCount < 0) return null;
+
+  // Converts the percentage to a 0-5 star value and keeps it in range.
+  const rating = Math.min(Math.max(Number(getValue('ac_rating_summary')) / 20 || 0, 0), 5);
+  const $rating = document.createElement('div');
+  $rating.className = 'product-discovery-product-rating';
+  // Renders, for example, five stars followed by "4.5 (12)".
+  UI.render(StarRating, {
+    rating,
+    reviewCount,
+    showCount: true,
+    valueDisplay: 'value',
+    countDisplay: 'parentheses',
+  })($rating);
+  return $rating;
+};
+
+await provider.render(SearchResults, {
+  slots: {
+    ProductName: (ctx) => {
+      const $rating = getReviewSummary(ctx.product);
+      // Keeps the default product name and adds the rating after it.
+      if ($rating) ctx.appendChild($rating);
+    },
+  },
+})(block);
+```
+
+Products without a valid `ac_review_count` show no rating. A product whose count is `0` shows empty stars and the *No reviews* label. To hide those too, return `null` when `reviewCount` is less than `1`.
+
+Add these rules to `blocks/product-list-page/product-list-page.css` to size the stars for product cards:
+
+```css title="blocks/product-list-page/product-list-page.css"
+/* Adds space between the product name and the rating. */
+.block.product-list-page .product-discovery-product-rating {
+  margin-block-start: var(--spacing-xxsmall);
+}
+
+/* Uses smaller stars on product cards. */
+.block.product-list-page .product-discovery-product-rating .dropin-star-rating__star svg {
+  height: 16px;
+  width: 16px;
+}
+```
+
 ### ProductImage slot
 
 The `ProductImage` slot allows you to customize the product image section of the `SearchResults` container.

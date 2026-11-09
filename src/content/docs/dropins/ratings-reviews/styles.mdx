@@ -1,0 +1,99 @@
+---
+title: Ratings and Reviews styles
+description: CSS classes, states, and customization examples for the Ratings and Reviews drop-in and the Product Reviews block.
+sidebar:
+  label: Styles
+  order: 7
+---
+
+import TableWrapper from '@components/TableWrapper.astro';
+
+Customize the review list with CSS in your Product Reviews block. The drop-in uses design tokens such as `--spacing-medium` and `--color-neutral-700`, so most theme changes apply automatically. For tokens, breakpoints, and general guidance, see [CSS customization](/dropins/all/styling/).
+
+## Block styles
+
+The Product Reviews block stylesheet, `blocks/product-reviews/product-reviews.css`, controls the section spacing and hidden states:
+
+```css title="blocks/product-reviews/product-reviews.css"
+/* Separates the reviews section from the content above it. */
+.product-reviews {
+  margin-block-start: var(--spacing-xxbig);
+}
+
+/* Keeps the block hidden while reviews are turned off or loading has not started. */
+.product-reviews[hidden] {
+  display: none;
+}
+
+.product-reviews .product-reviews__pagination {
+  min-width: 0;
+  margin-block: var(--spacing-medium);
+}
+
+/* Removes the pagination spacing when there is only one page. */
+.product-reviews .product-reviews__pagination:has(.ratingsreviews-pagination[hidden]) {
+  display: none;
+}
+```
+
+- `.product-reviews`: The block wrapper. The block sets `hidden` on it until reviews can load.
+- `.product-reviews__list`: The element that holds the `Review` container.
+- `.product-reviews__pagination`: The element that holds the `Pagination` container. It collapses when the container is hidden.
+
+## Container classes
+
+The drop-in uses BEM-style class names with the `ratingsreviews-` prefix.
+
+<TableWrapper nowrap={[0]}>
+
+| Class | Element |
+| --- | --- |
+| `.ratingsreviews-review` | `Review` wrapper. Its `data-state` attribute is `loading`, `ready`, `empty`, `unavailable`, or `error`. |
+| `.ratingsreviews-review__status` | Status message. Visually hidden in the `loading` state. |
+| `.ratingsreviews-review__skeleton` | Loading skeleton. |
+| `.ratingsreviews-review__list` | The list of review rows. |
+| `.ratingsreviews-review-item` | One review row. |
+| `.ratingsreviews-review-item__author` | Reviewer name. |
+| `.ratingsreviews-review-item__content` | Rating, date, title, and text. |
+| `.ratingsreviews-review-item__meta` | Rating and date row. |
+| `.ratingsreviews-review-item__summary` | Review title. |
+| `.ratingsreviews-review-item__text` | Review text. Preserves the shopper's line breaks. |
+| `.ratingsreviews-star-rating` | Stars and value in a review row. |
+| `.ratingsreviews-star-rating__star` | One star outline. |
+| `.ratingsreviews-star-rating__fill` | The filled part of one star. |
+| `.ratingsreviews-star-rating__value` | The numeric rating, for example *4.0*. |
+| `.ratingsreviews-pagination` | `Pagination` wrapper. |
+| `.ratingsreviews-pagination__controls` | Page controls. Disabled and dimmed while a page loads. |
+
+</TableWrapper>
+
+## Responsive layout
+
+Review rows respond to the width of the `Review` container, not the browser window. The wrapper is a CSS container named `ratingsreviews-review`. When it is 900 pixels wide or wider, each row places the author in a narrow column beside the content. On narrower containers, such as a sidebar or modal, the author appears above the content.
+
+## Customization examples
+
+Add these rules to `blocks/product-reviews/product-reviews.css`.
+
+```css title="blocks/product-reviews/product-reviews.css"
+/* Shows the error state in a highlighted panel. */
+.product-reviews .ratingsreviews-review[data-state='error'] .ratingsreviews-review__status {
+  padding: var(--spacing-small);
+  border-radius: var(--shape-border-radius-1);
+  background-color: var(--color-alert-200);
+}
+
+/* Changes the filled star color. The star fill uses the text color (currentcolor). */
+.product-reviews .ratingsreviews-star-rating__fill {
+  color: var(--color-brand-500);
+}
+
+/* Uses the side-by-side row layout on narrower containers. */
+@container ratingsreviews-review (width >= 600px) {
+  .product-reviews .ratingsreviews-review-item {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 3fr);
+  }
+}
+```
+
+Use your browser's developer tools to inspect other elements, such as the SDK header, divider, and pagination components inside the containers.

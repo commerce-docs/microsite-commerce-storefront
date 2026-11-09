@@ -1,0 +1,164 @@
+---
+title: Ratings and Reviews functions
+description: Load product reviews and review settings with the Ratings and Reviews drop-in API functions.
+sidebar:
+  label: Functions
+  order: 4
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import TableWrapper from '@components/TableWrapper.astro';
+
+The Ratings and Reviews drop-in exports API functions from `@dropins/storefront-ratings-reviews/api.js`. Use them to load review pages, read review settings, and configure the GraphQL client. Complete [initialization](/dropins/ratings-reviews/initialization/) before you call `getProductReviews`.
+
+<TableWrapper nowrap={[0]}>
+
+| Function | Description |
+| --- | --- |
+| [`getProductReviews`](#getproductreviews) | Loads one page of approved reviews for a SKU and publishes the result as events. |
+| [`getStoreConfig`](#getstoreconfig) | Loads the store's review settings. |
+| [`setEndpoint`](#graphql-client-functions) | Sets the GraphQL endpoint the drop-in uses. |
+| [`setFetchGraphQlHeader`](#graphql-client-functions) | Adds or replaces one request header. |
+| [`setFetchGraphQlHeaders`](#graphql-client-functions) | Adds or replaces several request headers. |
+| [`removeFetchGraphQlHeader`](#graphql-client-functions) | Removes one request header. |
+| [`fetchGraphQl`](#graphql-client-functions) | Sends a GraphQL request through the drop-in's client. |
+| [`getConfig`](#graphql-client-functions) | Returns the GraphQL client configuration. |
+
+</TableWrapper>
+
+## getProductReviews
+
+Loads one page of approved reviews for a product and publishes the request state on the [event bus](/dropins/ratings-reviews/events/). The `Review` and `Pagination` containers do not fetch data; they update from these events. Call this function once to show the first page. `Pagination` requests later pages by itself.
+
+```typescript
+getProductReviews(
+  sku: string,
+  options?: { pageSize?: number; currentPage?: number; scope?: string },
+): Promise<ProductReviewsModel | null>
+```
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+| --- | --- | --- | --- |
+| `sku` | `string` | Yes | SKU of the product whose reviews to load. The drop-in sends it to Commerce unchanged. |
+| `options.pageSize` | `number` | No | Number of reviews per page. Defaults to `20`. |
+| `options.currentPage` | `number` | No | Page to load, starting at `1`. Defaults to `1`. |
+| `options.scope` | `string` | No | Event scope. Pass the same value to the containers that display this list. |
+
+</TableWrapper>
+
+### Returns
+
+A promise that resolves to a [`ProductReviewsModel`](#productreviewsmodel), or `null` when the `reviews` query returns `null`, for example when the product is unavailable. The `Review` container shows *Reviews are unavailable.* for a `null` result and *No reviews on this page.* for a page with no items.
+
+### Example
+
+```js
+import { getProductReviews } from '@dropins/storefront-ratings-reviews/api.js';
+
+// Replace ADB102 with your product SKU. Use the same scope for the containers.
+getProductReviews('ADB102', { pageSize: 20, currentPage: 1, scope: 'product-reviews' })
+  // The containers show failures, so the block only logs the rejection.
+  .catch((error) => console.error(error));
+```
+
+### Behavior
+
+- **Input checks**: A blank SKU, or a `pageSize` or `currentPage` that is not a positive integer, rejects the promise before any network request. No events are published in that case.
+- **Newest request wins**: Only the newest request in a scope publishes its result, so a slow, older response cannot replace a newer page. The promise of an older request still resolves with its own data.
+- **Errors**: GraphQL and network errors publish a `reviews/error` event and reject the promise. Add a `.catch()` when you do not need the rejection.
+- **Malformed data**: Invalid page information rejects the response. An individual invalid review is skipped and the drop-in logs a warning, so the remaining reviews still render.
+- **Ratings**: Each review's `average_rating` (0–100) is divided by 20 to produce `rating` on a 0–5 scale. A review with an average of `0` and no rating votes gets `rating: null`, which the review list shows as *Not rated*.
+- **Caching**: Each call sends a new request. Responses are not cached.
+
+## getStoreConfig
+
+Loads the store's review settings from the `storeConfig` query. The initializer calls this function for you and saves the result in the drop-in configuration, so most storefronts read `config.getConfig()` instead.
+
+```typescript
+getStoreConfig(): Promise<StoreConfigModel>
+```
+
+### Returns
+
+A promise that resolves to a [`StoreConfigModel`](#storeconfigmodel). The promise rejects when the request returns GraphQL errors or no `storeConfig` data.
+
+### Example
+
+```js
+import { getStoreConfig } from '@dropins/storefront-ratings-reviews/api.js';
+
+// Configure the endpoint before calling this function.
+const { isProductReviewsEnabled, allowGuestsToWriteProductReviews } = await getStoreConfig();
+```
+
+## GraphQL client functions
+
+The drop-in has its own GraphQL client. These functions configure it.
+
+<TableWrapper nowrap={[0]}>
+
+| Function | Description |
+| --- | --- |
+| `setEndpoint(endpoint)` | Sets the GraphQL endpoint. Storefront initializers pass `CORE_FETCH_GRAPHQL` so that requests use your Commerce GraphQL endpoint and store headers. |
+| `setFetchGraphQlHeader(name, value)` | Adds or replaces one header on every request. |
+| `setFetchGraphQlHeaders(headers)` | Adds or replaces several headers on every request. |
+| `removeFetchGraphQlHeader(name)` | Removes one header. |
+| `fetchGraphQl(query, options)` | Sends a GraphQL request through the configured client. |
+| `getConfig()` | Returns the current client configuration. |
+
+</TableWrapper>
+
+<Aside type="note">
+Headers are shared by every request the drop-in sends. Set store headers once in the initializer rather than before individual calls.
+</Aside>
+
+## Data models
+
+### ProductReviewsModel
+
+One page of reviews.
+
+```typescript
+type ProductReviewsModel = {
+  items: ProductReviewModel[];
+  pageInfo: {
+    currentPage: number;
+    pageSize: number;
+    totalPages: number;
+  };
+};
+```
+
+### ProductReviewModel
+
+One approved review. All text fields are plain text exactly as the shopper entered them. Render them as text, not HTML.
+
+```typescript
+type ProductReviewModel = {
+  // Name the reviewer entered.
+  nickname: string;
+  // Review title.
+  summary: string;
+  // Review body.
+  text: string;
+  // Average of the review's rating votes on a 0–5 scale, or null when the review has no votes.
+  rating: number | null;
+  // Server date string without a time zone, for example "2026-09-17 12:12:00".
+  createdAt: string;
+};
+```
+
+### StoreConfigModel
+
+The store's review settings.
+
+```typescript
+type StoreConfigModel = {
+  // True when product reviews are enabled for the store.
+  isProductReviewsEnabled: boolean;
+  // True when guests may submit reviews. Commerce still validates each submission.
+  allowGuestsToWriteProductReviews: boolean;
+};
+```

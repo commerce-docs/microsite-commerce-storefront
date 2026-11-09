@@ -1,0 +1,105 @@
+---
+title: Ratings and Reviews
+description: Show approved shopper reviews and average star ratings on product pages, product listings, and recommendation cards in your Adobe Commerce storefront.
+sidebar:
+  label: Overview
+  order: 1
+---
+
+import { Aside, Badge } from '@astrojs/starlight/components';
+import Link from '@components/Link.astro';
+import TableWrapper from '@components/TableWrapper.astro';
+
+The Ratings and Reviews drop-in shows approved shopper reviews on your product pages. Each review shows the reviewer's name, star rating, title, text, and date. Long review lists split into pages. Reviews give shoppers social proof from people who bought the product, which builds trust and helps them decide.
+
+Average star ratings also appear outside the review list: below the product name on the product details page (PDP), on product listing page (PLP) and search result cards, and on recommendation cards. These ratings come from your catalog, so they load with the product data and need no extra requests.
+
+## What shoppers see
+
+- **Review list**: Approved reviews for the current product, 20 per page by default, in the order Commerce returns them.
+- **Page controls**: Previous, next, and page-number buttons when a product has more than one page of reviews.
+- **Average rating on the product page**: Stars and the approved review count below the product name.
+- **Ratings on product cards**: Stars, the average value, and the review count on listing, search, and recommendation cards.
+
+Products without approved reviews show no average rating on product pages or recommendation cards. When product reviews are turned off for the store, the review list and its page controls do not appear.
+
+## How it works
+
+Ratings and reviews come from two data sources. Knowing which source feeds each part of the page helps you find the cause when a rating or review does not appear.
+
+<TableWrapper nowrap={[0]}>
+
+| Storefront element | Data source | Rendered by |
+| --- | --- | --- |
+| Review list and page controls | Commerce GraphQL `reviews` query, which returns the approved reviews for one SKU | Ratings and Reviews drop-in: [`Review`](/dropins/ratings-reviews/containers/review/) and [`Pagination`](/dropins/ratings-reviews/containers/pagination/) containers |
+| Review settings | Commerce GraphQL `storeConfig` query: `product_reviews_enabled` and `allow_guests_to_write_product_reviews` | Ratings and Reviews drop-in [initializer](/dropins/ratings-reviews/initialization/) |
+| Average rating and review count | Catalog Service product attributes `ac_rating_summary` and `ac_review_count` | Product Details [`ProductRating`](/dropins/product-details/containers/product-rating/) container, product listing cards, and recommendation cards |
+
+</TableWrapper>
+
+The two catalog attributes carry the review summary for each product:
+
+- **`ac_rating_summary`**: The average rating as a percentage from `0` to `100`. Storefronts divide it by 20 to get a 0–5 star value. For example, `90` displays as 4.5 stars.
+- **`ac_review_count`**: The number of approved reviews.
+
+Commerce manages these attributes for you. When review summary synchronization is enabled, the SaaS Data Export extension exports them to Catalog Service after reviews are approved, rejected, or deleted. Changes reach the storefront after the next product feed synchronization, not immediately. See the <Link href="https://experienceleague.adobe.com/en/docs/commerce/saas-data-export/release-notes" text="SaaS Data Export release notes" /> (version 103.6.0).
+
+## Before you begin
+
+Ratings and reviews need setup in three places: the Commerce backend, the catalog attributes, and your storefront code. Complete the backend steps first so that the storefront has data to show.
+
+### Commerce backend
+
+- **Reviews API**: Your Commerce GraphQL endpoint must provide the `reviews` query. This query is part of the [Storefront Compatibility Package](/setup/configuration/storefront-compatibility/). See the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/products/queries/reviews" text="reviews query reference" /> for availability and the full schema.
+- **Product reviews turned on**: In the Admin, go to **Stores** > **Settings** > **Configuration** > **Catalog** > **Catalog** > **Product Reviews** and set **Enabled** to `Yes`. Product reviews are disabled by default in Adobe Commerce as a Cloud Service.
+- **Approved reviews**: Shoppers see only approved reviews. Moderate reviews in **Marketing** > **User Content** > **All Reviews** or **Pending Reviews**. Approved reviews also update the average rating and review count.
+- **Rating categories**: Review ratings use the rating categories in **Stores** > **Attributes** > **Rating**. A rating is used only when it is active and assigned to the store view. A review with no rating votes shows *Not rated* in the review list.
+
+### Catalog attributes
+
+Catalog Service returns each product attribute with storefront roles. The storefront shows average ratings only where both `ac_rating_summary` and `ac_review_count` have the role for that page:
+
+- **Product page**: Both attributes need the `visible_in_pdp` role.
+- **Product listing and search results**: Both attributes need the `visible_in_plp` role.
+
+The storefront roles for these attributes are off by default. A merchant turns them on in the Admin on each attribute's **Storefront Properties** tab (**Stores** > **Attributes** > **Product**).
+
+### Storefront
+
+- **Drop-in and block**: Install the drop-in and add the Product Reviews block. See the [Ratings and Reviews quick start](/dropins/ratings-reviews/quick-start/).
+- **Ratings on other pages**: Add average ratings to the [product page](/dropins/product-details/containers/product-rating/), [product listing cards](/dropins/product-discovery/slots/#show-star-ratings-on-product-cards), and [recommendation cards](/dropins/recommendations/containers/product-list/#show-star-ratings).
+
+## Supported Commerce features
+
+The following table lists the Commerce review features that the storefront supports:
+
+<TableWrapper nowrap={[0]}>
+
+| Feature | Status |
+| --- | --- |
+| Approved review list for a product | <Badge text="Supported" variant="tip" /> |
+| Review pagination | <Badge text="Supported" variant="tip" /> |
+| Store-level review enablement (`product_reviews_enabled`) | <Badge text="Supported" variant="tip" /> |
+| Average rating and review count on product pages | <Badge text="Supported" variant="tip" /> |
+| Average rating and review count on product listing and search result cards | <Badge text="Supported" variant="tip" /> |
+| Average rating and review count on recommendation cards | <Badge text="Supported" variant="tip" /> |
+| Multiple independent review lists on one page | <Badge text="Supported" variant="tip" /> |
+| Localized labels and review dates | <Badge text="Supported" variant="tip" /> |
+
+</TableWrapper>
+
+<Aside type="note" title="Review text is plain text">
+Commerce stores review names, titles, and text exactly as shoppers enter them. The drop-in always renders these fields as escaped text. When you build custom review markup with [slots](/dropins/ratings-reviews/slots/), set shopper text with `textContent`, not `innerHTML`, to prevent cross-site scripting (XSS).
+</Aside>
+
+## Section topics
+
+- [Quick start](/dropins/ratings-reviews/quick-start/): Install the drop-in and show reviews on product pages.
+- [Initialization](/dropins/ratings-reviews/initialization/): Configure the endpoint, labels, and data models.
+- [Containers](/dropins/ratings-reviews/containers/): Configure the `Review` and `Pagination` containers.
+- [Functions](/dropins/ratings-reviews/functions/): Load reviews and review settings with API functions.
+- [Events](/dropins/ratings-reviews/events/): Respond to review loading, results, and errors.
+- [Slots](/dropins/ratings-reviews/slots/): Replace or extend parts of the review list and page controls.
+- [Styles](/dropins/ratings-reviews/styles/): Customize the review layout with CSS.
+- [Dictionary](/dropins/ratings-reviews/dictionary/): Change labels and localize text.
+- [Product Reviews block](/merchants/blocks/product-reviews/): Place reviews on pages without code.

@@ -1,0 +1,102 @@
+---
+title: Ratings and Reviews dictionary
+description: Customize and localize the labels and messages in the Ratings and Reviews drop-in.
+sidebar:
+  label: Dictionary
+  order: 8
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import TableWrapper from '@components/TableWrapper.astro';
+
+The Ratings and Reviews dictionary holds every label and message the drop-in shows, such as the **Reviews** heading, status messages, and accessible star labels. Change dictionary values to localize the review list or match your brand voice without changing drop-in code.
+
+## How to customize
+
+Choose the method that fits who maintains the text:
+
+- **Placeholders sheet (no code)**: The storefront initializer loads `placeholders/ratings-reviews.json`. Add rows with a **Key** column that uses dot notation, such as `Review.title`, and a **Value** column with your text. See [Labels and placeholders](/how-tos/change-labels-and-placeholders/).
+- **Initializer code**: Pass `langDefinitions` to `initialize`. Include only the keys you change. The drop-in deep-merges them with its defaults.
+
+```js title="scripts/initializers/ratings-reviews.js"
+import { initializers } from '@dropins/tools/initializer.js';
+import { initialize } from '@dropins/storefront-ratings-reviews/api.js';
+
+await initializers.mountImmediately(initialize, {
+  langDefinitions: {
+    default: {
+      Review: {
+        title: 'Customer reviews',
+        // {{nickname}} is replaced with the reviewer's name.
+        author: 'Reviewed by {{nickname}}',
+        // Formats review dates for British English.
+        dateLocale: 'en-GB',
+      },
+    },
+  },
+});
+```
+
+For multiple languages, see [Dictionaries](/dropins/all/dictionaries/).
+
+## Default keys and values
+
+The drop-in provides these default English (`en_US`) values:
+
+```json title="en_US.json"
+{
+  "Pagination": {
+    "label": "Review pagination",
+    "loading": "Loading review pages...",
+    "outOfRange": "This review page is no longer available.",
+    "firstPage": "Return to the first page"
+  },
+  "Review": {
+    "title": "Reviews",
+    "oneReview": "1 review",
+    "reviews": "{{count}} reviews",
+    "author": "By {{nickname}}",
+    "unrated": "Not rated",
+    "dateLocale": "en-US",
+    "loading": "Loading reviews...",
+    "empty": "No reviews on this page.",
+    "unavailable": "Reviews are unavailable.",
+    "error": "Unable to load reviews.",
+    "retry": "Try again"
+  },
+  "Rating": {
+    "label": "{{rating}} out of 5 stars",
+    "symbolLabel": "{{rating}} out of 5",
+    "valueLabel": "{{rating}} out of 5",
+    "compactCount": "({{count}})",
+    "zeroReviews": "No reviews",
+    "oneReview": "1 review",
+    "reviews": "{{count}} reviews"
+  }
+}
+```
+
+## Key reference
+
+<TableWrapper nowrap={[0]}>
+
+| Key | Where it appears |
+| --- | --- |
+| `Review.title` | Review list heading when `totalCount` is not set. |
+| `Review.oneReview`, `Review.reviews` | Review list heading when `totalCount` is set. |
+| `Review.author` | Reviewer name in each row. `{{nickname}}` is the reviewer's name. |
+| `Review.unrated` | Rating text for a review with no rating votes. |
+| `Review.dateLocale` | Locale for review dates, such as `en-US` or `fr-FR`. Not shown as text. |
+| `Review.loading` | Screen reader message while reviews load. |
+| `Review.empty`, `Review.unavailable`, `Review.error` | Status messages for the empty, unavailable, and error states. |
+| `Review.retry` | Button that requests the page again after an error. |
+| `Pagination.label` | Accessible name of the page navigation. |
+| `Pagination.loading` | Screen reader message while the first page loads. |
+| `Pagination.outOfRange`, `Pagination.firstPage` | Message and button when the requested page no longer exists. |
+| `Rating.label` | Accessible label of the stars in a review row, for example *4 out of 5 stars*. |
+
+</TableWrapper>
+
+<Aside type="note" title="Average ratings on catalog pages">
+Average ratings on product pages, product listing cards, and recommendation cards use the SDK `StarRating` component. Its labels use the `Dropin.StarRating` keys, not the `Rating` keys on this page.
+</Aside>

@@ -1,0 +1,91 @@
+---
+title: Ratings and Reviews events
+description: Respond to review requests, loading states, results, and errors published by the Ratings and Reviews drop-in.
+sidebar:
+  label: Events
+  order: 5
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import TableWrapper from '@components/TableWrapper.astro';
+
+The Ratings and Reviews drop-in uses the [event bus](/sdk/reference/events/) to share review data. [`getProductReviews`](/dropins/ratings-reviews/functions/#getproductreviews) publishes four events for every request. The `Review` and `Pagination` containers listen for them and update. Your own code can listen too, for example to send analytics or show a custom summary.
+
+## Events reference
+
+<TableWrapper nowrap={[0, 1]}>
+
+| Event | Direction | Payload | When it fires |
+|-------|-----------|---------|---------------|
+| [`reviews/request`](#reviewsrequest) | Emits and listens | `ProductReviewsRequest` | A request starts. |
+| [`reviews/loading`](#reviewsloading) | Emits and listens | `boolean` | `true` when the newest request starts, `false` when it finishes. |
+| [`reviews/result`](#reviewsresult) | Emits and listens | `{ request, result }` | The newest request succeeds. |
+| [`reviews/error`](#reviewserror) | Emits and listens | `string \| null` | The newest request fails, or `null` when a new request starts. |
+
+</TableWrapper>
+
+## Scopes
+
+Pass a `scope` to `getProductReviews` and to the containers to keep separate review lists on one page independent. Events from a scoped request reach only listeners that use the same scope. Without a scope, the events use the shared, unscoped channel.
+
+Containers replay the last event for their scope when they mount, so you can call `getProductReviews` before or after rendering them.
+
+To listen for a scoped event, pass the same `scope` in the listener options:
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+
+// Use the scope that your block passes to getProductReviews and the containers.
+events.on('reviews/result', ({ request, result }) => {
+  console.log(`Loaded page ${request.currentPage} for ${request.sku}`, result);
+}, { scope: 'product-reviews' });
+```
+
+The Product Reviews block generates a private scope for each block instance (`product-reviews-` followed by a random ID). Code outside the block does not know that scope, so it cannot listen to the block's events. To listen, render the containers in your own block with a scope you choose.
+
+<Aside type="caution" title="Do not emit these events yourself">
+Emit `reviews/*` events only through `getProductReviews`. The containers trust these payloads to decide which page is current. A hand-built event can show the wrong page or leave the list loading.
+</Aside>
+
+## Event details
+
+### reviews/request
+
+Fires when `getProductReviews` starts a request. The containers use it to know which SKU, page size, and page are current.
+
+```typescript
+type ProductReviewsRequest = {
+  sku: string;
+  pageSize: number;
+  currentPage: number;
+};
+```
+
+### reviews/loading
+
+Fires with `true` when the newest request starts and `false` when it finishes, whether it succeeded or failed. The `Review` container shows a skeleton and sets `aria-busy` while loading. `Pagination` disables its controls.
+
+```typescript
+boolean
+```
+
+### reviews/result
+
+Fires when the newest request succeeds. `result` is the normalized page, or `null` when the `reviews` query returns `null`. Responses from older requests in the same scope are ignored and do not fire this event.
+
+```typescript
+{
+  request: ProductReviewsRequest;
+  result: ProductReviewsModel | null;
+}
+```
+
+See [`ProductReviewsModel`](/dropins/ratings-reviews/functions/#productreviewsmodel) for the page shape.
+
+### reviews/error
+
+Fires with an error message when the newest request fails. Fires with `null` when the next request starts, which clears the previous error. The `Review` container shows *Unable to load reviews.* and a **Try again** button while an error is set.
+
+```typescript
+string | null
+```

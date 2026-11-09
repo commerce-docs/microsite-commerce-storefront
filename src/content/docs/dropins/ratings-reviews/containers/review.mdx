@@ -1,0 +1,87 @@
+---
+title: Review container
+description: Show one page of approved product reviews with author, star rating, title, text, date, and localized loading, empty, and error states.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import OptionsTable from '@components/OptionsTable.astro';
+import TableWrapper from '@components/TableWrapper.astro';
+
+The `Review` container shows one page of approved reviews for a product. Each review shows the reviewer's name, the review's star rating and value, the review date, the title, and the text. The heading reads **Reviews** by default.
+
+The container does not fetch data. It listens for the [`reviews/*` events](/dropins/ratings-reviews/events/) that [`getProductReviews`](/dropins/ratings-reviews/functions/#getproductreviews) publishes for its `scope`, and replays the last event when it mounts.
+
+## Configurations
+
+The `Review` container provides the following configuration options:
+
+<OptionsTable
+  compact
+  options={[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['scope', 'string', 'No', 'Event scope to listen to. Use the same value that you pass to `getProductReviews`.'],
+    ['totalCount', 'number', 'No', 'Total number of approved reviews. When set to a nonnegative integer, the heading shows the count (for example, *12 reviews*) instead of *Reviews*. Never calculate it from the page length or `totalPages * pageSize`.'],
+    ['slots', 'object', 'No', 'Replaces or extends the heading, status message, loading skeleton, review rows, and footer. See [Review slots](/dropins/ratings-reviews/slots/#review-slots).'],
+  ]}
+/>
+
+The container also accepts standard `div` attributes, such as `className`, `id`, and `dir`, and applies them to its wrapper.
+
+## States
+
+The container moves through these states. The current state is on the wrapper's `data-state` attribute, which you can target in [CSS](/dropins/ratings-reviews/styles/).
+
+<TableWrapper nowrap={[0]}>
+
+| State | When | What shoppers see |
+| --- | --- | --- |
+| `loading` | Before the first request, or while a request is in progress | A three-row skeleton. The wrapper sets `aria-busy="true"`, and a hidden status message (*Loading reviews...*) informs screen readers. |
+| `ready` | The current page has reviews | The review list, with dividers between reviews. |
+| `empty` | The current page has no reviews | *No reviews on this page.* |
+| `unavailable` | The `reviews` query returned `null` | *Reviews are unavailable.* |
+| `error` | The request failed | *Unable to load reviews.* and a **Try again** button that requests the same page again. |
+
+</TableWrapper>
+
+When `isProductReviewsEnabled` is `false`, the container renders nothing, including slots. Whether guests can write reviews does not affect this list.
+
+## Review rows
+
+Each row renders these fields from [`ProductReviewModel`](/dropins/ratings-reviews/functions/#productreviewmodel):
+
+- **Author**: *By* followed by the reviewer's name.
+- **Rating**: Five stars filled to the review's `rating`, with the value to one decimal place (for example, *4.0*). Reviews with no rating votes show *Not rated*.
+- **Date**: The calendar day from the server, formatted for the `Review.dateLocale` label (default `en-US`), for example *Sep 17, 2026*. The time of day is not shown. An invalid date is omitted.
+- **Title and text**: The review title as a heading, followed by the review text. Line breaks in the text are preserved.
+
+All shopper text renders as escaped text. On containers 900 pixels wide or wider, the author column sits beside the review content. On narrower containers, such as a sidebar or modal, the author appears above the content.
+
+## Example
+
+The following example renders `Review` and requests the first page of reviews:
+
+```js
+import { getProductReviews } from '@dropins/storefront-ratings-reviews/api.js';
+import { render as provider } from '@dropins/storefront-ratings-reviews/render.js';
+import { Review } from '@dropins/storefront-ratings-reviews/containers/Review.js';
+// Loads review settings before the container checks them.
+import '../../scripts/initializers/ratings-reviews.js';
+
+export default async function decorate(block) {
+  const scope = 'product-reviews';
+  const $reviews = document.createElement('div');
+  block.append($reviews);
+
+  // provider.render(Container, props) returns a function that mounts the container into an element.
+  const instance = await provider.render(Review, { scope })($reviews);
+
+  // Replace ADB102 with your product SKU. The container shows its own error state.
+  getProductReviews('ADB102', { pageSize: 20, currentPage: 1, scope }).catch(() => undefined);
+}
+```
+
+To load another product or page later, call `getProductReviews` again with the same `scope`. Call `instance.remove()` before you remove the container's element from the page.
+
+<Aside type="note" title="Review totals">
+The `reviews` query returns pages, not a total review count, so the heading shows *Reviews* unless you pass `totalCount`. The Product Reviews block leaves `totalCount` unset.
+</Aside>

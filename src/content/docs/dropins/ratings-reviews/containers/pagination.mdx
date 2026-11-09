@@ -1,0 +1,85 @@
+---
+title: Pagination container
+description: Show page controls for the Ratings and Reviews review list and request other review pages.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import OptionsTable from '@components/OptionsTable.astro';
+import TableWrapper from '@components/TableWrapper.astro';
+
+The `Pagination` container shows page controls for a review list. It uses the SDK [Pagination component](/sdk/components/pagination/) and requests other pages by itself. You do not need to fetch pages or listen for clicks.
+
+Like [`Review`](/dropins/ratings-reviews/containers/review/), the container listens for the [`reviews/*` events](/dropins/ratings-reviews/events/) for its `scope`. When a shopper selects a page, it calls [`getProductReviews`](/dropins/ratings-reviews/functions/#getproductreviews) with the same SKU, page size, and scope. Both containers then update from the result.
+
+## Configurations
+
+The `Pagination` container provides the following configuration options:
+
+<OptionsTable
+  compact
+  options={[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['scope', 'string', 'No', 'Event scope to listen to. Use the same value as the `Review` container and `getProductReviews`.'],
+    ['disabled', 'boolean', 'No', 'Disables the page controls without starting a request. Defaults to `false`.'],
+    ['onPageChange', 'function', 'No', 'Called with the selected page number before the container requests that page. Use it for analytics or URL updates. Do not fetch the page yourself.'],
+    ['slots', 'object', 'No', 'Replaces or extends the page controls and the loading skeleton. See [Pagination slots](/dropins/ratings-reviews/slots/#pagination-slots).'],
+    ['aria-label', 'string', 'No', 'Accessible name for the navigation landmark. Defaults to the `Pagination.label` dictionary value, *Review pagination*.'],
+  ]}
+/>
+
+The container also accepts standard `div` attributes, such as `className` and `dir`.
+
+## Behavior
+
+<TableWrapper nowrap={[0]}>
+
+| Situation | What shoppers see |
+| --- | --- |
+| No request has started yet | Nothing. |
+| The first page of a product is loading | A one-line skeleton and a hidden *Loading review pages...* status for screen readers. |
+| The product has no reviews, or one page of reviews | Nothing. The container keeps an empty, hidden wrapper so it can reappear without remounting. |
+| The product has more than one page | Page controls with the current page selected. |
+| Another page is loading | The current controls, disabled until the page loads. |
+| A page request fails | The previous controls, enabled again. The `Review` container shows the error and a **Try again** button. |
+| The requested page no longer exists | *This review page is no longer available.* and a **Return to the first page** button. |
+| Reviews are turned off for the store | Nothing. |
+
+</TableWrapper>
+
+After a page loads, keyboard focus returns to the control the shopper used, so keyboard and screen reader users keep their place. In right-to-left layouts, the arrow icons point in the reading direction.
+
+## Example
+
+The following example renders `Review` and `Pagination` with a shared scope and requests the first page:
+
+```js
+import { getProductReviews } from '@dropins/storefront-ratings-reviews/api.js';
+import { render as provider } from '@dropins/storefront-ratings-reviews/render.js';
+import { Review } from '@dropins/storefront-ratings-reviews/containers/Review.js';
+import { Pagination } from '@dropins/storefront-ratings-reviews/containers/Pagination.js';
+import '../../scripts/initializers/ratings-reviews.js';
+
+export default async function decorate(block) {
+  // The same scope connects both containers and the request.
+  const scope = 'product-reviews';
+  const $reviews = document.createElement('div');
+  const $pagination = document.createElement('div');
+  block.append($reviews, $pagination);
+
+  await Promise.all([
+    provider.render(Review, { scope })($reviews),
+    provider.render(Pagination, {
+      scope,
+      // Notification only: the container requests the page itself.
+      onPageChange: (page) => console.log(`Shopper selected review page ${page}`),
+    })($pagination),
+  ]);
+
+  // Replace ADB102 with your product SKU.
+  getProductReviews('ADB102', { pageSize: 20, currentPage: 1, scope }).catch(() => undefined);
+}
+```
+
+<Aside type="note" title="Changing the product or page size">
+To show a different product or page size, call `getProductReviews` again with the same `scope` and `currentPage: 1`. The container clears the old page controls when the SKU or page size changes.
+</Aside>
