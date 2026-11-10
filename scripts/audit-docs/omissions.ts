@@ -25,7 +25,10 @@ export const KNOWN_FUNCTION_ALIASES = new Set([
  * should not be flagged as phantom until the extractor is fixed.
  * Key format: "dropin-key/name"
  */
-export const KNOWN_EXTRACTOR_GAPS_FUNCTIONS = new Set(['storefront-company-management/initialize']);
+export const KNOWN_EXTRACTOR_GAPS_FUNCTIONS = new Set([
+  'storefront-company-management/initialize',
+  'storefront-company-management/getStoreConfig',
+]);
 
 export const KNOWN_EXTRACTOR_GAPS_EVENTS = new Set<string>([]);
 
