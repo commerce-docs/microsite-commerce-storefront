@@ -1,6 +1,6 @@
 ---
 title: Ratings and Reviews styles
-description: CSS classes, states, and customization examples for the Ratings and Reviews drop-in and the Product Reviews block.
+description: CSS classes, states, and customization examples for the Ratings and Reviews drop-in, the review form, and the Product Reviews block.
 sidebar:
   label: Styles
   order: 7
@@ -8,11 +8,11 @@ sidebar:
 
 import TableWrapper from '@components/TableWrapper.astro';
 
-Customize the review list with CSS in your Product Reviews block. The drop-in uses design tokens such as `--spacing-medium` and `--color-neutral-700`, so most theme changes apply automatically. For tokens, breakpoints, and general guidance, see [CSS customization](/dropins/all/styling/).
+Customize the review list and page controls with CSS in your Product Reviews block. The drop-in uses design tokens, shared CSS variables such as `--spacing-medium` and `--color-neutral-700`. Changes to these variables carry through to the drop-in's styles. For tokens, breakpoints, and general guidance, see [CSS customization](/dropins/all/styling/).
 
 ## Block styles
 
-The Product Reviews block stylesheet, `blocks/product-reviews/product-reviews.css`, controls the section spacing and hidden states:
+The Product Reviews block from the [quick start](/dropins/ratings-reviews/quick-start/) uses this stylesheet to control section spacing and hidden states:
 
 ```css title="blocks/product-reviews/product-reviews.css"
 /* Separates the reviews section from the content above it. */
@@ -36,13 +36,13 @@ The Product Reviews block stylesheet, `blocks/product-reviews/product-reviews.cs
 }
 ```
 
-- `.product-reviews`: The block wrapper. The block sets `hidden` on it until reviews can load.
+- `.product-reviews`: The block wrapper. The block sets its `hidden` attribute until reviews can load.
 - `.product-reviews__list`: The element that holds the `Review` container.
-- `.product-reviews__pagination`: The element that holds the `Pagination` container. It collapses when the container is hidden.
+- `.product-reviews__pagination`: The element that holds the `Pagination` container. The CSS hides this element when the container is hidden.
 
 ## Container classes
 
-The drop-in uses BEM-style class names with the `ratingsreviews-` prefix.
+Class names start with `ratingsreviews-`. A double underscore (`__`) separates a component name from the name of an element inside it.
 
 <TableWrapper nowrap={[0]}>
 
@@ -50,7 +50,7 @@ The drop-in uses BEM-style class names with the `ratingsreviews-` prefix.
 | --- | --- |
 | `.ratingsreviews-review` | `Review` wrapper. Its `data-state` attribute is `loading`, `ready`, `empty`, `unavailable`, or `error`. |
 | `.ratingsreviews-review__status` | Status message. Visually hidden in the `loading` state. |
-| `.ratingsreviews-review__skeleton` | Loading skeleton. |
+| `.ratingsreviews-review__skeleton` | Placeholder shown while reviews load. |
 | `.ratingsreviews-review__list` | The list of review rows. |
 | `.ratingsreviews-review-item` | One review row. |
 | `.ratingsreviews-review-item__author` | Reviewer name. |
@@ -59,17 +59,44 @@ The drop-in uses BEM-style class names with the `ratingsreviews-` prefix.
 | `.ratingsreviews-review-item__summary` | Review title. |
 | `.ratingsreviews-review-item__text` | Review text. Preserves the shopper's line breaks. |
 | `.ratingsreviews-star-rating` | Stars and value in a review row. |
-| `.ratingsreviews-star-rating__star` | One star outline. |
+| `.ratingsreviews-star-rating__star` | One star. |
 | `.ratingsreviews-star-rating__fill` | The filled part of one star. |
-| `.ratingsreviews-star-rating__value` | The numeric rating, for example *4.0*. |
+| `.ratingsreviews-star-rating__value` | The numeric rating, for example, *4.0*. |
 | `.ratingsreviews-pagination` | `Pagination` wrapper. |
 | `.ratingsreviews-pagination__controls` | Page controls. Disabled and dimmed while a page loads. |
 
 </TableWrapper>
 
+## Write review classes
+
+The `WriteReview` form uses these classes for its product summary, rating inputs, and messages:
+
+<TableWrapper nowrap={[0]}>
+
+| Class | Element |
+| --- | --- |
+| `.ratingsreviews-write-review` | `WriteReview` wrapper. Its `data-state` attribute is `ready`, `error`, `success`, or `signIn`. |
+| `.ratingsreviews-write-review__form` | The form. The submit button fills its width. |
+| `.ratingsreviews-write-review__top` | Product summary and rating rows, above a divider. |
+| `.ratingsreviews-write-review__product` | Product image and name. |
+| `.ratingsreviews-write-review__image` | Product image, 80 pixels wide. |
+| `.ratingsreviews-write-review__name` | Product name. |
+| `.ratingsreviews-write-review__ratings` | All rating rows. |
+| `.ratingsreviews-write-review__rating` | One rating row with its label and error message. |
+| `.ratingsreviews-write-review__label` | Rating category name or *Give your rating*. |
+| `.ratingsreviews-write-review__error` | *Select a rating.* message. |
+| `.ratingsreviews-write-review__load-error` | Message when the rating categories cannot load. |
+| `.ratingsreviews-star-rating-input` | Rating input with one radio button for each star. |
+| `.ratingsreviews-star-rating-input__star` | One selectable star. Also has `.ratingsreviews-star-rating-input__star--filled` when it is at or below the selected rating. |
+
+</TableWrapper>
+
 ## Responsive layout
 
-Review rows respond to the width of the `Review` container, not the browser window. The wrapper is a CSS container named `ratingsreviews-review`. When it is 900 pixels wide or wider, each row places the author in a narrow column beside the content. On narrower containers, such as a sidebar or modal, the author appears above the content.
+Review rows respond to the width of the `Review` container, not the browser window. The wrapper defines a CSS container named `ratingsreviews-review`. Container queries apply layout rules based on that width:
+
+- *At least 900 pixels*: Each row places the author in a narrow column beside the review content.
+- *Below 900 pixels*: The author appears above the content. This layout also applies in narrow containers, such as a sidebar or modal.
 
 ## Customization examples
 
@@ -96,4 +123,8 @@ Add these rules to `blocks/product-reviews/product-reviews.css`.
 }
 ```
 
-Use your browser's developer tools to inspect other elements, such as the SDK header, divider, and pagination components inside the containers.
+- *Error state*: The `data-state='error'` selector adds padding and a highlighted background to the status message.
+- *Star color*: The fill uses `currentcolor`, which takes its value from the CSS `color` property. Changing that property changes the filled star color.
+- *Row layout*: The container query starts the side-by-side layout at a container width of 600 pixels instead of the default 900 pixels.
+
+Use your browser's developer tools to inspect the SDK header, divider, and page controls that the containers render.

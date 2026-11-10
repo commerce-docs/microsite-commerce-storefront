@@ -6,37 +6,45 @@ description: Show a product's average star rating and approved review count on t
 import { Aside } from '@astrojs/starlight/components';
 import OptionsTable from '@components/OptionsTable.astro';
 
-The `ProductRating` container shows a product's average star rating and approved review count on the product details page, for example below the product name. It uses the SDK `StarRating` component, so it matches the ratings on product listing and recommendation cards.
+Use `ProductRating` to show a product's average star rating and approved review count on the product details page. For example, place it below the product name. The container renders the summary with the SDK `StarRating` component.
 
-The rating comes from two Catalog Service product attributes: `ac_rating_summary`, the average rating from `0` to `100`, and `ac_review_count`, the number of approved reviews. The container divides `ac_rating_summary` by 20 to show 0–5 stars. For how these attributes reach Catalog Service, see the [Ratings and Reviews overview](/dropins/ratings-reviews/#how-it-works).
+The summary comes from two Catalog Service product attributes:
 
-Like other Product Details containers, `ProductRating` receives initial product data during [initialization](/dropins/product-details/initialization/) and updates with data emitted to `pdp/data` within its event scope.
+- `ac_rating_summary`: The average rating on a scale from `0` to `100`. The container divides this value by 20 to show a rating from `0` to `5` stars.
+- `ac_review_count`: The number of approved reviews.
+
+For how these attributes reach Catalog Service, see the [Ratings and Reviews overview](/dropins/ratings-reviews/#how-it-works).
+
+`ProductRating` receives initial product data during [initialization](/dropins/product-details/initialization/). It then updates when it receives a `pdp/data` event in the same scope.
+
+<Aside type="note" title="Build requirement">
+Use this container only with a Product Details build that exports `ProductRating` and an SDK build that includes `StarRating`.
+</Aside>
 
 ## When the rating appears
 
-The container renders nothing unless all of these are true:
+The container stays hidden unless all of these conditions are met:
 
-- Both `ac_rating_summary` and `ac_review_count` are present in the product data with valid numbers.
+- Both `ac_rating_summary` and `ac_review_count` are present in the product data with valid numeric values. The average rating must be between `0` and `100`.
 - Both attributes have the `visible_in_pdp` storefront role. The Product Details drop-in keeps only product attributes with this role.
-- The product has at least one approved review.
-
-For configurable products, the container keeps the parent product's rating when the shopper selects options. Review summaries belong to the parent product, not to its variants.
+- The review count is a whole number greater than `0`, so the product has at least one approved review.
 
 ## ProductRating configurations
 
-The `ProductRating` container provides the following configuration options:
+Pass these options when you render `ProductRating`:
 
 <OptionsTable
   compact
   options={[
     ['Option', 'Type', 'Req?', 'Description'],
-    ['scope', 'string', 'No', 'Unique identifier for the PDP context. Only containers rendered with this scope respond to product events.'],
+    ['scope', 'string', 'No', 'Uses product events from the matching scope. Use the same scope as the other Product Details containers for this product.'],
     ['showCount', 'boolean', 'No', 'Shows the review count next to the stars. Defaults to `true`.'],
-    ['valueDisplay', 'string', 'No', 'Shows the numeric rating: `hidden` (default), `value` (for example, *4.5*), or `outOfFive` (for example, *4.5 out of 5*).'],
-    ['countDisplay', 'string', 'No', 'Formats the review count: `text` (default, for example, *12 reviews*) or `parentheses` (for example, *(12)*).'],
+    ['valueDisplay', 'string', 'No', 'Controls the numeric rating: `hidden` (default), `value` (for example, *4.5*), or `outOfFive` (for example, *4.5 out of 5*).'],
+    ['countDisplay', 'string', 'No', 'Formats the count when it is shown: `text` (default, for example, *12 reviews*) or `parentheses` (for example, *(12)*).'],
     ['layout', 'string', 'No', 'Arranges the stars and text: `inline` (default) or `stacked`.'],
-    ['showDivider', 'boolean', 'No', 'Adds a divider between the stars and the count in the inline layout. Defaults to `false`.'],
-    ['icon', 'Icon source', 'No', 'SDK icon to use instead of the default `Star` icon.'],
+    ['size', 'string', 'No', 'Sets the star size: `small` or `medium` (default).'],
+    ['showDivider', 'boolean', 'No', 'Adds a divider before the count in the inline layout when the count is shown. Defaults to `false`.'],
+    ['icon', 'Icon source', 'No', 'Uses an SDK icon instead of the default `Star` icon.'],
   ]}
 />
 
@@ -44,7 +52,9 @@ The container also accepts standard `div` attributes, such as `className`.
 
 ## Example
 
-The following example renders `ProductRating` below `ProductHeader` in the product details block:
+This example renders the product header and rating in your existing product details block. It runs inside the block's `decorate` function, after Product Details initialization.
+
+The example assumes that your block layout already has two elements: `$header` for the product header and `$rating` for the rating. Place `$rating` below `$header` in the layout. Use your block's element variables in place of these names.
 
 ```js title="blocks/product-details/product-details.js"
 import { render as pdpRendered } from '@dropins/storefront-pdp/render.js';
@@ -59,8 +69,11 @@ await Promise.all([
 ]);
 ```
 
-To show the average value, for example *4.5 (12)*, pass `valueDisplay: 'value'` and `countDisplay: 'parentheses'`.
+The two `render()` calls use the same product data. `ProductHeader` shows the product name and SKU. `ProductRating` shows the stars and review count only when the display conditions are met.
+
+- *Numeric rating*: To show text such as *4.5 (12)*, pass `valueDisplay: 'value'` and `countDisplay: 'parentheses'` to `ProductRating`.
+- *Scoped product data*: If your product data uses a scope, pass that same `scope` to both containers.
 
 <Aside type="tip" title="Show the review list">
-`ProductRating` shows only the summary. To show the reviews themselves, add the [Product Reviews block](/merchants/blocks/product-reviews/) from the [Ratings and Reviews drop-in](/dropins/ratings-reviews/).
+`ProductRating` shows a summary, not individual reviews. To display the reviews, use the [Product Reviews block](/merchants/blocks/product-reviews/) with the [Ratings and Reviews drop-in](/dropins/ratings-reviews/).
 </Aside>

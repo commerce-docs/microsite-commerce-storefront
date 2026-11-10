@@ -9,26 +9,26 @@ sidebar:
 import { Aside } from '@astrojs/starlight/components';
 import TableWrapper from '@components/TableWrapper.astro';
 
-The Ratings and Reviews initializer connects the drop-in to Commerce GraphQL, loads the store's review settings, and applies your label and data model customizations. Containers read these settings, so the initializer must finish before you render `Review` or `Pagination`.
+The Ratings and Reviews initializer connects the drop-in to Adobe Commerce GraphQL and loads the store's review settings. It also applies custom labels and data models. Wait for initialization to finish before rendering `Review` or `Pagination`, which read these settings.
 
 ## Configuration options
 
-The following table describes the options you can pass to `initialize`:
+Pass label and data model customizations to `initialize` with these options:
 
 <TableWrapper nowrap={[0,1]}>
 
 | Option | Type | Req? | Description |
 |---|---|---|---|
-| `langDefinitions` | [`LangDefinitions`](#langdefinitions) | No | Overrides dictionary labels for localization or branding. See [Dictionary](/dropins/ratings-reviews/dictionary/). |
-| `models` | [`Models`](#models) | No | Adds fields to the review data through transformer functions. See [Customize data models](#customize-data-models). |
+| `langDefinitions` | [`LangDefinitions`](#langdefinitions) | No | Changes dictionary labels to translate the text or match your storefront's wording. See [Dictionary](/dropins/ratings-reviews/dictionary/). |
+| `models` | [`Models`](#models) | No | Adds or changes fields in the review data. See [Customize data models](#customize-data-models). |
 
 </TableWrapper>
 
-The configuration type also accepts `isProductReviewsEnabled` and `allowGuestsToWriteProductReviews`. The initializer replaces both values with the store settings it loads from Commerce, so set them in the Admin, not in code.
+The configuration type also accepts `isProductReviewsEnabled` and `allowGuestsToWriteProductReviews`. Set these review settings in the Admin rather than in code. The initializer replaces code-based values with the settings loaded from Commerce.
 
 ## Default initializer
 
-Your storefront's initializer sets the endpoint, loads labels from a placeholders sheet, and mounts the drop-in:
+The initializer from the [Ratings and Reviews quick start](/dropins/ratings-reviews/quick-start/) sets the endpoint, loads labels from a placeholders sheet, and initializes the drop-in. Use it as the starting point for customizations:
 
 ```js title="scripts/initializers/ratings-reviews.js"
 import { initializers } from '@dropins/tools/initializer.js';
@@ -51,28 +51,36 @@ await initializeDropin(async () => {
 })();
 ```
 
+- `fetchPlaceholders` loads label overrides from `placeholders/ratings-reviews.json`.
+- `setEndpoint` configures Commerce GraphQL before the drop-in requests review settings.
+- `mountImmediately` waits for initialization to finish, so the settings are ready before the block renders its containers.
+
 ### Endpoint and headers
 
-Call `setEndpoint` before `initialize`. The drop-in sends the `storeConfig` and `reviews` queries to Commerce GraphQL through `CORE_FETCH_GRAPHQL`, which already carries your endpoint and store headers. Do not point this drop-in at the Catalog Service endpoint. Average ratings on catalog pages come from Catalog Service through other drop-ins, so this drop-in never requests them.
+Call `setEndpoint` before `initialize`. `CORE_FETCH_GRAPHQL` supplies the Commerce GraphQL endpoint and store headers for the `storeConfig` and `reviews` queries.
+
+Use the Commerce GraphQL endpoint, not the Catalog Service endpoint. Other drop-ins load average ratings for catalog pages from Catalog Service. The Ratings and Reviews drop-in does not request those averages.
 
 ## Review settings
 
-During initialization, the drop-in requests the store's review settings once per page load and saves them in its configuration:
+During initialization, the drop-in requests the store's review settings and saves them in its configuration. Later initialization calls on the same page reuse a successful request:
 
 <TableWrapper nowrap={[0,1]}>
 
 | Setting | GraphQL source | Effect |
 |---|---|---|
-| `isProductReviewsEnabled` | `storeConfig.product_reviews_enabled` | When `false`, `Review` and `Pagination` render nothing and the Product Reviews block stays hidden. |
-| `allowGuestsToWriteProductReviews` | `storeConfig.allow_guests_to_write_product_reviews` | Reports whether guests may submit reviews. It does not affect reading: signed-out shoppers always see approved reviews. |
+| `isProductReviewsEnabled` | `storeConfig.product_reviews_enabled` | When `false`, `Review` and `Pagination` render nothing. The Product Reviews block from the quick start also stays hidden. `WriteReview` does not check this setting, so check it before showing the form. |
+| `allowGuestsToWriteProductReviews` | `storeConfig.allow_guests_to_write_product_reviews` | When `false`, signed-out shoppers see a sign-in prompt in `WriteReview` instead of the form. This setting does not restrict access to approved reviews. |
 
 </TableWrapper>
 
-Both settings are `false` until the request succeeds. If the request fails, the drop-in logs `[Ratings Reviews] Failed to fetch store config:` in the browser console and keeps both settings `false`, so reviews stay hidden instead of showing a broken section. Reloading the page retries the request.
+- *Defaults*: Both settings default to `false`.
+- *Failed request*: The drop-in logs `[Ratings Reviews] Failed to fetch store config:` in the browser console and sets both settings to `false`, so reviews stay hidden.
+- *Retry*: A later initialization call requests the settings again. Reloading the page also runs initialization again.
 
-Read the settings in your own code with `config.getConfig()`:
+After initialization finishes, read the saved settings in your block with `config.getConfig()`:
 
-```js
+```js title="blocks/product-reviews/product-reviews.js"
 import { config } from '@dropins/storefront-ratings-reviews/api.js';
 
 // Returns false until initialization has loaded the store settings.
@@ -81,23 +89,35 @@ const { isProductReviewsEnabled } = config.getConfig();
 
 ## Language definitions
 
-Override dictionary labels for localization or branding. The drop-in deep-merges your values with its default English labels, so include only the keys you change.
+Use `langDefinitions` to translate labels or match your storefront's wording. Include only the keys to change. The drop-in uses your values for those keys and keeps the default English labels for the rest.
+
+This example changes the review list heading:
 
 ```js title="scripts/initializers/ratings-reviews.js"
 import { initializers } from '@dropins/tools/initializer.js';
-import { initialize } from '@dropins/storefront-ratings-reviews/api.js';
+import { initialize, setEndpoint } from '@dropins/storefront-ratings-reviews/api.js';
+import { initializeDropin } from './index.js';
+import { CORE_FETCH_GRAPHQL } from '../commerce.js';
 
-await initializers.mountImmediately(initialize, {
-  langDefinitions: {
-    // The default locale applies when no other locale matches.
-    default: {
-      Review: {
-        title: 'Customer reviews',
+await initializeDropin(async () => {
+  // Configure Commerce GraphQL before initialization loads the review settings.
+  setEndpoint(CORE_FETCH_GRAPHQL);
+
+  return initializers.mountImmediately(initialize, {
+    langDefinitions: {
+      // Default labels apply to every locale unless a locale entry overrides them.
+      default: {
+        Review: {
+          title: 'Customer reviews',
+        },
       },
     },
-  },
-});
+  });
+})();
 ```
+
+- `default` supplies labels for every locale unless a locale-specific entry overrides them.
+- `Review.title` changes the heading to *Customer reviews* when the `Review` container has no `totalCount` value.
 
 <Aside type="tip">
 For every available key, see the [Ratings and Reviews dictionary](/dropins/ratings-reviews/dictionary/).
@@ -105,7 +125,9 @@ For every available key, see the [Ratings and Reviews dictionary](/dropins/ratin
 
 ## Customize data models
 
-Use the `models` option to add fields to the review data that containers and slots receive. Each transformer receives the raw GraphQL object. The drop-in deep-merges the object your transformer returns into its default model, so return only the fields you add or change.
+Use the `models` option to add or change fields in the review data that containers and slots receive. A *transformer* is a function that converts query data into model fields.
+
+Each transformer receives the raw GraphQL object. Return only the fields to add or change. The drop-in combines them with its default model, keeping the other default fields.
 
 <TableWrapper nowrap={[0]}>
 
@@ -116,34 +138,46 @@ Use the `models` option to add fields to the review data that containers and slo
 
 </TableWrapper>
 
-The `reviews` query already requests each review's `ratings_breakdown`, which lists the score for each rating category (for example, Quality or Price). The default model does not keep it. This example adds it to every review:
+The `reviews` query already requests each review's `ratings_breakdown`, which lists the score for each rating category, such as *Quality* or *Price*. The default model does not keep this field. This example adds it to every review as `ratingsBreakdown`:
 
 ```js title="scripts/initializers/ratings-reviews.js"
 import { initializers } from '@dropins/tools/initializer.js';
-import { initialize } from '@dropins/storefront-ratings-reviews/api.js';
+import { initialize, setEndpoint } from '@dropins/storefront-ratings-reviews/api.js';
+import { initializeDropin } from './index.js';
+import { CORE_FETCH_GRAPHQL } from '../commerce.js';
 
-await initializers.mountImmediately(initialize, {
-  models: {
-    ProductReviewModel: {
-      // review is the raw GraphQL review object.
-      transformer: (review) => ({
-        // Each entry has a category name and a value, for example { name: 'Quality', value: '4' }.
-        ratingsBreakdown: review.ratings_breakdown ?? [],
-      }),
+await initializeDropin(async () => {
+  // Configure Commerce GraphQL before initialization loads the review settings.
+  setEndpoint(CORE_FETCH_GRAPHQL);
+
+  return initializers.mountImmediately(initialize, {
+    models: {
+      ProductReviewModel: {
+        // review is the raw GraphQL review object.
+        transformer: (review) => ({
+          // Each entry has a category name and a value, for example { name: 'Quality', value: '4' }.
+          ratingsBreakdown: review.ratings_breakdown ?? [],
+        }),
+      },
     },
-  },
-});
+  });
+})();
 ```
+
+- `review.ratings_breakdown` contains the category names and scores from GraphQL.
+- `ratingsBreakdown` is the new model field. The `?? []` fallback supplies an empty array when the query field is missing or `null`.
 
 Read the new field in the `ReviewItem` slot through `context.review.ratingsBreakdown`. See [Review slots](/dropins/ratings-reviews/slots/#review-slots).
 
-A transformer can read only the fields that the query requests. The `reviews` query requests `nickname`, `summary`, `text`, `average_rating`, `created_at`, and `ratings_breakdown` for each review, and `current_page`, `page_size`, and `total_pages` for the page.
+A transformer can read only the fields that the query requests. For each review, the `reviews` query requests `nickname`, `summary`, `text`, `average_rating`, `created_at`, and `ratings_breakdown`. For the page, it requests `current_page`, `page_size`, and `total_pages`.
 
 ## Configuration types
 
+Both `langDefinitions` and `models` are optional.
+
 ### langDefinitions
 
-Maps locale identifiers to dictionaries of labels. The `default` locale applies when no specific locale matches.
+Maps locale identifiers to dictionaries of labels. Labels in `default` apply to every locale. Labels for the current locale take precedence over them.
 
 ```typescript
 langDefinitions?: {

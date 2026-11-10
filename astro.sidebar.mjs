@@ -890,6 +890,7 @@ export function generateSidebar() {
                     { label: 'Overview', link: '/dropins/ratings-reviews/containers/' },
                     { label: 'Review', link: '/dropins/ratings-reviews/containers/review/' },
                     { label: 'Pagination', link: '/dropins/ratings-reviews/containers/pagination/' },
+                    { label: 'WriteReview', link: '/dropins/ratings-reviews/containers/write-review/' },
                   ],
                 },
               ],

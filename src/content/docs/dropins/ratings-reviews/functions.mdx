@@ -1,6 +1,6 @@
 ---
 title: Ratings and Reviews functions
-description: Load product reviews and review settings with the Ratings and Reviews drop-in API functions.
+description: Load product reviews and review settings, and submit reviews, with the Ratings and Reviews drop-in API functions.
 sidebar:
   label: Functions
   order: 4
@@ -9,7 +9,9 @@ sidebar:
 import { Aside } from '@astrojs/starlight/components';
 import TableWrapper from '@components/TableWrapper.astro';
 
-The Ratings and Reviews drop-in exports API functions from `@dropins/storefront-ratings-reviews/api.js`. Use them to load review pages, read review settings, and configure the GraphQL client. Complete [initialization](/dropins/ratings-reviews/initialization/) before you call `getProductReviews`.
+The Ratings and Reviews drop-in exports API functions from `@dropins/storefront-ratings-reviews/api.js`. Use them to load review pages, read review settings, submit reviews, and configure requests to Adobe Commerce GraphQL.
+
+Complete [initialization](/dropins/ratings-reviews/initialization/) before calling functions that load or submit review data. The examples import the initializer from the [quick start](/dropins/ratings-reviews/quick-start/) to configure the endpoint and store headers.
 
 <TableWrapper nowrap={[0]}>
 
@@ -17,6 +19,8 @@ The Ratings and Reviews drop-in exports API functions from `@dropins/storefront-
 | --- | --- |
 | [`getProductReviews`](#getproductreviews) | Loads one page of approved reviews for a SKU and publishes the result as events. |
 | [`getStoreConfig`](#getstoreconfig) | Loads the store's review settings. |
+| [`getRatingsMetadata`](#getratingsmetadata) | Loads the rating categories and the values shoppers can choose. |
+| [`createProductReview`](#createproductreview) | Submits a product review. |
 | [`setEndpoint`](#graphql-client-functions) | Sets the GraphQL endpoint the drop-in uses. |
 | [`setFetchGraphQlHeader`](#graphql-client-functions) | Adds or replaces one request header. |
 | [`setFetchGraphQlHeaders`](#graphql-client-functions) | Adds or replaces several request headers. |
@@ -28,7 +32,9 @@ The Ratings and Reviews drop-in exports API functions from `@dropins/storefront-
 
 ## getProductReviews
 
-Loads one page of approved reviews for a product and publishes the request state on the [event bus](/dropins/ratings-reviews/events/). The `Review` and `Pagination` containers do not fetch data; they update from these events. Call this function once to show the first page. `Pagination` requests later pages by itself.
+Loads one page of approved reviews for a product and publishes request, loading, result, and error [events](/dropins/ratings-reviews/events/).
+
+Call this function to load the first page for the `Review` and `Pagination` containers. Both containers update in response to its events. `Pagination` requests later pages when a shopper uses the page controls. `Review` retries a failed request when a shopper selects **Try again**.
 
 ```typescript
 getProductReviews(
@@ -44,37 +50,47 @@ getProductReviews(
 | `sku` | `string` | Yes | SKU of the product whose reviews to load. The drop-in sends it to Commerce unchanged. |
 | `options.pageSize` | `number` | No | Number of reviews per page. Defaults to `20`. |
 | `options.currentPage` | `number` | No | Page to load, starting at `1`. Defaults to `1`. |
-| `options.scope` | `string` | No | Event scope. Pass the same value to the containers that display this list. |
+| `options.scope` | `string` | No | Name that connects the request to its containers through events. Pass the same value to the containers that display this list. |
 
 </TableWrapper>
 
 ### Returns
 
-A promise that resolves to a [`ProductReviewsModel`](#productreviewsmodel), or `null` when the `reviews` query returns `null`, for example when the product is unavailable. The `Review` container shows *Reviews are unavailable.* for a `null` result and *No reviews on this page.* for a page with no items.
+A promise that resolves to a [`ProductReviewsModel`](#productreviewsmodel), or `null` when the `reviews` query returns `null`. The `Review` container shows *Reviews are unavailable.* for a `null` result and *No reviews on this page.* for a page with no items.
 
 ### Example
 
-```js
-import { getProductReviews } from '@dropins/storefront-ratings-reviews/api.js';
+Use this call in a storefront block that renders `Review` and `Pagination`:
 
-// Replace ADB102 with your product SKU. Use the same scope for the containers.
-getProductReviews('ADB102', { pageSize: 20, currentPage: 1, scope: 'product-reviews' })
+```js title="blocks/product-reviews/product-reviews.js"
+import { getProductReviews } from '@dropins/storefront-ratings-reviews/api.js';
+import '../../scripts/initializers/ratings-reviews.js';
+
+const yourSku = 'YOUR-PRODUCT-SKU';
+
+getProductReviews(yourSku, { pageSize: 20, currentPage: 1, scope: 'product-reviews' })
   // The containers show failures, so the block only logs the rejection.
   .catch((error) => console.error(error));
 ```
 
+Replace `YOUR-PRODUCT-SKU` with the product's SKU.
+
+- The call loads the first page with up to 20 reviews.
+- Pass `'product-reviews'` as the `scope` for both containers so they receive this request's events.
+- The `.catch()` logs errors in the browser console. The containers display the error state.
+
 ### Behavior
 
-- **Input checks**: A blank SKU, or a `pageSize` or `currentPage` that is not a positive integer, rejects the promise before any network request. No events are published in that case.
-- **Newest request wins**: Only the newest request in a scope publishes its result, so a slow, older response cannot replace a newer page. The promise of an older request still resolves with its own data.
-- **Errors**: GraphQL and network errors publish a `reviews/error` event and reject the promise. Add a `.catch()` when you do not need the rejection.
-- **Malformed data**: Invalid page information rejects the response. An individual invalid review is skipped and the drop-in logs a warning, so the remaining reviews still render.
-- **Ratings**: Each review's `average_rating` (0–100) is divided by 20 to produce `rating` on a 0–5 scale. A review with an average of `0` and no rating votes gets `rating: null`, which the review list shows as *Not rated*.
-- **Caching**: Each call sends a new request. Responses are not cached.
+- *Input checks*: A blank SKU, or a `pageSize` or `currentPage` that is not a positive integer, rejects the promise before any network request. No events are published in that case.
+- *Newest request wins*: Only the newest request in a scope publishes its result, so a slower, older response cannot replace a newer page. An older request's promise still resolves with its own data.
+- *Errors*: GraphQL and network errors reject the promise. They also publish a `reviews/error` event if the request is still the newest in its scope. Handle errors with `.catch()` or `try...catch`.
+- *Invalid data*: Invalid page information rejects the promise. The drop-in skips individual invalid reviews and logs a warning, so the remaining reviews still render.
+- *Ratings*: The drop-in divides each review's `average_rating`, from `0` to `100`, by 20 to produce `rating` on a scale from `0` to `5`. A review with an average of `0` and no rating votes gets `rating: null`, which the list shows as *Not rated*.
+- *Caching*: Each call sends a new request. Responses are not cached.
 
 ## getStoreConfig
 
-Loads the store's review settings from the `storeConfig` query. The initializer calls this function for you and saves the result in the drop-in configuration, so most storefronts read `config.getConfig()` instead.
+Loads the store's review settings from the `storeConfig` query. The initializer calls this function and saves the result in the drop-in configuration. To read those saved settings without another request, use `config.getConfig()` instead.
 
 ```typescript
 getStoreConfig(): Promise<StoreConfigModel>
@@ -82,16 +98,115 @@ getStoreConfig(): Promise<StoreConfigModel>
 
 ### Returns
 
-A promise that resolves to a [`StoreConfigModel`](#storeconfigmodel). The promise rejects when the request returns GraphQL errors or no `storeConfig` data.
+A promise that resolves to a [`StoreConfigModel`](#storeconfigmodel). It rejects if the request returns GraphQL errors or no `storeConfig` data. It also rejects if a setting value is not `true`, `false`, `1`, or `0`.
 
 ### Example
 
-```js
-import { getStoreConfig } from '@dropins/storefront-ratings-reviews/api.js';
+To request the settings directly from a storefront block:
 
-// Configure the endpoint before calling this function.
-const { isProductReviewsEnabled, allowGuestsToWriteProductReviews } = await getStoreConfig();
+```js title="blocks/product-reviews/product-reviews.js"
+import { getStoreConfig } from '@dropins/storefront-ratings-reviews/api.js';
+import '../../scripts/initializers/ratings-reviews.js';
+
+try {
+  const { isProductReviewsEnabled, allowGuestsToWriteProductReviews } = await getStoreConfig();
+  console.log({ isProductReviewsEnabled, allowGuestsToWriteProductReviews });
+} catch (error) {
+  console.error('Could not load review settings:', error);
+}
 ```
+
+- `isProductReviewsEnabled` indicates whether the store has product reviews turned on.
+- `allowGuestsToWriteProductReviews` indicates whether signed-out shoppers can submit reviews.
+
+## getRatingsMetadata
+
+Loads the active rating categories, such as *Quality* or *Price*, and the values a shopper can choose for each one. The data comes from the `productReviewRatingsMetadata` query.
+
+The `WriteReview` container calls this function for you. Call it directly when building a custom review form.
+
+```typescript
+getRatingsMetadata(): Promise<RatingMetadataModel[]>
+```
+
+### Returns
+
+A promise that resolves to an array of [`RatingMetadataModel`](#ratingmetadatamodel) objects, one for each category. The promise rejects when the request returns GraphQL errors or no data.
+
+### Behavior
+
+- *Values*: Each category's `values` are sorted from lowest to highest. Each `value` is a whole number of stars, such as `1` through `5`.
+- *Unusable categories*: The drop-in leaves out categories without an ID, a name, or at least one valid value.
+- *Caching*: The request can use the browser's HTTP cache.
+
+## createProductReview
+
+Submits a product review with the `createProductReview` mutation. The `WriteReview` container calls this function for you. Call it directly when building a custom review form.
+
+```typescript
+createProductReview(input: CreateProductReviewInput): Promise<CreatedProductReviewModel>
+```
+
+<TableWrapper nowrap={[0,1]}>
+
+| Parameter | Type | Req? | Description |
+| --- | --- | --- | --- |
+| `input.sku` | `string` | Yes | SKU of the product to review. |
+| `input.nickname` | `string` | Yes | Name the reviewer enters. |
+| `input.summary` | `string` | Yes | Review title. |
+| `input.text` | `string` | Yes | Review body. |
+| `input.ratings` | `Array<{ id: string; valueId: string }>` | Yes | One entry for each rating category. Use the `id` of the category and the `valueId` of the chosen value from `getRatingsMetadata`. |
+
+</TableWrapper>
+
+### Returns
+
+A promise that resolves to the created review as a [`CreatedProductReviewModel`](#createdproductreviewmodel).
+
+### Example
+
+This example submits a review with four stars in each rating category:
+
+```js title="blocks/product-reviews/product-reviews.js"
+import { createProductReview, getRatingsMetadata } from '@dropins/storefront-ratings-reviews/api.js';
+import '../../scripts/initializers/ratings-reviews.js';
+
+const yourSku = 'YOUR-PRODUCT-SKU';
+
+try {
+  const categories = await getRatingsMetadata();
+  const ratings = categories.map(({ id, values }) => ({
+    id,
+    // A category without a four-star value makes the request reject.
+    valueId: values.find(({ value }) => value === 4)?.valueId,
+  }));
+
+  const review = await createProductReview({
+    sku: yourSku,
+    nickname: 'Alex',
+    summary: 'Comfortable fit',
+    text: 'I wear it every day.',
+    ratings,
+  });
+  console.log(review);
+} catch (error) {
+  console.error('Could not submit the review:', error);
+}
+```
+
+Replace `YOUR-PRODUCT-SKU` with the product's SKU.
+
+- `getRatingsMetadata` supplies the category IDs and value IDs. Send those IDs unchanged in `ratings`.
+- The example selects the four-star value in each category. If a category has no four-star value, `createProductReview` rejects the input before sending a submission request.
+- A successful call logs the created review in the browser console. A failed call logs an error.
+
+### Behavior
+
+- *Input checks*: The function trims `sku`, `nickname`, `summary`, and `text`. The promise rejects before any network request if one of these fields is empty, `ratings` is empty, or a rating has no `id` or `valueId`.
+- *reCAPTCHA*: For valid input, the function requests a fresh reCAPTCHA token. If a token is returned, the request includes it in the `X-ReCaptcha` header. The function removes the header after the request finishes, whether it succeeds or fails.
+- *Errors*: The promise rejects with the GraphQL error message, for example, when reviews are turned off or Commerce rejects the reCAPTCHA token.
+- *Moderation*: New reviews usually wait for approval in the Admin, so they do not appear in the review list right away.
+- *Events*: This function publishes no events. The `WriteReview` container publishes [`reviews/review-submitted`](/dropins/ratings-reviews/events/#reviewsreview-submitted) after a successful submission.
 
 ## GraphQL client functions
 
@@ -115,6 +230,8 @@ Headers are shared by every request the drop-in sends. Set store headers once in
 </Aside>
 
 ## Data models
+
+These models describe review pages, store settings, rating choices, and submissions.
 
 ### ProductReviewsModel
 
@@ -158,7 +275,57 @@ The store's review settings.
 type StoreConfigModel = {
   // True when product reviews are enabled for the store.
   isProductReviewsEnabled: boolean;
-  // True when guests may submit reviews. Commerce still validates each submission.
+  // True when guests may submit reviews.
   allowGuestsToWriteProductReviews: boolean;
+};
+```
+
+### RatingMetadataModel
+
+One rating category and the values a shopper can choose.
+
+```typescript
+type RatingMetadataModel = {
+  // Category ID. Send it back unchanged.
+  id: string;
+  // Category name, for example "Quality".
+  name: string;
+  // Choices sorted from lowest to highest.
+  values: Array<{
+    // Value ID. Send it back unchanged.
+    valueId: string;
+    // Number of stars, for example 4.
+    value: number;
+  }>;
+};
+```
+
+### CreateProductReviewInput
+
+The review to submit.
+
+```typescript
+type CreateProductReviewInput = {
+  sku: string;
+  nickname: string;
+  summary: string;
+  text: string;
+  ratings: Array<{ id: string; valueId: string }>;
+};
+```
+
+### CreatedProductReviewModel
+
+The review that Adobe Commerce created.
+
+```typescript
+type CreatedProductReviewModel = {
+  nickname: string;
+  summary: string;
+  text: string;
+  // Average of the review's ratings on a 0–5 scale, or null when it has none.
+  rating: number | null;
+  // Score for each rating category.
+  ratingsBreakdown: Array<{ name: string; value: number }>;
 };
 ```

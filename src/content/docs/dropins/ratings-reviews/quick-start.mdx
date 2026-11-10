@@ -9,9 +9,9 @@ sidebar:
 import { Aside, Steps } from '@astrojs/starlight/components';
 import TableWrapper from '@components/TableWrapper.astro';
 
-After you complete this quick start, your product pages show a **Reviews** section below the product details. The section lists approved reviews, 20 per page, with page controls when a product has more reviews.
+Show approved product reviews below the product details on your product pages. The list shows 20 reviews per page and includes page controls when more reviews are available.
 
-The integration has four parts: the drop-in package, an import map entry, an initializer, and the Product Reviews block. If your storefront already has `scripts/initializers/ratings-reviews.js` and `blocks/product-reviews/`, skip to [Check the result](#check-the-result).
+The setup uses four parts: the drop-in package, an import map entry, an initializer, and the Product Reviews block. If your storefront already has `scripts/initializers/ratings-reviews.js` and `blocks/product-reviews/`, skip to [Check the result](#check-the-result).
 
 ## Before you begin
 
@@ -19,6 +19,8 @@ The integration has four parts: the drop-in package, an import map entry, an ini
 - Run your storefront locally. See [Run your storefront locally](/get-started/run-locally/).
 
 ## Add the drop-in to your storefront
+
+Install the package and create the files that connect the review list to your storefront.
 
 <Steps>
 
@@ -31,11 +33,11 @@ The integration has four parts: the drop-in package, an import map entry, an ini
    npm run install:dropins
    ```
 
-   The storefront template disables npm install scripts for security, so `npm run install:dropins` copies the files. After it finishes, the `scripts/__dropins__/storefront-ratings-reviews/` folder exists.
+    Your storefront's `.npmrc` disables package install scripts to protect against supply-chain attacks. Run `npm run install:dropins` to copy the files that `npm install` skips. After it finishes, confirm that `scripts/__dropins__/storefront-ratings-reviews/` exists.
 
 1. In `head.html`, add the drop-in to the existing import map.
 
-   ```html
+    ```html title="head.html"
    <script nonce="aem" type="importmap">
      {
        "imports": {
@@ -47,11 +49,11 @@ The integration has four parts: the drop-in package, an import map entry, an ini
    </script>
    ```
 
-   Add only the `@dropins/storefront-ratings-reviews/` line and keep your other entries. The import map lets block code import `@dropins/storefront-ratings-reviews/...` paths.
+    Add only the `@dropins/storefront-ratings-reviews/` entry and keep your other entries. It maps imports in block code to the installed files under `scripts/__dropins__/storefront-ratings-reviews/`.
 
 1. Create the initializer at `scripts/initializers/ratings-reviews.js`.
 
-   ```js
+    ```js title="scripts/initializers/ratings-reviews.js"
    import { initializers } from '@dropins/tools/initializer.js';
    import { initialize, setEndpoint } from '@dropins/storefront-ratings-reviews/api.js';
    import { initializeDropin } from './index.js';
@@ -64,7 +66,7 @@ The integration has four parts: the drop-in package, an import map entry, an ini
      // Reviews and review settings come from Commerce GraphQL, not Catalog Service.
      setEndpoint(CORE_FETCH_GRAPHQL);
 
-     // Fetches the store's review settings once, then stores them in the drop-in config.
+     // Loads the store's review settings and saves them in the drop-in config.
      return initializers.mountImmediately(initialize, {
        langDefinitions: {
          default: { ...labels },
@@ -73,11 +75,15 @@ The integration has four parts: the drop-in package, an import map entry, an ini
    })();
    ```
 
-   `CORE_FETCH_GRAPHQL` carries your Commerce GraphQL endpoint and store headers. The [initialization](/dropins/ratings-reviews/initialization/) page explains each option.
+    - `CORE_FETCH_GRAPHQL` supplies your Adobe Commerce GraphQL endpoint and store headers.
+    - `fetchPlaceholders` loads custom labels from `placeholders/ratings-reviews.json`.
+    - `mountImmediately` waits for the store's review settings to load before initialization finishes.
+
+    For configuration options, see [Ratings and Reviews initialization](/dropins/ratings-reviews/initialization/).
 
 1. Create the block script at `blocks/product-reviews/product-reviews.js`.
 
-   ```js
+    ```js title="blocks/product-reviews/product-reviews.js"
    import { config, getProductReviews } from '@dropins/storefront-ratings-reviews/api.js';
    import { render as reviewsRenderer } from '@dropins/storefront-ratings-reviews/render.js';
    import { Review } from '@dropins/storefront-ratings-reviews/containers/Review.js';
@@ -121,11 +127,13 @@ The integration has four parts: the drop-in package, an import map entry, an ini
    }
    ```
 
-   The containers do not fetch data. `getProductReviews()` publishes [events](/dropins/ratings-reviews/events/), and both containers update from the events for their `scope`. `Pagination` requests later pages by itself.
+    - *Initial request*: `getProductReviews` loads the first page and publishes [events](/dropins/ratings-reviews/events/) for both containers.
+    - *Separate lists*: Each block uses a unique `scope` to keep its events separate from other review lists on the page.
+    - *Later requests*: `Pagination` requests pages when a shopper uses the page controls. `Review` retries a failed request when a shopper selects **Try again**.
 
 1. Create the block styles at `blocks/product-reviews/product-reviews.css`.
 
-   ```css
+    ```css title="blocks/product-reviews/product-reviews.css"
    /* Separates the reviews section from the content above it. */
    .product-reviews {
      margin-block-start: var(--spacing-xxbig);
@@ -149,20 +157,20 @@ The integration has four parts: the drop-in package, an import map entry, an ini
 
 1. Place the block on product pages. Choose one option:
 
-   - **Author the block**: Add a Product Reviews block to your product page template or any other page. See [Product Reviews block](/merchants/blocks/product-reviews/).
-   - **Add it automatically**: Append the block to product pages that the storefront builds from the page SKU. Follow [Add reviews to product pages automatically](#add-reviews-to-product-pages-automatically).
+    - *Author the block*: Add a Product Reviews block to your product page template or another page. See [Product Reviews block](/merchants/blocks/product-reviews/).
+    - *Add it automatically*: Append the block when the storefront builds a product page from its SKU. Follow [Add reviews to product pages automatically](#add-reviews-to-product-pages-automatically).
 
 </Steps>
 
 ## Add reviews to product pages automatically
 
-Product pages that the storefront builds from SKU metadata do not have an authored block table. To add reviews to those pages, extend the auto-blocking code that builds the Product Details block.
+When the storefront builds a Product Details block from a SKU in page metadata or the product URL, it can also add reviews. Extend the automatic block creation (auto-blocking) code to append a Product Reviews section.
 
 <Steps>
 
 1. In `scripts/commerce.js`, add a function that appends a Product Reviews section to the page.
 
-   ```js
+    ```js title="scripts/commerce.js"
    /**
     * Appends a product-reviews section unless reviews are already authored.
     * @param {Element} main The main element
@@ -176,11 +184,12 @@ Product pages that the storefront builds from SKU metadata do not have an author
    }
    ```
 
-   `scripts/commerce.js` already imports `buildBlock` from `./aem.js`.
+    - `scripts/commerce.js` already imports `buildBlock` from `./aem.js`.
+    - The check for `.product-reviews` keeps an authored block from appearing alongside a second, automatically added list.
 
 1. In `scripts/scripts.js`, import the function and call it right after `buildPDPBlock(main)`.
 
-   ```js
+    ```js title="scripts/scripts.js"
    import {
      buildPDPBlock,
      // Add this import next to buildPDPBlock.
@@ -205,19 +214,137 @@ Product pages that the storefront builds from SKU metadata do not have an author
    }
    ```
 
-   Keep your existing imports and auto-blocking code. Only the two marked additions are new.
+    Keep your existing imports and auto-blocking code, including the SKU lookup that defines `metaSku`. Add only the `buildProductRatingsAndReviews` import and the call after `buildPDPBlock(main)`.
 
 </Steps>
 
-This automatic placement applies only when the storefront builds the Product Details block itself. If a page has an authored Product Details block, add the Product Reviews block to that page or template too.
+This automatic placement runs only when the storefront creates the Product Details block. For pages with an authored Product Details block, add Product Reviews to the page or template instead.
+
+## Add a Write review button
+
+Add a **Write review** button above the list to let shoppers submit reviews. The button opens the [`WriteReview`](/dropins/ratings-reviews/containers/write-review/) form in a modal dialog over the page. New reviews appear in the list after approval in the Admin.
+
+<Steps>
+
+1. Replace `blocks/product-reviews/product-reviews.js` with this version to keep the review list and add the button and modal.
+
+    ```js title="blocks/product-reviews/product-reviews.js"
+   import { events } from '@dropins/tools/event-bus.js';
+   import { Button, provider as UI } from '@dropins/tools/components.js';
+   import { config, getProductReviews } from '@dropins/storefront-ratings-reviews/api.js';
+   import { render as reviewsRenderer } from '@dropins/storefront-ratings-reviews/render.js';
+   import { Review } from '@dropins/storefront-ratings-reviews/containers/Review.js';
+   import { WriteReview } from '@dropins/storefront-ratings-reviews/containers/WriteReview.js';
+   import { Pagination } from '@dropins/storefront-ratings-reviews/containers/Pagination.js';
+   import { readBlockConfig } from '../../scripts/aem.js';
+   import {
+     CUSTOMER_LOGIN_PATH,
+     checkIsAuthenticated,
+     fetchPlaceholders,
+     getProductSku,
+     rootLink,
+   } from '../../scripts/commerce.js';
+   import createModal from '../modal/modal.js';
+   import '../../scripts/initializers/ratings-reviews.js';
+
+   // Shows the product name and image in the form when this page's product is the one being reviewed.
+   function getPageProduct(sku) {
+     const product = events.lastPayload('pdp/data');
+     if (!product || product.sku !== sku) return {};
+     const image = product.images?.[0];
+     return {
+       productName: product.name,
+       productImage: image?.url ? { src: image.url, alt: image.label || product.name } : undefined,
+     };
+   }
+
+   async function openWriteReview(sku) {
+     const content = document.createElement('div');
+     content.className = 'product-reviews__modal-content';
+     const modal = await createModal([content]);
+     // Opens the modal first, because the form loads rating categories before it appears.
+     modal.showModal();
+     await reviewsRenderer.render(WriteReview, {
+       sku,
+       ...getPageProduct(sku),
+       isAuthenticated: checkIsAuthenticated(),
+       routeSignIn: () => rootLink(CUSTOMER_LOGIN_PATH),
+     })(content);
+   }
+
+   export default async function decorate(block) {
+     const { sku: authoredSku } = readBlockConfig(block);
+     block.replaceChildren();
+     block.hidden = true;
+     // Also hides the Write review button when reviews are turned off.
+     if (config.getConfig()?.isProductReviewsEnabled !== true || !block.isConnected) return;
+     const sku = authoredSku?.trim() || getProductSku();
+     if (!sku) throw new Error('A product SKU is required to display product reviews.');
+
+     const scope = `product-reviews-${crypto.randomUUID()}`;
+     const fragment = document.createRange().createContextualFragment(`
+       <div class="product-reviews__write-review"></div>
+       <div class="product-reviews__list"></div>
+       <div class="product-reviews__pagination"></div>
+     `);
+     const labels = await fetchPlaceholders('placeholders/ratings-reviews.json');
+     const reviews = fragment.querySelector('.product-reviews__list');
+     const pagination = fragment.querySelector('.product-reviews__pagination');
+     block.appendChild(fragment);
+     block.hidden = false;
+
+     await UI.render(Button, {
+       children: labels.Global?.WriteReview ?? 'Write review',
+       variant: 'secondary',
+       onClick: () => openWriteReview(sku),
+     })(block.querySelector('.product-reviews__write-review'));
+
+     await Promise.all([
+       reviewsRenderer.render(Review, { scope })(reviews),
+       reviewsRenderer.render(Pagination, { scope })(pagination),
+     ]);
+
+     if (!block.isConnected) return;
+     getProductReviews(sku, { pageSize: 20, currentPage: 1, scope }).catch((error) => {
+       console.error('[Product Reviews] Failed to load reviews:', error);
+     });
+   }
+   ```
+
+    - *Button label*: `Global.WriteReview` in `placeholders/ratings-reviews.json` supplies the text. If the key is missing, the button shows *Write review*.
+    - *Shopper access*: `checkIsAuthenticated()` tells the form whether the shopper is signed in. When guests cannot write reviews, signed-out shoppers see a **Sign in** button that opens your sign-in page.
+
+1. Add these rules to `blocks/product-reviews/product-reviews.css`:
+
+    ```css title="blocks/product-reviews/product-reviews.css"
+   .product-reviews__write-review {
+     margin-block-end: var(--spacing-medium);
+   }
+
+   /* footer.css offsets every modal's close button by 40px with !important; restore the corner for this modal. */
+   .modal:has(.product-reviews__modal-content) .close-button {
+     top: 0 !important;
+     right: 0 !important;
+   }
+
+   /* Keeps the form clear of the close button. */
+   .product-reviews__modal-content {
+     padding-block-start: var(--spacing-big);
+   }
+   ```
+
+</Steps>
+
+To protect the form with reCAPTCHA, configure **Enable for Product Review** in the Admin reCAPTCHA settings. Your storefront already configures the reCAPTCHA library. See [reCAPTCHA](/dropins/ratings-reviews/containers/write-review/#recaptcha).
 
 ## Check the result
 
 Open a product page for a product with approved reviews.
 
-- You see a **Reviews** heading followed by the reviews.
+- The *Reviews* heading appears above the review list.
 - Each review shows the reviewer's name, stars or *Not rated*, the date, the title, and the text.
 - Products with more than 20 approved reviews show page controls below the list.
+- If you added the **Write review** button, select it and submit a review. Confirm that the success message says the review is waiting for approval. Approve the review in the Admin to see it in the list.
 
 If the reviews section does not appear, check these common causes:
 
@@ -225,7 +352,7 @@ If the reviews section does not appear, check these common causes:
 
 | What you see | Likely cause | What to do |
 | --- | --- | --- |
-| No reviews section and no errors | Product reviews are turned off for the store | Turn on **Product Reviews** in the Admin, then reload the page. |
+| No reviews section and no errors | Product reviews are turned off for the store | Turn on product reviews in the Admin, then reload the page. |
 | Console error `[Ratings Reviews] Failed to fetch store config:` | The initializer could not load review settings, so reviews stay off | Check the Commerce GraphQL endpoint and store headers in your storefront configuration. |
 | Console error `A product SKU is required to display product reviews.` | The block could not find a SKU | Add a `sku` row to the authored block, or place the block on a product page. |
 | *No reviews on this page.* | The product has no approved reviews | Approve a review in the Admin. |
@@ -235,11 +362,13 @@ If the reviews section does not appear, check these common causes:
 
 ## Quick reference
 
-- **Package**: `@dropins/storefront-ratings-reviews`
-- **Initializer**: `import '../../scripts/initializers/ratings-reviews.js';`
-- **Containers**: `import { Review } from '@dropins/storefront-ratings-reviews/containers/Review.js';` and `import { Pagination } from '@dropins/storefront-ratings-reviews/containers/Pagination.js';`
-- **Provider**: `import { render } from '@dropins/storefront-ratings-reviews/render.js';`
-- **API functions**: `import { getProductReviews } from '@dropins/storefront-ratings-reviews/api.js';`
+- *Package*: `@dropins/storefront-ratings-reviews`
+- *Initializer*: `import '../../scripts/initializers/ratings-reviews.js';`
+- *Review container*: `import { Review } from '@dropins/storefront-ratings-reviews/containers/Review.js';`
+- *Pagination container*: `import { Pagination } from '@dropins/storefront-ratings-reviews/containers/Pagination.js';`
+- *WriteReview container*: `import { WriteReview } from '@dropins/storefront-ratings-reviews/containers/WriteReview.js';`
+- *Render provider*: `import { render } from '@dropins/storefront-ratings-reviews/render.js';`
+- *API function*: `import { getProductReviews } from '@dropins/storefront-ratings-reviews/api.js';`
 
 <Aside type="tip" title="New to drop-ins?">
 [Connect a drop-in](/dropins/all/quick-start/) explains initializers, containers, and render providers step by step.

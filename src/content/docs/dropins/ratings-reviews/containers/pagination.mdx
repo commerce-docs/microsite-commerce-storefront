@@ -7,23 +7,23 @@ import { Aside } from '@astrojs/starlight/components';
 import OptionsTable from '@components/OptionsTable.astro';
 import TableWrapper from '@components/TableWrapper.astro';
 
-The `Pagination` container shows page controls for a review list. It uses the SDK [Pagination component](/sdk/components/pagination/) and requests other pages by itself. You do not need to fetch pages or listen for clicks.
+The `Pagination` container shows page controls for a product review list. It uses the SDK [Pagination component](/sdk/components/pagination/) and handles page selection without extra click handlers.
 
-Like [`Review`](/dropins/ratings-reviews/containers/review/), the container listens for the [`reviews/*` events](/dropins/ratings-reviews/events/) for its `scope`. When a shopper selects a page, it calls [`getProductReviews`](/dropins/ratings-reviews/functions/#getproductreviews) with the same SKU, page size, and scope. Both containers then update from the result.
+Use the same `scope` for [`Review`](/dropins/ratings-reviews/containers/review/), `Pagination`, and the initial [`getProductReviews`](/dropins/ratings-reviews/functions/#getproductreviews) request. When a shopper selects another page, `Pagination` requests it with the original SKU, page size, and scope. Both containers update from the resulting [`reviews/*` events](/dropins/ratings-reviews/events/).
 
 ## Configurations
 
-The `Pagination` container provides the following configuration options:
+Use these options to configure `Pagination`:
 
 <OptionsTable
   compact
   options={[
     ['Option', 'Type', 'Req?', 'Description'],
-    ['scope', 'string', 'No', 'Event scope to listen to. Use the same value as the `Review` container and `getProductReviews`.'],
-    ['disabled', 'boolean', 'No', 'Disables the page controls without starting a request. Defaults to `false`.'],
-    ['onPageChange', 'function', 'No', 'Called with the selected page number before the container requests that page. Use it for analytics or URL updates. Do not fetch the page yourself.'],
+    ['scope', 'string', 'No', 'Identifies which review events the container receives. Use the same value as the `Review` container and `getProductReviews`.'],
+    ['disabled', 'boolean', 'No', 'Disables the page controls without making a request. Defaults to `false`.'],
+    ['onPageChange', 'function', 'No', 'Callback that receives the selected page number before the container requests that page. Use it for analytics or URL updates, not to request the page again.'],
     ['slots', 'object', 'No', 'Replaces or extends the page controls and the loading skeleton. See [Pagination slots](/dropins/ratings-reviews/slots/#pagination-slots).'],
-    ['aria-label', 'string', 'No', 'Accessible name for the navigation landmark. Defaults to the `Pagination.label` dictionary value, *Review pagination*.'],
+    ['aria-label', 'string', 'No', 'Name that screen readers use for the page navigation. Defaults to the `Pagination.label` dictionary value, *Review pagination*.'],
   ]}
 />
 
@@ -36,8 +36,8 @@ The container also accepts standard `div` attributes, such as `className` and `d
 | Situation | What shoppers see |
 | --- | --- |
 | No request has started yet | Nothing. |
-| The first page of a product is loading | A one-line skeleton and a hidden *Loading review pages...* status for screen readers. |
-| The product has no reviews, or one page of reviews | Nothing. The container keeps an empty, hidden wrapper so it can reappear without remounting. |
+| The first page of a product is loading | A single placeholder row and the hidden status message *Loading review pages...*, which is available to screen readers. |
+| The product has no reviews or only one page of reviews | Nothing. An empty, hidden wrapper stays in the page so the controls can reappear without recreating the container. |
 | The product has more than one page | Page controls with the current page selected. |
 | Another page is loading | The current controls, disabled until the page loads. |
 | A page request fails | The previous controls, enabled again. The `Review` container shows the error and a **Try again** button. |
@@ -46,13 +46,15 @@ The container also accepts standard `div` attributes, such as `className` and `d
 
 </TableWrapper>
 
-After a page loads, keyboard focus returns to the control the shopper used, so keyboard and screen reader users keep their place. In right-to-left layouts, the arrow icons point in the reading direction.
+When loading finishes, the container tries to return keyboard focus to the control the shopper used, but only if focus has moved to the document body. It leaves focus on other elements unchanged.
+
+In right-to-left layouts, the arrow icons point in the reading direction.
 
 ## Example
 
-The following example renders `Review` and `Pagination` with a shared scope and requests the first page:
+This example displays `Review` and `Pagination` with the same `scope` and requests the first page of reviews. It uses the initializer from the [Ratings and Reviews quick start](/dropins/ratings-reviews/quick-start/):
 
-```js
+```js title="blocks/product-reviews/product-reviews.js"
 import { getProductReviews } from '@dropins/storefront-ratings-reviews/api.js';
 import { render as provider } from '@dropins/storefront-ratings-reviews/render.js';
 import { Review } from '@dropins/storefront-ratings-reviews/containers/Review.js';
@@ -79,6 +81,12 @@ export default async function decorate(block) {
   getProductReviews('ADB102', { pageSize: 20, currentPage: 1, scope }).catch(() => undefined);
 }
 ```
+
+Replace `ADB102` with the product SKU whose reviews you want to show.
+
+- The shared `scope` connects both containers to the same review events.
+- The initial request loads page one with up to 20 reviews. `Pagination` requests other pages when the shopper selects them.
+- The `onPageChange` callback logs the selected page number. It does not need to request the page.
 
 <Aside type="note" title="Changing the product or page size">
 To show a different product or page size, call `getProductReviews` again with the same `scope` and `currentPage: 1`. The container clears the old page controls when the SKU or page size changes.

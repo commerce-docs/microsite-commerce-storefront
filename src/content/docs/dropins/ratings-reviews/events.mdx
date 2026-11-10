@@ -1,6 +1,6 @@
 ---
 title: Ratings and Reviews events
-description: Respond to review requests, loading states, results, and errors published by the Ratings and Reviews drop-in.
+description: Respond to review requests, loading states, results, errors, and submissions published by the Ratings and Reviews drop-in.
 sidebar:
   label: Events
   order: 5
@@ -9,9 +9,16 @@ sidebar:
 import { Aside } from '@astrojs/starlight/components';
 import TableWrapper from '@components/TableWrapper.astro';
 
-The Ratings and Reviews drop-in uses the [event bus](/sdk/reference/events/) to share review data. [`getProductReviews`](/dropins/ratings-reviews/functions/#getproductreviews) publishes four events for every request. The `Review` and `Pagination` containers listen for them and update. Your own code can listen too, for example to send analytics or show a custom summary.
+The Ratings and Reviews drop-in uses the [event bus](/sdk/reference/events/) to share review data with containers and custom code.
+
+- *Review list events*: [`getProductReviews`](/dropins/ratings-reviews/functions/#getproductreviews) publishes events as a request starts, succeeds, or fails. The `Review` and `Pagination` containers update in response.
+- *Submission events*: The `WriteReview` container publishes `reviews/review-submitted` after a shopper successfully submits a review.
+
+Listen for these events in your code to send analytics data or show a custom summary.
 
 ## Events reference
+
+Each event passes a *payload*, the value your listener receives.
 
 <TableWrapper nowrap={[0, 1]}>
 
@@ -21,37 +28,94 @@ The Ratings and Reviews drop-in uses the [event bus](/sdk/reference/events/) to 
 | [`reviews/loading`](#reviewsloading) | Emits and listens | `boolean` | `true` when the newest request starts, `false` when it finishes. |
 | [`reviews/result`](#reviewsresult) | Emits and listens | `{ request, result }` | The newest request succeeds. |
 | [`reviews/error`](#reviewserror) | Emits and listens | `string \| null` | The newest request fails, or `null` when a new request starts. |
+| [`reviews/review-submitted`](#reviewsreview-submitted) | Emits | `{ sku, review }` | A shopper successfully submits a review in `WriteReview`. |
 
 </TableWrapper>
 
+`getProductReviews` rejects calls with invalid arguments before publishing any events. When requests overlap in one scope, only the newest request publishes a result or error and ends the loading state. See [`getProductReviews` behavior](/dropins/ratings-reviews/functions/#behavior).
+
 ## Scopes
 
-Pass a `scope` to `getProductReviews` and to the containers to keep separate review lists on one page independent. Events from a scoped request reach only listeners that use the same scope. Without a scope, the events use the shared, unscoped channel.
+A *scope* is a name you choose, such as `'product-reviews'`, to connect a review request with the containers that display its results. `getProductReviews` publishes each event with that scope, so only listeners with the same scope receive it.
 
-Containers replay the last event for their scope when they mount, so you can call `getProductReviews` before or after rendering them.
+Use separate scopes when a page shows more than one review list, such as a page that compares two products. Lists with the same scope share results and page controls:
 
-To listen for a scoped event, pass the same `scope` in the listener options:
+- *Shared results*: Only the newest request in a scope publishes its result. Every list then shows reviews from that request, even if it was for a different product.
+- *Shared page controls*: Selecting a page in one list's `Pagination` container changes the page in every list with that scope.
+
+For each review list, pass the same `scope` to `getProductReviews`, `Review`, and `Pagination`. Give separate lists different scopes. A page with only one review list works without a scope. Its events use the shared channel with no scope.
+
+For example, a comparison page could use `'camera-reviews'` for a camera's reviews and `'tripod-reviews'` for a tripod's reviews. Choose names that identify each list. They are not predefined values or product SKUs.
+
+After completing the [Ratings and Reviews quick start](/dropins/ratings-reviews/quick-start/), use this example in a custom block to display the camera's reviews:
+
+```js title="blocks/camera-reviews/camera-reviews.js"
+import { config, getProductReviews } from '@dropins/storefront-ratings-reviews/api.js';
+import { render as provider } from '@dropins/storefront-ratings-reviews/render.js';
+import { Review } from '@dropins/storefront-ratings-reviews/containers/Review.js';
+import { Pagination } from '@dropins/storefront-ratings-reviews/containers/Pagination.js';
+import '../../scripts/initializers/ratings-reviews.js';
+
+export default async function decorate(block) {
+  // Keep the block hidden and skip the request when reviews are turned off.
+  if (!config.getConfig().isProductReviewsEnabled) {
+    block.hidden = true;
+    return;
+  }
+
+  // Share this name across the camera's request, list, and page controls.
+  const scope = 'camera-reviews';
+  const yourSku = 'YOUR-CAMERA-SKU';
+  const reviews = document.createElement('div');
+  const pagination = document.createElement('div');
+  block.replaceChildren(reviews, pagination);
+  block.hidden = false;
+
+  await Promise.all([
+    provider.render(Review, { scope })(reviews),
+    provider.render(Pagination, { scope })(pagination),
+  ]);
+
+  try {
+    await getProductReviews(yourSku, { scope });
+  } catch (error) {
+    console.error('Could not load camera reviews:', error);
+  }
+}
+```
+
+Replace `YOUR-CAMERA-SKU` with the camera's SKU.
+
+- The request and both containers use `'camera-reviews'`, so they share the same review events.
+- For an independent tripod list, use `'tripod-reviews'` in all three calls and pass the tripod's SKU to `getProductReviews`.
+- With separate scopes, changing pages in one list leaves the other list unchanged.
+
+The containers process the latest events for their scope when they mount, so `getProductReviews` can run before or after they render.
+
+To receive the camera list's results in your own code, pass its `scope` in the listener options:
 
 ```js
 import { events } from '@dropins/tools/event-bus.js';
 
-// Use the scope that your block passes to getProductReviews and the containers.
+// Match the camera block's scope to receive only its review results.
 events.on('reviews/result', ({ request, result }) => {
   console.log(`Loaded page ${request.currentPage} for ${request.sku}`, result);
-}, { scope: 'product-reviews' });
+}, { scope: 'camera-reviews' });
 ```
 
-The Product Reviews block generates a private scope for each block instance (`product-reviews-` followed by a random ID). Code outside the block does not know that scope, so it cannot listen to the block's events. To listen, render the containers in your own block with a scope you choose.
+The Product Reviews block in the [quick start](/dropins/ratings-reviews/quick-start/) generates a separate scope for each block instance: `product-reviews-` followed by a random ID. Code outside the block does not know that generated scope. To receive review events in other code, render the containers in your own block with a scope that the block and listeners share.
 
-<Aside type="caution" title="Do not emit these events yourself">
-Emit `reviews/*` events only through `getProductReviews`. The containers trust these payloads to decide which page is current. A hand-built event can show the wrong page or leave the list loading.
+<Aside type="caution" title="Let the API publish review events">
+Use `getProductReviews` to publish the four review list events: `reviews/request`, `reviews/loading`, `reviews/result`, and `reviews/error`. The containers use these payloads to identify the current page. Publishing your own payloads can show the wrong page or leave the list loading.
 </Aside>
 
 ## Event details
 
+Use the event payloads to track requests and submissions in your own code.
+
 ### reviews/request
 
-Fires when `getProductReviews` starts a request. The containers use it to know which SKU, page size, and page are current.
+`getProductReviews` publishes this event when a request starts. The containers use its payload to identify the current SKU, page size, and page number.
 
 ```typescript
 type ProductReviewsRequest = {
@@ -63,7 +127,7 @@ type ProductReviewsRequest = {
 
 ### reviews/loading
 
-Fires with `true` when the newest request starts and `false` when it finishes, whether it succeeded or failed. The `Review` container shows a skeleton and sets `aria-busy` while loading. `Pagination` disables its controls.
+The payload is `true` when the newest request starts and `false` when it finishes, whether it succeeds or fails. While loading, `Review` shows placeholder rows and sets `aria-busy="true"`. `Pagination` disables its controls.
 
 ```typescript
 boolean
@@ -71,7 +135,7 @@ boolean
 
 ### reviews/result
 
-Fires when the newest request succeeds. `result` is the normalized page, or `null` when the `reviews` query returns `null`. Responses from older requests in the same scope are ignored and do not fire this event.
+The API publishes this event when the newest request succeeds. `result` contains the review page in the drop-in's data format, or `null` when the `reviews` query returns `null`. Results from older requests in the same scope do not trigger this event.
 
 ```typescript
 {
@@ -84,8 +148,31 @@ See [`ProductReviewsModel`](/dropins/ratings-reviews/functions/#productreviewsmo
 
 ### reviews/error
 
-Fires with an error message when the newest request fails. Fires with `null` when the next request starts, which clears the previous error. The `Review` container shows *Unable to load reviews.* and a **Try again** button while an error is set.
+The payload contains an error message when the newest request fails. When a new request starts, the payload is `null`, which clears the previous error. While an error is set, `Review` shows *Unable to load reviews.* and a **Try again** button.
 
 ```typescript
 string | null
+```
+
+### reviews/review-submitted
+
+The `WriteReview` container publishes this event after a successful submission, using the container's `scope`. `review` contains the review that Adobe Commerce created in [`CreatedProductReviewModel`](/dropins/ratings-reviews/functions/#createdproductreviewmodel) format.
+
+The drop-in's containers do not listen for this event, so it does not refresh the review list. New reviews usually wait for approval.
+
+```typescript
+{
+  sku: string;
+  review: CreatedProductReviewModel;
+}
+```
+
+For a `WriteReview` container rendered without a `scope`, listen without a scope too:
+
+```js
+import { events } from '@dropins/tools/event-bus.js';
+
+events.on('reviews/review-submitted', ({ sku }) => {
+  console.log(`Review submitted for ${sku}`);
+});
 ```
