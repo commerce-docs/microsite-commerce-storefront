@@ -18,10 +18,13 @@ The `InvoiceDetails` container displays one invoice associated with an order. It
   Use a release of `@dropins/storefront-order` that exports `InvoiceDetails` and supports the PDF
   options described here. Invoice retrieval uses the authenticated customer's orders; an invoice
   reference alone does not provide access to another customer's invoice. The invoice query also
-  requires a Storefront Compatibility (SCP) endpoint with the status and invoice-item tax fields:
-  4.7.21, 4.8.33, or 4.9.8, or a later compatible patch on that release line. Deploy the compatible
-  backend schema before using this drop-in version; an older schema rejects the query.
+  requires a Storefront Compatibility (SCP) endpoint exposing invoice status, invoice-item tax, and
+  stored invoice-item row totals. Use SCP 4.7.22, 4.8.34, or 4.9.9, or a later compatible patch on
+  the corresponding release line. Deploy the compatible backend schema before using this drop-in
+  version; an older schema rejects the query.
 </Aside>
+
+Before using either invoice container in an environment, [verify the deployed invoice schema](/dropins/order/functions/#verify-invoice-schema-compatibility). A backend change must be deployed to that environment; merging it alone is not enough.
 
 ## Configurations
 
@@ -158,7 +161,9 @@ To use a backend document service instead, supply `onDownloadPdf` and implement 
 
 ## Current data limitations
 
-- The detail view and PDF calculate each line subtotal as sale price multiplied by invoiced quantity. The invoice's aggregate subtotal and grand total come from the backend; computed line amounts can differ from stored row totals for partial invoices because of rounding.
+- The detail view and PDF use each invoice item's stored `row_total` for the line subtotal, preserving backend proration and rounding for partial invoices. This amount excludes tax and is before discounts. Both views use its returned currency without recalculating it from unit price and invoiced quantity.
+- A valid zero subtotal is formatted as money. Unavailable subtotals are shown as an em dash, with no calculated fallback. If the backend converts missing stored totals to zero, the storefront cannot distinguish those responses from valid zero.
+- The invoice's aggregate subtotal and grand total still come from the backend. Bundle line subtotals use the backend-provided amount without additional storefront aggregation.
 - Discounts appear separately in invoice totals. Item-level discount data is available in the model, but is not displayed as an additional line discount column.
 - Aggregate invoice taxes continue to provide the tax total.
 - The UI supports the [Order dictionary](/dropins/order/dictionary/). Built-in PDF headings use fixed English labels, and the default download uses the renderer's `en-US` locale.

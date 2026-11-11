@@ -275,11 +275,11 @@ try {
 
 ### Events
 
-Does not emit any drop-in events. [OrderInvoices](/dropins/order/containers/order-invoices/) and [InvoiceDetails](/dropins/order/containers/invoice-details/) call this function after receiving their order context.
+On a non-aborted network failure, emits `order/error` with `source: 'auth'`, `type: 'network'`, and an error message, then rejects the promise. [OrderInvoices](/dropins/order/containers/order-invoices/) and [InvoiceDetails](/dropins/order/containers/invoice-details/) call this function after receiving their order context.
 
 ### Returns
 
-Returns a normalized `OrderInvoicesModel`, or `null` when the response contains no matching order. A matching order without invoices returns an empty `invoices` array. Request failures reject the promise.
+Returns a normalized `OrderInvoicesModel`, or `null` when the response contains no matching order. A matching order without invoices returns an empty `invoices` array. Network failures reject the promise. The current implementation does not explicitly reject GraphQL `errors` in a resolved response; if that response has no order data, it can return `null` instead. Verify schema compatibility before interpreting an empty or not-found state as missing invoice data.
 
 ```typescript
 interface OrderInvoicesModel {
@@ -288,9 +288,38 @@ interface OrderInvoicesModel {
 }
 ```
 
-Each invoice contains its `id`, `number`, `status`, `comments`, `items`, and `total`. Items include `productSku`, `productName`, `quantityInvoiced`, `productSalePrice`, nullable `taxAmount`, and optional `discounts`. Totals include `subtotal`, `grandTotal`, `baseGrandTotal`, `taxes`, optional `shippingHandling`, and `discounts`. Money values contain `value` and `currency`. A zero item-tax amount is distinct from a `null` amount, which means item tax is unavailable.
+Each invoice contains its `id`, `number`, `status`, `comments`, `items`, and `total`. Items include `productSku`, `productName`, `quantityInvoiced`, `productSalePrice`, nullable `taxAmount`, nullable `rowTotal`, and optional `discounts`. Totals include `subtotal`, `grandTotal`, `baseGrandTotal`, `taxes`, optional `shippingHandling`, and `discounts`. Money values contain `value` and `currency`. A zero item-tax amount is distinct from a `null` amount, which means item tax is unavailable.
 
-The query requires a Storefront Compatibility endpoint exposing `Invoice.status` and `InvoiceItemInterface.tax_amount`: SCP 4.7.21, 4.8.33, or 4.9.8, or a later compatible patch on the corresponding release line. Ensure the endpoint is upgraded before using this query; older schemas reject these fields. The current schema does not expose the stored invoice-item row total, so line subtotals are calculated from unit sale price and invoiced quantity and can differ from Admin for partial invoices due to rounding. See the [invoice data limitations](/dropins/order/containers/invoice-details/#current-data-limitations).
+`rowTotal` maps to GraphQL `row_total`: the stored subtotal for that invoice line and invoiced quantity, excluding tax and before discounts, in the invoice's order/display currency. The storefront preserves the returned amount rather than multiplying unit price by quantity. A valid zero is formatted as money; null or missing values display an em dash without a calculated fallback. A backend that converts missing stored totals to zero cannot preserve that distinction for the storefront.
+
+The query requires a Storefront Compatibility (SCP) endpoint exposing `Invoice.status`, `InvoiceItemInterface.tax_amount`, and `InvoiceItemInterface.row_total`. Use SCP **4.7.22**, **4.8.34**, or **4.9.9**, or a later compatible patch on the corresponding release line. These versions add stored invoice-item row totals in addition to status and item tax. The earlier status/item-tax minimums, 4.7.21, 4.8.33, and 4.9.8, do not provide row-total support. Deploy the compatible schema before this drop-in update: older schemas reject the entire invoice query. See the [invoice data limitations](/dropins/order/containers/invoice-details/#current-data-limitations).
+
+### Verify invoice schema compatibility
+
+Check the GraphQL endpoint used by each environment before updating the storefront. A merged backend change does not add fields to an endpoint until the updated package is deployed there.
+
+Run this query in your GraphQL client using the same endpoint and store headers as your storefront:
+
+```graphql
+query InvoiceSchemaCompatibility {
+  invoice: __type(name: "Invoice") {
+    fields {
+      name
+    }
+  }
+  invoiceItem: __type(name: "InvoiceItemInterface") {
+    fields {
+      name
+    }
+  }
+}
+```
+
+The response must include `status` in `invoice.fields` and both `tax_amount` and `row_total` in `invoiceItem.fields`. If your endpoint disables schema introspection, which lets a client inspect available fields, verify the invoice query with an authenticated test customer and an order that has invoices instead.
+
+After confirming the fields, verify that the authenticated invoice query returns the expected stored subtotals and currencies, including partial invoices and zero or unavailable amounts.
+
+If the endpoint returns `Cannot query field "row_total"`, deploy a compatible Storefront Compatibility package to that environment before retrying. This is a schema compatibility failure, not an unavailable subtotal: the query fails before the storefront can display invoice data. The em dash for unavailable values applies to a null amount returned by a compatible schema, not to an absent schema field.
 
 ## getStoreConfig
 
