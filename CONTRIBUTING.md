@@ -586,6 +586,14 @@ import TableWrapper from '@components/TableWrapper.astro';
 - Include both light and dark mode versions when possible
 - Keep file sizes reasonable (< 1MB for screenshots)
 
+### Diagrams in dark mode
+
+For a simple diagram with a white background and dark labels, add the `adaptColors` prop to its `<Diagram>` component. The component uses the same image in both themes. It slightly increases contrast in light mode and changes the white background to dark gray in dark mode. The zoomed image follows the same colors, and print uses the light appearance.
+
+Use this option only after checking the image in both themes and in the zoomed view. Filters change every pixel, so do not use it for screenshots, photographs, or diagrams that require exact colors. Mermaid diagrams are unchanged.
+
+Check normal text for a contrast ratio of at least 4.5:1 against its background. Meaningful lines and icons need at least 3:1. The filter does not guarantee that every diagram meets these Web Content Accessibility Guidelines (WCAG) contrast requirements. If colors still fail, adjust the source diagram or use a separately designed dark version.
+
 ### Screenshots
 
 **Best Practices:**
@@ -1074,4 +1082,3 @@ For questions about this guide or documentation processes, contact:
 
 _Last updated: [Current Date]_
 _Version: 1.0_
-

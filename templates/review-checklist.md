@@ -58,7 +58,7 @@ git diff --name-only --diff-filter=ACMR HEAD -- '*.md' '*.mdx'
 
 - [ ] Uses consistent tone and voice
 - [ ] Language is clear and concise
-- [ ] Consult the Adobe Style Guide through the style-access skill; record unavailable guidance rather than claiming it was verified.
+- [ ] Apply repository editorial conventions; Adobe Style Guide access is not a required check.
 - [ ] Use sentence case for titles and headings, except exact product names and code identifiers.
 - [ ] Published MDX uses the frontmatter title as its H1, has no body H1, and does not skip heading levels (H2, H3, H4).
 - [ ] Lists and tables are properly formatted
