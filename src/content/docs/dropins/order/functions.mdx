@@ -288,11 +288,13 @@ interface OrderInvoicesModel {
 }
 ```
 
-Each invoice contains its `id`, `number`, `status`, `comments`, `items`, and `total`. Items include `productSku`, `productName`, `quantityInvoiced`, `productSalePrice`, nullable `taxAmount`, nullable `rowTotal`, and optional `discounts`. Totals include `subtotal`, `grandTotal`, `baseGrandTotal`, `taxes`, optional `shippingHandling`, and `discounts`. Money values contain `value` and `currency`. A zero item-tax amount is distinct from a `null` amount, which means item tax is unavailable.
+Each invoice contains its `id`, `number`, `status`, `comments`, `items`, and `total`. Items include `id`, `productSku`, `productName`, `quantityInvoiced`, `productSalePrice`, nullable `taxAmount`, nullable `rowTotal`, and optional `discounts`. Totals include `subtotal`, `grandTotal`, `baseGrandTotal`, `taxes`, optional `shippingHandling`, and `discounts`. Money values contain `value` and `currency`. A zero item-tax amount is distinct from a `null` amount, which means item tax is unavailable.
 
 `rowTotal` maps to GraphQL `row_total`: the stored subtotal for that invoice line and invoiced quantity, excluding tax and before discounts, in the invoice's order/display currency. The storefront preserves the returned amount rather than multiplying unit price by quantity. A valid zero is formatted as money; null or missing values display an em dash without a calculated fallback. A backend that converts missing stored totals to zero cannot preserve that distinction for the storefront.
 
 The query requires a Storefront Compatibility (SCP) endpoint exposing `Invoice.status`, `InvoiceItemInterface.tax_amount`, and `InvoiceItemInterface.row_total`. Use SCP **4.7.22**, **4.8.34**, or **4.9.9**, or a later compatible patch on the corresponding release line. These versions add stored invoice-item row totals in addition to status and item tax. The earlier status/item-tax minimums, 4.7.21, 4.8.33, and 4.9.8, do not provide row-total support. Deploy the compatible schema before this drop-in update: older schemas reject the entire invoice query. See the [invoice data limitations](/dropins/order/containers/invoice-details/#current-data-limitations).
+
+The [Storefront Compatibility release notes](/releases/changelog/storefront-compatibility-package/) identify the row-total and item-tax additions.
 
 ### Verify invoice schema compatibility
 

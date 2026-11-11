@@ -26,6 +26,8 @@ The `InvoiceDetails` container displays one invoice associated with an order. It
 
 Before using either invoice container in an environment, [verify the deployed invoice schema](/dropins/order/functions/#verify-invoice-schema-compatibility). A backend change must be deployed to that environment; merging it alone is not enough.
 
+For the available prerelease and host setup requirements, see [Invoice Management setup](/dropins/order/quick-start/#invoice-management).
+
 ## Configurations
 
 The `InvoiceDetails` container provides the following configuration options:
@@ -75,7 +77,9 @@ The `InvoiceDetails` container provides the following configuration options:
 
 Provide `orderData` or receive an [`order/data`](/dropins/order/events/#orderdata-emits-and-listens) event from the existing Order initializer. The container fetches invoices for that order and matches `invoiceRef` against the invoice number or ID.
 
-The container shows a loader during retrieval, a not-found alert if the invoice is absent from the order, and a separate error alert if retrieval fails.
+The container shows a loader while waiting for order context or retrieving invoices, a not-found alert if the invoice is absent from the order, and a separate error alert when the invoice request rejects. A resolved GraphQL error response can instead produce a not-found state; see the [API error-handling limitation](/dropins/order/functions/#getorderinvoices). Host listeners for `order/error` can also redirect the customer before the alert is visible.
+
+The order date, payment methods, and addresses come from the supplied order context, not separate invoice-specific address or payment records. The back link is shown only when `routeInvoicesList` is supplied.
 
 The status is read from the selected invoice, not inferred from the parent order. Status styling is case-insensitive: Paid uses positive styling, Pending uses warning styling, and Canceled uses alert styling. Unrecognized statuses use neutral styling.
 
@@ -157,7 +161,31 @@ The renderer preserves the logo's aspect ratio within a maximum width of 36 mm a
 
 Missing or invalid logos do not reserve an empty logo column. An invalid logo produces a console warning, and PDF generation continues without the image.
 
+This fallback applies to image data that reaches the PDF renderer. If `getInvoicePdfBranding` throws or rejects while loading the logo, the download fails before PDF generation; the container does not retry without branding.
+
 To use a backend document service instead, supply `onDownloadPdf` and implement the download in that callback. Do not pass an empty callback: it disables the built-in download.
+
+### AEM storefront branding configuration
+
+The AEM `commerce-invoice-details` block supplies `getInvoicePdfBranding` from the effective `invoice-pdf-branding` storefront configuration. Add the following object to the existing `public.default` settings in your approved [storefront configuration source](/setup/configuration/commerce-configuration/). Merge it with the existing settings; do not replace the entire configuration.
+
+```json
+{
+  "invoice-pdf-branding": {
+    "logoUrl": "/media/merchant-logo.png",
+    "storeName": "Example Merchant",
+    "addressLines": ["123 Example Street", "Austin, TX 78701", "United States"]
+  }
+}
+```
+
+Replace the example merchant values and logo path with your own. The logo must exist at the configured URL. All fields are optional; omitting the configuration preserves the unbranded download.
+
+The block selects branding from the current page's effective storefront configuration, including root-specific overrides. It does not retrieve the historical store branding for the invoice. These settings are public browser data; do not include credentials or private information.
+
+The block loads the logo only when the customer requests a PDF, converts it to PNG, and passes the result to the renderer. Relative URLs resolve against the current page; a leading `/` makes the URL relative to the site root. External image servers must allow anonymous cross-origin resource sharing (CORS). Invalid configuration or a failed image load or conversion rejects the callback and logs an error instead of silently downloading an unbranded PDF.
+
+After changing shared configuration, follow [Confirm the loaded configuration](/setup/configuration/commerce-configuration/#confirm-the-loaded-configuration) to clear the browser's cached `config` entry and reload the published settings.
 
 ## Current data limitations
 
