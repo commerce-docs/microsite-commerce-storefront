@@ -313,6 +313,10 @@ export function generateSidebar() {
                   link: '/merchants/blocks/commerce-customer-information/',
                 },
                 {
+                  label: 'Customer Reviews',
+                  link: '/merchants/blocks/commerce-customer-reviews/',
+                },
+                {
                   label: 'Forgot Password',
                   link: '/merchants/blocks/commerce-forgot-password/',
                 },
@@ -944,6 +948,7 @@ export function generateSidebar() {
                     {
                       label: 'PaymentMethods', link: '/dropins/user-account/containers/payment-methods/',
                     },
+                    { label: 'ProductReviews', link: '/dropins/user-account/containers/product-reviews/' },
                     { label: 'SellerAssistedBuyingActivity', link: '/dropins/user-account/containers/seller-assisted-buying-activity/' },
                     { label: 'SellerAssistedBuyingSettings', link: '/dropins/user-account/containers/seller-assisted-buying-settings/' },
                   ],
