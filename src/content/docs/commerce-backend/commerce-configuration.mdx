@@ -214,7 +214,7 @@ Storefront drop-ins handle the catalog-model transition without code changes. Th
 
 The current configuration generator does not provide a separate Merchandising Services option for Adobe Commerce as a Cloud Service. If you use generated configuration, review its output and replace the catalog headers with the values below. Endpoint detection alone does not complete this setup.
 
-Use the following catalog configuration in `config.json` or your site's public configuration. Keep any other required settings, including the core GraphQL endpoint, from your approved environment configuration.
+Merge the following configuration fragment into `public.default` in `config.json` or your site's public configuration. This fragment is not a complete `config.json` file. Keep any other required settings, including the core GraphQL endpoint, from your approved environment configuration.
 
 ```json
 {
@@ -244,7 +244,7 @@ Keep these `AC-*` catalog headers in `headers.cs`. Do not add `Magento-*` catalo
 
 When `commerce-core-endpoint` is absent, the storefront also uses `commerce-endpoint` for core GraphQL requests. Leave `commerce-core-endpoint` unset only if the supplied endpoint supports both catalog and transactional operations. Otherwise, configure the separate core endpoint.
 
-Before using this configuration, confirm the `adobe-commerce-optimizer` flag and analytics values with the environment's integration owner. Do not copy the generated storefront services defaults without confirming these values.
+The `adobe-commerce-optimizer` flag controls whether recommendation requests can include the current product's price. Before using this configuration, confirm the flag and analytics values with the environment's integration owner. Do not copy the generated storefront services defaults without confirming these values.
 
 Customer-authenticated operations, such as a signed-in shopper's cart or order history, also need `Authorization: Bearer {{CUSTOMER_TOKEN}}`. Supply the current shopper's token dynamically with the request. Never save a customer token in public configuration. Guest cart creation does not require a customer token.
 
@@ -283,11 +283,13 @@ Adobe Commerce Optimizer uses different header naming conventions and requires C
 
 The analytics section contains store and environment metadata for tracking and reporting. The specific values depend on your Commerce environment type.
 
+For Adobe Commerce as a Cloud Service with Merchandising Services, use analytics values approved for your environment. Do not copy the storefront services or standalone Adobe Commerce Optimizer analytics template based only on the catalog header model.
+
 <Tabs>
 
-<TabItem label="Adobe Commerce (PaaS) / SaaS">
+<TabItem label="Adobe Commerce (PaaS) / storefront services">
 
-For Adobe Commerce PaaS and Adobe Commerce as a Cloud Service environments, use standard Commerce store and website identifiers from your Commerce Environment. You can obtain these values using a `storeConfig` query.
+For Adobe Commerce PaaS environments and Adobe Commerce as a Cloud Service with storefront services, use standard Commerce store and website identifiers from your Commerce environment. You can obtain these values using a `storeConfig` query.
 
 ```json
 {
@@ -539,11 +541,11 @@ This example shows the configuration for an Adobe Commerce PaaS environment, whi
 ```
 </TabItem>
 
-<TabItem label="Adobe Commerce as a Cloud Service (ACCS)">
+<TabItem label="Adobe Commerce as a Cloud Service (storefront services)">
 
-This example shows the configuration for Adobe Commerce as a Cloud Service. For ACCS you only need to set **`commerce-endpoint`** to your ACCS GraphQL URL; the same endpoint is used for catalog and core. This configuration is used on this site: https://main--boilerplate-accs--adobe-commerce.aem.live/
+This Adobe Commerce as a Cloud Service example uses storefront services and `Magento-*` catalog headers. It uses one GraphQL URL for catalog and core operations. Omit `commerce-core-endpoint` only when the supplied endpoint supports both. For Merchandising Services, use the [Merchandising Services configuration](#catalog-views-and-policies-context) and verify the catalog and core endpoints separately. This configuration is used on the <Link href="https://main--boilerplate-accs--adobe-commerce.aem.live/" text="storefront services demo site" />.
 
-```json title="ACCS config.json" showLineNumbers
+```json title="Adobe Commerce as a Cloud Service config.json" showLineNumbers
 {
   "public": {
     "default": {
