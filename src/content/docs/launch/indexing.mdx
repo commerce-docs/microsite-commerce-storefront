@@ -40,27 +40,27 @@ For [multi-store setups](/setup/configuration/multistore-setup/) or stores suppo
 
 - Verify a <Link href={"https://www.aem.live/developer/sitemap#specifying-the-primary-language-manually"} text={"correct hreflang setup"} />. You can validate using the <Link href={"https://technicalseo.com/tools/hreflang/"} text={"hreflang Tags Testing Tool"} />.
 
-- Verify that catalog GET request URLs include a `cb` query parameter derived from the [configured headers](/setup/configuration/commerce-configuration/#headers). In the storefront services context, these include `Magento-*` store headers. With [Catalog Views and Policies](/setup/configuration/commerce-configuration/#catalog-views-and-policies-context), they include `AC-View-ID` and any configured price book or policy headers. The header values do not need to appear as readable text in the URL.
+- Verify that catalog GET request URLs include a `cb` query parameter derived from the [configured headers](/setup/configuration/commerce-configuration/#headers). In the storefront services context, these include `Magento-*` store headers. With [Merchandising Services](/setup/configuration/commerce-configuration/#catalog-views-and-policies-context), they include `AC-View-ID` and any configured price book or policy headers. The header values do not need to appear as readable text in the URL.
 
   <Aside type="note" title="Catalog context in cache keys">
   A shared cache must distinguish requests for different stores or catalog views. The `cb` parameter gives those requests different URLs even when the GraphQL query is the same.
   </Aside>
 
-### Cache-busting Query Parameter
+### Cache-busting query parameter
 
-The <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/scripts/commerce.js" text="storefront catalog client" /> adds a cache-busting parameter when it builds the catalog endpoint URL.
-
-The hash uses the configured header values, not a fixed list of header names. It therefore includes `AC-*` headers without a separate implementation for Catalog Views and Policies.
+The <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/scripts/commerce.js" text="storefront catalog client" /> adds a cache-busting parameter named `cb` when it builds the catalog endpoint URL.
 
 The storefront builds the URL as follows:
 
-- Collect the merged `headers.all` and `headers.cs` values with `getHeaders('cs')`.
-- Create a short hash, five characters by default, from that header object.
-- Add the hash to the catalog URL as `cb`.
+- Collects the merged `headers.all` and `headers.cs` values with `getHeaders('cs')`.
+- Creates a short hash, five characters by default, from that header object.
+- Adds the hash to the catalog URL as `cb`.
 
-No additional cache-busting configuration is needed for either header model. After changing static configuration, [reload the configuration](/setup/configuration/commerce-configuration/#confirm-the-loaded-configuration) and inspect a new catalog request. Confirm that the request has the intended headers and a `cb` value for that context.
+The hash uses the configured header values, not a fixed list of header names. It therefore includes `AC-*` headers without a separate implementation for Merchandising Services. No additional cache-busting configuration is needed for either header model.
 
-This check concerns static storefront configuration. It does not establish that every runtime customer-context change rebuilds the endpoint URL.
+After changing static configuration, [reload the configuration](/setup/configuration/commerce-configuration/#confirm-the-loaded-configuration) and inspect a new catalog request. Confirm that the request has the intended headers and a `cb` value for that context.
+
+This check covers static storefront configuration. It does not confirm that the storefront rebuilds the endpoint URL whenever shopper context changes while the storefront is running.
 
 ### Redirects
 

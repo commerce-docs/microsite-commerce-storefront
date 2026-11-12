@@ -16,9 +16,9 @@ For a new project, follow the connection task below. If Site Creator or your tea
 
 ## Connect your storefront to Commerce
 
-Before changing settings, confirm your backend requirements in [Backend options](/get-started/backends/). Work with the Commerce administrator or integration owner to gather:
+Before changing settings, confirm your backend requirements in [Backend options](/get-started/backends/). To gather the following, work with the Commerce administrator or integration owner:
 
-- The approved development environment and the site or local preview where you will test it.
+- The approved development environment and the site or local preview where you test it.
 - The GraphQL API address for catalog requests.
 - The API address for cart, checkout, and account operations, when those features are required.
 - The store or catalog header values that identify the correct data.
@@ -58,7 +58,7 @@ A repository `config.json` takes precedence over the site's public configuration
 
 ## Confirm the loaded configuration
 
-Check the same local or preview origin where you will test the storefront. An origin is the address before the page path. The browser can retain an older configuration in session storage even after the source changes.
+Check the same local or preview origin where you test the storefront. An origin is the address before the page path. The browser can retain an older configuration in session storage even after the source changes.
 
 <Steps>
 
@@ -119,7 +119,7 @@ The endpoints properties define the GraphQL API endpoints for your Commerce back
 
 - **`commerce-core-endpoint`** (read/write) — Core GraphQL endpoint for queries and mutations. This endpoint handles all write operations and some read operations. See <Link href="https://developer.adobe.com/commerce/webapi/reference/graphql/latest/" text="Adobe Commerce GraphQL API" /> for details.
 
-- **`commerce-endpoint`** (catalog reads): The GraphQL endpoint for Catalog Service and storefront services, or for Merchandising Services powered by Catalog Views and Policies. The selected backend determines the supported catalog API. For details, see the following documentation:
+- **`commerce-endpoint`** (catalog reads): The GraphQL endpoint for Catalog Service and storefront services, or for Merchandising Services. The selected backend determines the supported catalog API. For details, see the following documentation:
   - For Adobe Commerce as a Cloud Service, see the <Link href="https://experienceleague.adobe.com/en/docs/commerce/catalog-service/installation#endpoints" text="Catalog Service Guide" />.
    - For Adobe Commerce Optimizer, see the <Link href="https://developer.adobe.com/commerce/services/optimizer/merchandising-services/using-the-api/#base-url" text="Merchandising Services Developer Guide" />.
 
@@ -199,11 +199,11 @@ Environments using Catalog Service and the storefront services use `Magento-*` c
 
 #### Catalog Views and Policies context
 
-Adobe Commerce as a Cloud Service with Merchandising Services powered by Catalog Views and Policies uses the composable catalog data model (CCDM). Catalog views select the product data available to a storefront, and policies filter that data. This configuration uses `AC-*` catalog headers instead of `Magento-*` headers.
+Adobe Commerce as a Cloud Service with Merchandising Services powered by Catalog Views and Policies uses the composable catalog data model (CCDM). Catalog views select the product data available to a storefront, and policies filter that data. The Merchandising Services configuration uses `AC-*` catalog headers instead of `Magento-*` headers.
+
+The current configuration generator does not provide a separate Merchandising Services option for Adobe Commerce as a Cloud Service. If you use generated configuration, review its output and replace the catalog headers with the values below. Endpoint detection alone does not complete this setup.
 
 Use the following catalog configuration in `config.json` or your site's public configuration. Keep any other required settings, including the core GraphQL endpoint, from your approved environment configuration.
-
-The current configuration generator does not provide a separate Catalog Views and Policies option for Adobe Commerce as a Cloud Service. Review its output and replace the catalog headers with the values below. Do not assume that detecting the endpoint completes this setup.
 
 ```json
 {
@@ -227,11 +227,13 @@ Replace the placeholders with values from your environment:
 - `headers.all.Store`: The store view code for core GraphQL requests. It is optional for the default store view when no other store selection is present. Set it explicitly for another store view.
 - `headers.cs.AC-View-ID`: Required. Replace `{{CATALOG_VIEW_ID}}` with the catalog view UUID. If Site Creator generated the configuration, add this value if it is missing.
 - `headers.cs.AC-Price-Book-ID`: Optional. Replace `{{PRICE_BOOK_ID}}` with the price book ID when selecting a specific price book, or remove this entry.
-- `headers.cs.AC-Policy-{{POLICY_TRIGGER_NAME}}`: Optional. The header name must match the policy's configured HTTP-header trigger. Replace `{{POLICY_TRIGGER_NAME}}` with the part after `AC-Policy-` and `{{POLICY_VALUE}}` with the trigger value, or remove this entry. For example, the trigger `AC-Policy-Brand` uses that same header name.
+- `headers.cs.AC-Policy-{{POLICY_TRIGGER_NAME}}`: Optional. The header name must match the policy's configured HTTP header trigger. Replace `{{POLICY_TRIGGER_NAME}}` with the part after `AC-Policy-` and `{{POLICY_VALUE}}` with the trigger value, or remove this entry. For example, the trigger `AC-Policy-Brand` uses that same header name.
 
-Keep these `AC-*` catalog headers in `headers.cs`; do not add `Magento-*` catalog headers to this scope. For header details, see the <Link href="https://developer.adobe.com/commerce/services/optimizer/merchandising-services/using-the-api/#headers" text="Merchandising API headers reference" />.
+Keep these `AC-*` catalog headers in `headers.cs`. Do not add `Magento-*` catalog headers to this scope. For header details, see the <Link href="https://developer.adobe.com/commerce/services/optimizer/merchandising-services/using-the-api/#headers" text="Merchandising API headers reference" />.
 
-The storefront uses `commerce-endpoint` for core GraphQL as well when `commerce-core-endpoint` is absent. Leave the latter unset only if the supplied endpoint supports both catalog and transactional operations; otherwise, configure the separate core endpoint. Confirm the `adobe-commerce-optimizer` flag and analytics values with the environment's integration owner rather than copying the generated storefront services defaults.
+When `commerce-core-endpoint` is absent, the storefront also uses `commerce-endpoint` for core GraphQL requests. Leave `commerce-core-endpoint` unset only if the supplied endpoint supports both catalog and transactional operations. Otherwise, configure the separate core endpoint.
+
+Before using this configuration, confirm the `adobe-commerce-optimizer` flag and analytics values with the environment's integration owner. Do not copy the generated storefront services defaults without confirming these values.
 
 Customer-authenticated operations, such as a signed-in shopper's cart or order history, also need `Authorization: Bearer {{CUSTOMER_TOKEN}}`. Supply the current shopper's token dynamically with the request. Never save a customer token in public configuration. Guest cart creation does not require a customer token.
 
@@ -528,7 +530,7 @@ This example shows the configuration for an Adobe Commerce PaaS environment, whi
 
 <TabItem label="Adobe Commerce as a Cloud Service (ACCS)">
 
-This example shows the configuration for Adobe Commerce as a Cloud Service (ACCS). For ACCS you only need to set **`commerce-endpoint`** to your ACCS GraphQL URL; the same endpoint is used for catalog and core. This configuration is used on this site: https://main--boilerplate-accs--adobe-commerce.aem.live/
+This example shows the configuration for Adobe Commerce as a Cloud Service. For ACCS you only need to set **`commerce-endpoint`** to your ACCS GraphQL URL; the same endpoint is used for catalog and core. This configuration is used on this site: https://main--boilerplate-accs--adobe-commerce.aem.live/
 
 ```json title="ACCS config.json" showLineNumbers
 {
@@ -572,9 +574,9 @@ This example shows the configuration for Adobe Commerce as a Cloud Service (ACCS
 
 </TabItem>
 
-<TabItem label="Adobe Commerce Optimizer (ACO)">
+<TabItem label="Adobe Commerce Optimizer">
 
-This example shows the configuration for Adobe Commerce Optimizer (ACO), which uses different header naming conventions and includes ACO-specific settings. For ACO, set commerce-endpoint (ACO GraphQL URL for catalog) at a minimum. Set commerce-core-endpoint (your core endpoint—PaaS or your own Adobe Commerce hosted environment) to enable transactional or other core-related functionality. Include "adobe-commerce-optimizer": true. This example is from https://main--boilerplate-aco--adobe-commerce.aem.live/ and does not include a core endpoint.
+This example shows the configuration for Adobe Commerce Optimizer, which uses different header naming conventions and includes ACO-specific settings. For Adobe Commerce Optimizer, set commerce-endpoint (Adobe Commerce Optimizer GraphQL URL for catalog) at a minimum. Set commerce-core-endpoint (your core endpoint—PaaS or your own Adobe Commerce hosted environment) to enable transactional or other core-related functionality. Include "adobe-commerce-optimizer": true. This example is from https://main--boilerplate-aco--adobe-commerce.aem.live/ and does not include a core endpoint.
 
 ```json title="ACO config.json" showLineNumbers
 {
@@ -646,7 +648,7 @@ printf '\n/config.json\n' >> "$(git rev-parse --git-path info/exclude)"
 git check-ignore -v config.json
 ```
 
-The last command should show the `/config.json` rule and the local exclude file that contains it. This applies only to an untracked personal override, not a configuration that the team intentionally tracks.
+The last command shows the `/config.json` rule and the local exclude file that contains it. This applies only to an untracked personal override, not a configuration that the team intentionally tracks.
 
 ### Branch-based configuration
 
@@ -900,7 +902,7 @@ These helpers read configured headers, not every header that a running shopping 
 
 ### Access analytics and other configuration
 
-`getConfigValue` also accepts dot-separated paths such as `analytics.store-url`, `analytics.base-currency-code`, `analytics.environment`, and `plugins.picker.rootCategory`. Use the path for the setting your custom code actually needs.
+`getConfigValue` also accepts dot-separated paths such as `analytics.store-url`, `analytics.base-currency-code`, `analytics.environment`, and `plugins.picker.rootCategory`. Use the path for the setting your custom code needs.
 
 The helper reads configuration; it does not send analytics events or enable a plugin. Follow the feature's setup instructions for those behaviors.
 
