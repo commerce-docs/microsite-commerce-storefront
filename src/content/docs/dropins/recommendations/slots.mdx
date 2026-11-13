@@ -18,7 +18,7 @@ The Recommendations drop-in exposes slots for customizing specific UI sections. 
 
 | Container | Slots |
 |-----------|-------|
-| [`ProductList`](#productlist-slots) | `Heading`, `Footer`, `Title`, `Sku`, `Price`, `Thumbnail` |
+| [`ProductList`](#productlist-slots) | `Heading`, `Footer`, `Title`, `Sku`, `Price`, `Rating`, `Thumbnail` |
 
 </TableWrapper>
 
@@ -44,6 +44,9 @@ interface ProductListProps {
     item: Item;
     }>;
     Price?: SlotProps<{
+    item: Item;
+    }>;
+    Rating?: SlotProps<{
     item: Item;
     }>;
     Thumbnail?: SlotProps<{
@@ -158,6 +161,30 @@ await provider.render(ProductList, {
       // Your custom implementation
       const element = document.createElement('div');
       element.innerText = 'Custom Price';
+      ctx.appendChild(element);
+    }
+  }
+})(block);
+```
+
+### Rating slot
+
+The Rating slot allows you to customize the star rating on each recommendation card. It renders only when `showRatings` is `true` and the item has a rating and at least one approved review. The slot context provides `item.rating` (0-5) and `item.reviewCount`.
+
+#### Example
+
+```js
+import { render as provider } from '@dropins/storefront-recommendations/render.js';
+import { ProductList } from '@dropins/storefront-recommendations/containers/ProductList.js';
+
+await provider.render(ProductList, {
+  // The Rating slot runs only when ratings are turned on.
+  showRatings: true,
+  slots: {
+    Rating: (ctx) => {
+      // Adds the average value after the default stars, for example "4.5 out of 5".
+      const element = document.createElement('span');
+      element.textContent = `${ctx.item.rating.toFixed(1)} out of 5`;
       ctx.appendChild(element);
     }
   }
