@@ -168,11 +168,13 @@ jobs:
       - name: Replace only preview2
         if: ${{ needs.build-preview2.result == 'success' }}
         run: rsync -a --checksum --delete dist-preview2/ combined/preview2/
-      - name: Verify both previews are present before publishing
+      - name: Verify the previews being published
+        env:
+          PREVIEW2_RESULT: ${{ needs.build-preview2.result }}
         run: |
           test -f combined/index.html
-          if [[ ! -f combined/preview2/index.html ]]; then
-            echo '::error::No saved second preview. Run either workflow manually with its source branch to initialize both previews.'
+          if [[ "$PREVIEW2_RESULT" == success || -d combined/preview2 ]] && [[ ! -f combined/preview2/index.html ]]; then
+            echo '::error::The second-preview output is incomplete; refusing to publish it.'
             exit 1
           fi
       - name: Upload combined static files as artifact
