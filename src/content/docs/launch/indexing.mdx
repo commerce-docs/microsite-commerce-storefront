@@ -40,34 +40,27 @@ For [multi-store setups](/setup/configuration/multistore-setup/) or stores suppo
 
 - Verify a <Link href={"https://www.aem.live/developer/sitemap#specifying-the-primary-language-manually"} text={"correct hreflang setup"} />. You can validate using the <Link href={"https://technicalseo.com/tools/hreflang/"} text={"hreflang Tags Testing Tool"} />.
 
-- Verify that the `Magento-Store-Code` header value defined in your [storefront configuration](/setup/configuration/commerce-configuration/) is part of the URL for every Catalog Service or Live Search request.
+- Verify that catalog GET request URLs include a `cb` query parameter derived from the [configured headers](/setup/configuration/commerce-configuration/#headers). In the storefront services context, these include `Magento-*` store headers. With [Merchandising Services](/setup/configuration/commerce-configuration/#catalog-views-and-policies-context), they include `AC-View-ID` and any configured price book or policy headers. The header values do not need to appear as readable text in the URL.
 
-  <Aside type="note" title="Store code in URLs">
-  This is required because Google caches responses without considering headers. Not adding the store code to the URL might lead to Google indexing the wrong data. You can ensure this by adding a cache-busting query parameter.
+  <Aside type="note" title="Catalog context in cache keys">
+  A shared cache must distinguish requests for different stores or catalog views. The `cb` parameter gives those requests different URLs even when the GraphQL query is the same.
   </Aside>
 
-### Cache-busting Query Parameter
+### Cache-busting query parameter
 
-The <Link href={"https://github.com/hlxsites/aem-boilerplate-commerce/tree/main"} text={"Commerce boilerplate template"} /> includes a mechanism to prevent stale data from being served. It does this by adding a dynamic cache-busting parameter to Catalog Service requests.
+The <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/blob/main/scripts/commerce.js" text="storefront catalog client" /> adds a cache-busting parameter named `cb` when it builds the catalog endpoint URL.
 
-When your configuration headers change, the browser fetches fresh data instead of using cached responses. This helps keep your storefront content up to date.
+The storefront builds the URL as follows:
 
-Here's how the boilerplate handles it:
+- Collects the merged `headers.all` and `headers.cs` values with `getHeaders('cs')`.
+- Creates a short hash, five characters by default, from that header object.
+- Adds the hash to the catalog URL as `cb`.
 
-1. It collects headers from your [storefront configuration](/setup/configuration/commerce-configuration/)—`public.headers.all.*` and `public.headers.cs.*`
-1. It creates a short hash (5 characters by default) based on those headers.
-1. It adds the hash to the Catalog Service URL using the format `?cb=<hash>`.
-1. When the headers change, it generates a new hash automatically.
+The hash uses the configured header values, not a fixed list of header names. It therefore includes `AC-*` headers without a separate implementation for Merchandising Services. No additional cache-busting configuration is needed for either header model.
 
-This ensures that any change—like a new store code or view code—triggers a fresh fetch and bypasses CDN-cached GET requests to the Catalog Service.
+After changing static configuration, [reload the configuration](/setup/configuration/commerce-configuration/#confirm-the-loaded-configuration) and inspect a new catalog request. Confirm that the request has the intended headers and a `cb` value for that context.
 
-You don't need to enable or configure anything. The Commerce boilerplate handles everything automatically when:
-
-- The PDP drop-in component initializes.
-- Any component sends a request to the Catalog Service.
-- Your configuration headers update.
-
-The boilerplate always manages the `cb` parameter for you.
+This check covers static storefront configuration. It does not confirm that the storefront rebuilds the endpoint URL whenever shopper context changes while the storefront is running.
 
 ### Redirects
 
