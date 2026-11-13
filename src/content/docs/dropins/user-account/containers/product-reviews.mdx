@@ -1,0 +1,84 @@
+---
+title: ProductReviews
+description: Learn how to display a shopper's approved review history, read-only review details, and a recent reviews summary with the User Account drop-in.
+---
+
+import TableWrapper from '@components/TableWrapper.astro';
+
+The `ProductReviews` container shows the signed-in shopper's approved product reviews in My Account. Shoppers can browse their reviews and open read-only details, or see a compact summary on the account landing page.
+
+This container belongs to the User Account drop-in. It loads customer review history through [`getCustomerReviews`](/dropins/user-account/functions/#getcustomerreviews) and works without the Ratings and Reviews drop-in. The public product review list and review submission form remain separate features.
+
+## Review views
+
+- *Full view*: Shows a review list, page controls, and a reviews-per-page selector. **See Details** opens the selected review on the same page.
+- *Review details*: Shows the review title, text, date, product information, and the shopper's ratings for each rating category. **Back to My Product Reviews** returns to the list.
+- *Minified view*: Shows a *Recent reviews* summary with three reviews by default. **View all reviews** links to the full history. This view has no page controls or **See Details** actions.
+
+The average rating belongs to the individual review, not the product's combined rating. Pending and rejected reviews are excluded before the backend calculates pages. Shoppers cannot edit or delete reviews in this container.
+
+## Container properties
+
+All properties are optional. Standard HTML attributes are also supported.
+
+<TableWrapper nowrap={[0]}>
+
+| Property | Type | Description |
+| --- | --- | --- |
+| `pageSize` | `number` | Initial number of reviews per page. Defaults to `10`, or `3` when `minifiedView` is `true`. Must be a positive integer. The storefront block limits authored values to `1` through `50`. |
+| `enabled` | `boolean` | Controls review availability and loading. Defaults to `true`. Pass the `productReviewsEnabled` value returned by the Account `getStoreConfig` function. |
+| `authenticated` | `boolean` | Controls whether customer reviews can load. Defaults to `true`. Pass the current authentication state from the storefront. This property does not sign a shopper in or redirect them. |
+| `contextKey` | `string` | Identifies the current customer context. Defaults to an empty string. Change it when the customer context changes to clear old rows and selected details and cancel outstanding requests. |
+| `withHeader` | `boolean` | Shows the heading and, in full view, its divider. Defaults to `true`. The full history uses a level-one heading, while the minified summary uses a level-two heading. |
+| `minifiedView` | `boolean` | Shows the compact account summary instead of the full history. Defaults to `false`. |
+| `routeReviewsList` | `() => string` | Returns the destination for **View all reviews**. Supply the route to the authored reviews page when using the minified view. |
+| `routeProduct` | `(product: CustomerReviewProductModel) => string \| undefined` | Returns a product page URL. Return `undefined` when no product link is available. |
+| `slots` | `ProductReviewsProps['slots']` | Customizes review ratings or the selected review details. See [Slots](#slots). |
+
+</TableWrapper>
+
+## Authentication and availability
+
+The storefront controls sign-in, merchant settings, and customer changes:
+
+- Pass the current authentication state and `getStoreConfig().productReviewsEnabled` to the container. Neither property checks the store or authentication state automatically.
+- Redirect signed-out shoppers to the storefront login page before showing account content.
+- Update `authenticated` and change `contextKey` when authentication changes. This prevents a previous customer's rows or selected details from remaining in the view.
+- Use a backend that supports `customer.reviews(filter: { status: [APPROVED] })`. An unsupported filter produces an error, not an unfiltered review list.
+
+The [Commerce Customer Reviews block](/merchants/blocks/commerce-customer-reviews/) handles these connections for an authored account page. Customize that block rather than creating a second customer token or connecting account history to the public `reviews/*` events.
+
+## Loading and details
+
+The container requests the first page itself. Page controls and the page-size selector load subsequent results. **Try again** retries a failed request.
+
+- *Empty history*: The container shows *You have no approved reviews on this page.* A shopper with only pending or rejected reviews sees this state too.
+- *Unavailable reviews*: When `enabled` is `false`, the container shows *Product reviews are unavailable.* and does not request history.
+- *Signed-out shopper*: When `authenticated` is `false`, the container shows *Sign in to view your product reviews.* and does not request history.
+- *Failed request*: The container shows *Unable to load your reviews.* with **Try again**.
+- *Missing product*: The review remains visible even when its product is unavailable. Product links are optional.
+- *Unrated review*: A review without rating votes shows *Not rated*.
+
+Details use the selected review already loaded in the list. There is no separate details request, persistent review selection, or details URL. Refreshing the page returns to the list.
+
+## Slots
+
+Both slots receive the selected review data directly through the slot context.
+
+<TableWrapper nowrap={[0]}>
+
+| Slot | Context | Purpose |
+| --- | --- | --- |
+| `Rating` | `{ review: CustomerReviewModel }` | Customizes the rating shown for a review. |
+| `ReviewDetails` | `{ review: CustomerReviewModel; productUrl?: string }` | Customizes the selected review details. The default details already include the shopper's ratings and review text. |
+
+</TableWrapper>
+
+Use the default details when no customization is needed. A `ReviewDetails` slot is not required to connect another drop-in.
+
+## More help on this topic
+
+- [User Account initialization](/dropins/user-account/initialization/)
+- [Customer review API and models](/dropins/user-account/functions/#getcustomerreviews)
+- [Product review labels](/dropins/user-account/dictionary/#product-review-history)
+- [Ratings and Reviews overview](/dropins/ratings-reviews/)

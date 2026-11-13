@@ -12,7 +12,9 @@ tableOfContents:
 import TableWrapper from '@components/TableWrapper.astro';
 import { Aside } from '@astrojs/starlight/components';
 
-The Product Discovery drop-in exposes slots for customizing specific UI sections. Use slots to replace or extend container components. For default properties available to all slots, see [Extending drop-in components](/dropins/all/extending/).
+Use Product Discovery slots to add content to a container or replace part of its UI. For example, you can change a filter label or add a star rating below a product name. Each slot receives a context object, `ctx`, with data and methods for changing its content. For methods shared by all slots, see [Extending drop-in components](/dropins/all/extending/).
+
+The basic examples append a text label to show where each slot appears. They keep the default slot content. Replace the sample text with your own content. In each example, `block` is the element passed to your storefront block's `decorate` function. Add the code to your existing `provider.render()` call rather than rendering the same container twice.
 
 <TableWrapper nowrap={[0]}>
 
@@ -23,14 +25,13 @@ The Product Discovery drop-in exposes slots for customizing specific UI sections
 
 </TableWrapper>
 
-<Aside type="tip" title="Slot usage best practice">
-Do not use context methods inside other context methods (for example, `appendChild()` inside `onChange()`). See [Slots best practices](/dropins/all/slots/#best-practice-for-dynamic-slot-content) for details and examples.
+<Aside type="tip" title="Update slot content safely">
+Create an element and add it with `ctx.appendChild()` when the slot mounts. To update that element inside `ctx.onChange()`, use standard DOM methods instead of calling slot methods again. See [Slots best practices](/dropins/all/slots/#best-practice-for-dynamic-slot-content) for an example.
 </Aside>
-
 
 ## Facets slots
 
-The slots for the Facets container allow you to customize its appearance and behavior.
+The `Facets` container displays search filters, such as color and price. Use its slots to customize a filter group, an individual option, or the selected filters.
 
 ```typescript
 interface FacetsProps {
@@ -47,18 +48,18 @@ interface FacetsProps {
 
 ### Facet slot
 
-The Facet slot allows you to customize the facet section of the Facets container.
+Use `Facet` to customize one filter group, including its heading and options. `ctx.data` contains the group's `SearchFacet` data.
 
 #### Example
 
-```js
+```js title="blocks/product-list-page/product-list-page.js"
 import { render as provider } from '@dropins/storefront-product-discovery/render.js';
 import { Facets } from '@dropins/storefront-product-discovery/containers/Facets.js';
 
 await provider.render(Facets, {
   slots: {
     Facet: (ctx) => {
-      // Your custom implementation
+      // Keep the existing filter controls and append content after them.
       const element = document.createElement('div');
       element.innerText = 'Custom Facet';
       ctx.appendChild(element);
@@ -69,18 +70,18 @@ await provider.render(Facets, {
 
 ### FacetHeading slot
 
-The `FacetHeading` slot allows you to customize the heading of each facet group in the Facets container.
+Use `FacetHeading` to customize each filter group's heading. `ctx.data` contains the group's `SearchFacet` data, including its title.
 
 #### Example
 
-```js
+```js title="blocks/product-list-page/product-list-page.js"
 import { render as provider } from '@dropins/storefront-product-discovery/render.js';
 import { Facets } from '@dropins/storefront-product-discovery/containers/Facets.js';
 
 await provider.render(Facets, {
   slots: {
     FacetHeading: (ctx) => {
-      // Your custom implementation
+      // Add content without replacing the default filter heading.
       const element = document.createElement('div');
       element.innerText = 'Custom FacetHeading';
       ctx.appendChild(element);
@@ -91,18 +92,18 @@ await provider.render(Facets, {
 
 ### SelectedFacets slot
 
-The `SelectedFacets` slot allows you to customize the selected facets section of the Facets container.
+Use `SelectedFacets` to customize the selected filters section. `ctx.data` contains a `SearchFacet[]` array of groups with selected options.
 
 #### Example
 
-```js
+```js title="blocks/product-list-page/product-list-page.js"
 import { render as provider } from '@dropins/storefront-product-discovery/render.js';
 import { Facets } from '@dropins/storefront-product-discovery/containers/Facets.js';
 
 await provider.render(Facets, {
   slots: {
     SelectedFacets: (ctx) => {
-      // Your custom implementation
+      // Keep the selected-filter controls and append your own content.
       const element = document.createElement('div');
       element.innerText = 'Custom SelectedFacets';
       ctx.appendChild(element);
@@ -113,18 +114,18 @@ await provider.render(Facets, {
 
 ### Facets slot
 
-The Facets slot allows you to customize the facets section of the Facets container.
+Use `Facets` to customize the full list of filter groups. Unlike `Facet`, which receives one group, this slot receives the complete `SearchFacet[]` array in `ctx.data`.
 
 #### Example
 
-```js
+```js title="blocks/product-list-page/product-list-page.js"
 import { render as provider } from '@dropins/storefront-product-discovery/render.js';
 import { Facets } from '@dropins/storefront-product-discovery/containers/Facets.js';
 
 await provider.render(Facets, {
   slots: {
     Facets: (ctx) => {
-      // Your custom implementation
+      // Append content after the list without replacing its filter groups.
       const element = document.createElement('div');
       element.innerText = 'Custom Facets';
       ctx.appendChild(element);
@@ -135,18 +136,18 @@ await provider.render(Facets, {
 
 ### FacetBucket slot
 
-The `FacetBucket` slot allows you to customize the facet bucket section of the Facets container.
+Use `FacetBucket` to customize one filter option, such as a color or price range. A bucket is an option within a filter group. `ctx.data` contains its `FacetBucket` data. This slot includes the option's control and label.
 
 #### Example
 
-```js
+```js title="blocks/product-list-page/product-list-page.js"
 import { render as provider } from '@dropins/storefront-product-discovery/render.js';
 import { Facets } from '@dropins/storefront-product-discovery/containers/Facets.js';
 
 await provider.render(Facets, {
   slots: {
     FacetBucket: (ctx) => {
-      // Your custom implementation
+      // Add content while keeping the option's existing selection control.
       const element = document.createElement('div');
       element.innerText = 'Custom FacetBucket';
       ctx.appendChild(element);
@@ -157,18 +158,18 @@ await provider.render(Facets, {
 
 ### FacetBucketLabel slot
 
-The `FacetBucketLabel` slot allows you to customize the facet bucket label section of the Facets container.
+Use `FacetBucketLabel` to customize an option's label without replacing its selection control. `ctx.data` contains the option's `FacetBucket` data.
 
 #### Example
 
-```js
+```js title="blocks/product-list-page/product-list-page.js"
 import { render as provider } from '@dropins/storefront-product-discovery/render.js';
 import { Facets } from '@dropins/storefront-product-discovery/containers/Facets.js';
 
 await provider.render(Facets, {
   slots: {
     FacetBucketLabel: (ctx) => {
-      // Your custom implementation
+      // Add content to the label without replacing the selection control.
       const element = document.createElement('div');
       element.innerText = 'Custom FacetBucketLabel';
       ctx.appendChild(element);
@@ -179,9 +180,16 @@ await provider.render(Facets, {
 
 ## SearchResults slots
 
-The slots for the `SearchResults` container allow you to customize its appearance and behavior.
+Use `SearchResults` slots to customize product cards, content above or below the results, and messages when no results are available.
+
+The product card slots share `SlotDefaultContext`. Read the current product from `ctx.product` and the search parameters from `ctx.variables`. `ProductImage` also provides `ctx.defaultImageProps` with the default image settings. `Header` and `Footer` receive the full product array in `ctx.products` instead of a single product.
 
 ```typescript
+type SlotDefaultContext = {
+  product: Product;
+  variables: SearchVariables | null;
+};
+
 interface SearchResultsProps {
   slots?: {
     ProductActions?: SlotProps<SlotDefaultContext>;
@@ -197,18 +205,18 @@ interface SearchResultsProps {
 
 ### ProductActions slot
 
-The `ProductActions` slot allows you to customize the product actions section of the `SearchResults` container.
+Use `ProductActions` to add actions to each product card. `ctx.product` contains the product for that card.
 
 #### Example
 
-```js
+```js title="blocks/product-list-page/product-list-page.js"
 import { render as provider } from '@dropins/storefront-product-discovery/render.js';
 import { SearchResults } from '@dropins/storefront-product-discovery/containers/SearchResults.js';
 
 await provider.render(SearchResults, {
   slots: {
     ProductActions: (ctx) => {
-      // Your custom implementation
+      // Add content to the card's actions area for the current product.
       const element = document.createElement('div');
       element.innerText = 'Custom ProductActions';
       ctx.appendChild(element);
@@ -219,18 +227,18 @@ await provider.render(SearchResults, {
 
 ### ProductPrice slot
 
-The `ProductPrice` slot allows you to customize the product price section of the `SearchResults` container.
+Use `ProductPrice` to customize the price section of each product card. `ctx.product` contains the current product. The example keeps the default price and appends a text label.
 
 #### Example
 
-```js
+```js title="blocks/product-list-page/product-list-page.js"
 import { render as provider } from '@dropins/storefront-product-discovery/render.js';
 import { SearchResults } from '@dropins/storefront-product-discovery/containers/SearchResults.js';
 
 await provider.render(SearchResults, {
   slots: {
     ProductPrice: (ctx) => {
-      // Your custom implementation
+      // Keep the default price and append content after it.
       const element = document.createElement('div');
       element.innerText = 'Custom ProductPrice';
       ctx.appendChild(element);
@@ -241,18 +249,18 @@ await provider.render(SearchResults, {
 
 ### ProductName slot
 
-The `ProductName` slot allows you to customize the product name section of the `SearchResults` container.
+Use `ProductName` to customize the name section of each product card. `ctx.product` contains the current product. Append content to keep the default name, as in the star rating example below.
 
 #### Example
 
-```js
+```js title="blocks/product-list-page/product-list-page.js"
 import { render as provider } from '@dropins/storefront-product-discovery/render.js';
 import { SearchResults } from '@dropins/storefront-product-discovery/containers/SearchResults.js';
 
 await provider.render(SearchResults, {
   slots: {
     ProductName: (ctx) => {
-      // Your custom implementation
+      // Keep the default product name and append content after it.
       const element = document.createElement('div');
       element.innerText = 'Custom ProductName';
       ctx.appendChild(element);
@@ -261,20 +269,97 @@ await provider.render(SearchResults, {
 })(block);
 ```
 
+### Show star ratings on product cards
+
+Use the `ProductName` slot to add an average star rating and approved review count below each product name. The following example renders the rating with the SDK `StarRating` component, with text such as *4.5 (12)*. This is a customization, not behavior included in the default product listing block.
+
+<Aside type="note" title="SDK requirement">
+Use this example only with an SDK build that exports `StarRating` from `@dropins/tools/components.js`.
+</Aside>
+
+The rating comes from two Catalog Service product attributes:
+
+- `ac_rating_summary`: The average rating on a scale from `0` to `100`. Divide it by 20 to get a rating from `0` to `5` stars.
+- `ac_review_count`: The number of approved reviews.
+
+Both attributes must be enabled for product listings. This setting is off by default. If cards show no ratings, follow [Catalog attributes](/dropins/ratings-reviews/#catalog-attributes) to enable it. For how review data reaches the catalog, see the [Ratings and Reviews overview](/dropins/ratings-reviews/#how-it-works).
+
+```js title="blocks/product-list-page/product-list-page.js"
+import { render as provider } from '@dropins/storefront-product-discovery/render.js';
+import SearchResults from '@dropins/storefront-product-discovery/containers/SearchResults.js';
+import { StarRating, provider as UI } from '@dropins/tools/components.js';
+
+// ac_rating_summary is a 0-100 percentage; products without ac_review_count get no rating.
+const getReviewSummary = (product) => {
+  const getValue = (name) => product.attributes?.find((attr) => attr.name === name)?.value;
+  const reviewCount = Number.parseInt(getValue('ac_review_count'), 10);
+  if (!Number.isSafeInteger(reviewCount) || reviewCount < 0) return null;
+
+  // Converts the percentage to a 0-5 star value and keeps it in range.
+  const rating = Math.min(Math.max(Number(getValue('ac_rating_summary')) / 20 || 0, 0), 5);
+  const $rating = document.createElement('div');
+  $rating.className = 'product-discovery-product-rating';
+  // Renders, for example, five stars followed by "4.5 (12)".
+  UI.render(StarRating, {
+    rating,
+    reviewCount,
+    showCount: true,
+    valueDisplay: 'value',
+    countDisplay: 'parentheses',
+  })($rating);
+  return $rating;
+};
+
+await provider.render(SearchResults, {
+  slots: {
+    ProductName: (ctx) => {
+      const $rating = getReviewSummary(ctx.product);
+      // Keeps the default product name and adds the rating after it.
+      if ($rating) ctx.appendChild($rating);
+    },
+  },
+})(block);
+```
+
+The example:
+
+- Reads the rating attributes from `ctx.product`.
+- Converts the average rating to a value from `0` to `5` and keeps it within that range.
+- Keeps the default product name and appends the rating after it.
+
+Products without a valid `ac_review_count` show no rating. A product whose count is `0` shows the *No reviews* label instead of a numeric rating and count. To hide ratings for those products too, return `null` when `reviewCount` is less than `1`.
+
+Add these rules to `blocks/product-list-page/product-list-page.css` to size the stars for product cards:
+
+```css title="blocks/product-list-page/product-list-page.css"
+/* Adds space between the product name and the rating. */
+.block.product-list-page .product-discovery-product-rating {
+  margin-block-start: var(--spacing-xxsmall);
+}
+
+/* Uses smaller stars on product cards. */
+.block.product-list-page .product-discovery-product-rating .dropin-star-rating__star svg {
+  height: 16px;
+  width: 16px;
+}
+```
+
+The first rule adds space above the rating. The second sizes the star icons to 16 pixels.
+
 ### ProductImage slot
 
-The `ProductImage` slot allows you to customize the product image section of the `SearchResults` container.
+Use `ProductImage` to customize each product card's image. `ctx.product` contains the current product, and `ctx.defaultImageProps` contains the default image settings. The example keeps the default image and appends a text label.
 
 #### Example
 
-```js
+```js title="blocks/product-list-page/product-list-page.js"
 import { render as provider } from '@dropins/storefront-product-discovery/render.js';
 import { SearchResults } from '@dropins/storefront-product-discovery/containers/SearchResults.js';
 
 await provider.render(SearchResults, {
   slots: {
     ProductImage: (ctx) => {
-      // Your custom implementation
+      // Keep the default product image and append content after it.
       const element = document.createElement('div');
       element.innerText = 'Custom ProductImage';
       ctx.appendChild(element);
@@ -285,18 +370,18 @@ await provider.render(SearchResults, {
 
 ### NoResults slot
 
-The `NoResults` slot allows you to customize the no results section of the `SearchResults` container.
+Use `NoResults` to customize the message area when a search has no results or fails. `ctx.error` contains the message, and `ctx.variables` contains the search parameters. Either value can be `null`. The example appends content without replacing the default message.
 
 #### Example
 
-```js
+```js title="blocks/product-list-page/product-list-page.js"
 import { render as provider } from '@dropins/storefront-product-discovery/render.js';
 import { SearchResults } from '@dropins/storefront-product-discovery/containers/SearchResults.js';
 
 await provider.render(SearchResults, {
   slots: {
     NoResults: (ctx) => {
-      // Your custom implementation
+      // Keep the default empty-results or error message.
       const element = document.createElement('div');
       element.innerText = 'Custom NoResults';
       ctx.appendChild(element);
@@ -307,18 +392,18 @@ await provider.render(SearchResults, {
 
 ### Header slot
 
-The Header slot allows you to customize the header section of the `SearchResults` container.
+Use `Header` to add content above the product results. `ctx.products` contains the result products, and `ctx.variables` contains the search parameters.
 
 #### Example
 
-```js
+```js title="blocks/product-list-page/product-list-page.js"
 import { render as provider } from '@dropins/storefront-product-discovery/render.js';
 import { SearchResults } from '@dropins/storefront-product-discovery/containers/SearchResults.js';
 
 await provider.render(SearchResults, {
   slots: {
     Header: (ctx) => {
-      // Your custom implementation
+      // Add content above the result products, not inside each card.
       const element = document.createElement('div');
       element.innerText = 'Custom Header';
       ctx.appendChild(element);
@@ -329,18 +414,18 @@ await provider.render(SearchResults, {
 
 ### Footer slot
 
-The Footer slot allows you to customize the footer section of the `SearchResults` container.
+Use `Footer` to add content below the product results. Like `Header`, this slot receives the result products in `ctx.products` and the search parameters in `ctx.variables`.
 
 #### Example
 
-```js
+```js title="blocks/product-list-page/product-list-page.js"
 import { render as provider } from '@dropins/storefront-product-discovery/render.js';
 import { SearchResults } from '@dropins/storefront-product-discovery/containers/SearchResults.js';
 
 await provider.render(SearchResults, {
   slots: {
     Footer: (ctx) => {
-      // Your custom implementation
+      // Add content below the result products, not inside each card.
       const element = document.createElement('div');
       element.innerText = 'Custom Footer';
       ctx.appendChild(element);
