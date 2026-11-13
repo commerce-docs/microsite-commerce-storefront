@@ -98,6 +98,8 @@ events.on('companyContext/changed', (payload) => {
 
 Emitted when order data is loaded or updated. This includes order details, items, shipping information, and payment status.
 
+[OrderInvoices](/dropins/order/containers/order-invoices/) and [InvoiceDetails](/dropins/order/containers/invoice-details/) listen eagerly to this event, so they can use the most recent order payload when mounted. They fetch invoices using the order number and refetch when it changes. `InvoiceDetails` also refetches when its invoice reference changes. Fetching invoices does not emit a separate invoice event or add the invoice response to the `order/data` payload.
+
 #### Event payload
 
 ```typescript
@@ -129,6 +131,8 @@ events.on('order/data', (payload) => {
 ### `order/error` (emits and listens)
 
 Emitted when an error occurs during order operations such as fetching order details, reordering items, or processing returns.
+
+Non-aborted invoice network failures also emit this event with `source: 'auth'`, `type: 'network'`, and an error message. The AEM Order initializer listens to `order/error` and can redirect the customer, so a container's load-error alert might not remain visible. Resolved GraphQL error responses are subject to the [invoice API error-handling limitation](/dropins/order/functions/#getorderinvoices).
 
 #### Event payload
 
@@ -394,4 +398,3 @@ type OrderItemModel = {
   quantityReturnRequested: number;
 };
 ```
-
