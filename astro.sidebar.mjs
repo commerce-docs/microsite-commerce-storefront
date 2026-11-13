@@ -166,6 +166,8 @@ export function generateSidebar() {
             { label: 'Consent and CMP integration', link: '/setup/analytics/consent/' },
             { label: 'Adobe Experience Platform', link: '/setup/analytics/adobe-experience-platform/' },
             { label: 'Analytics instrumentation', link: '/setup/analytics/instrumentation/' },
+            { label: 'Content requests overview', link: '/setup/launch/content-requests/' },
+            { label: 'Forecast content requests', link: '/setup/launch/measure-content-requests/' },
             { label: 'Browser compatibility', link: '/get-started/browser-compatibility/' },
             { label: 'Performance best practices', link: '/get-started/performance/' },
             {
