@@ -1,11 +1,4 @@
 ---
-# Manually-triggered workflow that deploys a second branch alongside the
-# existing `preview` branch on the same GitHub Pages site, under a /preview2/
-# subpath. GitHub Pages only serves one live deployment per repo, so both
-# builds are merged into a single Pages artifact instead of two separate
-# sites. The next automatic push to `preview` or `b2b-documentation` (see
-# preview-on-pages.yml) will overwrite this combined deployment — re-run this
-# workflow to bring the /preview2/ subpath back.
 name: Deploy second branch to Pages alongside preview
 on:
   workflow_dispatch:
@@ -13,8 +6,20 @@ on:
       branch:
         description: 'Branch to build into the /preview2/ subpath'
         required: true
+        type: string
+      preview_branch:
+        description: 'Optional site-root branch; leave blank to preserve its published build'
+        required: false
+        type: string
+  workflow_call:
+    inputs:
+      branch:
+        type: string
+      preview_branch:
+        type: string
 permissions:
   contents: read
+  actions: read
   pages: write
   id-token: write
 concurrency:
@@ -26,19 +31,37 @@ jobs:
     outputs:
       base_path: ${{ steps.pages.outputs.base_path }}
       origin: ${{ steps.pages.outputs.origin }}
+      artifact_id: ${{ steps.snapshot.outputs.artifact_id }}
+      run_id: ${{ steps.snapshot.outputs.run_id }}
     steps:
       - name: Setup Pages
         id: pages
         uses: actions/configure-pages@v5
+      - name: Find the last successfully published Pages artifact
+        id: snapshot
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          artifacts=$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts?name=github-pages&per_page=100" \
+            --jq ".artifacts | sort_by(.created_at) | reverse | .[] | select(.expired == false and .workflow_run.id != $GITHUB_RUN_ID) | [.id, .workflow_run.id] | @tsv")
+          while read -r artifact_id run_id; do
+            [[ -n "$artifact_id" ]] || continue
+            conclusion=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run_id" --jq '.conclusion')
+            if [[ "$conclusion" == success ]]; then
+              printf 'artifact_id=%s\nrun_id=%s\n' "$artifact_id" "$run_id" >> "$GITHUB_OUTPUT"
+              break
+            fi
+          done <<< "$artifacts"
 
   build-preview:
     needs: configure
+    if: ${{ inputs.preview_branch != '' || needs.configure.outputs.artifact_id == '' }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout preview
+      - name: Checkout site-root branch
         uses: actions/checkout@v4
         with:
-          ref: preview
+          ref: ${{ inputs.preview_branch || 'preview' }}
       - name: Install pnpm
         uses: pnpm/action-setup@v4
       - name: Setup Node
@@ -68,12 +91,13 @@ jobs:
 
   build-preview2:
     needs: configure
+    if: ${{ inputs.branch != '' }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout ${{ github.event.inputs.branch }}
+      - name: Checkout ${{ inputs.branch }}
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.inputs.branch }}
+          ref: ${{ inputs.branch }}
       - name: Install pnpm
         uses: pnpm/action-setup@v4
       - name: Setup Node
@@ -84,7 +108,7 @@ jobs:
           cache-dependency-path: pnpm-lock.yaml
       - name: Install dependencies
         run: pnpm install
-      - name: Build ${{ github.event.inputs.branch }} (/preview2/ subpath)
+      - name: Build ${{ inputs.branch }} (/preview2/ subpath)
         env:
           NODE_ENV: github
           PUBLIC_SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
@@ -102,26 +126,62 @@ jobs:
           retention-days: 1
 
   merge-and-deploy:
-    needs: [build-preview, build-preview2]
+    needs: [configure, build-preview, build-preview2]
+    if: ${{ always() && !cancelled() && needs.configure.result == 'success' && (needs.build-preview.result == 'success' || needs.build-preview.result == 'skipped') && (needs.build-preview2.result == 'success' || needs.build-preview2.result == 'skipped') }}
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      - name: Download the last published Pages artifact
+        if: ${{ needs.configure.outputs.artifact_id != '' }}
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: ${{ needs.configure.outputs.artifact_id }}
+          run-id: ${{ needs.configure.outputs.run_id }}
+          github-token: ${{ github.token }}
+          path: previous
+          merge-multiple: true
+      - name: Restore the published previews
+        env:
+          ARTIFACT_ID: ${{ needs.configure.outputs.artifact_id }}
+        run: |
+          mkdir -p combined
+          if [[ -n "$ARTIFACT_ID" ]]; then
+            tar -xf previous/artifact.tar -C combined
+          fi
       - name: Download preview build (site root)
+        if: ${{ needs.build-preview.result == 'success' }}
         uses: actions/download-artifact@v4
         with:
           name: dist-preview
-          path: combined
+          path: dist-preview
+      - name: Replace the site root without changing preview2
+        if: ${{ needs.build-preview.result == 'success' }}
+        run: rsync -a --checksum --delete --exclude='/preview2/' dist-preview/ combined/
       - name: Download preview2 build (subpath)
+        if: ${{ needs.build-preview2.result == 'success' }}
         uses: actions/download-artifact@v4
         with:
           name: dist-preview2
-          path: combined/preview2
+          path: dist-preview2
+      - name: Replace only preview2
+        if: ${{ needs.build-preview2.result == 'success' }}
+        run: rsync -a --checksum --delete dist-preview2/ combined/preview2/
+      - name: Verify the previews being published
+        env:
+          PREVIEW2_RESULT: ${{ needs.build-preview2.result }}
+        run: |
+          test -f combined/index.html
+          if [[ "$PREVIEW2_RESULT" == success || -d combined/preview2 ]] && [[ ! -f combined/preview2/index.html ]]; then
+            echo '::error::The second-preview output is incomplete; refusing to publish it.'
+            exit 1
+          fi
       - name: Upload combined static files as artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: combined
+          retention-days: 90
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
