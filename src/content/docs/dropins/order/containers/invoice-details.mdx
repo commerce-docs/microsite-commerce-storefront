@@ -165,6 +165,14 @@ This fallback applies to image data that reaches the PDF renderer. If `getInvoic
 
 To use a backend document service instead, supply `onDownloadPdf` and implement the download in that callback. Do not pass an empty callback: it disables the built-in download.
 
+### PDF labels
+
+The built-in download uses the `Order.InvoiceDetails.pdf` dictionary entries for metadata labels, address and method headings, table columns, totals, and the telephone prefix. Override these entries in the existing `langDefinitions` configuration, as described in [Invoice labels](/dropins/order/dictionary/#invoice-labels). PDF entries are separate from HTML entries to preserve the existing PDF wording. For example, changing `Order.InvoiceDetails.pdf.soldTo` changes the PDF's `Sold to` heading without changing the HTML billing-address label.
+
+This label support requires an Order package release containing the PDF localization update; it is not included in `5.0.0-alpha-20261110114801`. Omitted labels retain their English defaults.
+
+Dictionary overrides do not translate backend values such as invoice status, product names, or payment methods. They also do not change number and date formatting: the built-in container download still uses the renderer's default `en-US` locale.
+
 ### AEM storefront branding configuration
 
 The AEM `commerce-invoice-details` block supplies `getInvoicePdfBranding` from the effective `invoice-pdf-branding` storefront configuration. Add the following object to the existing `public.default` settings in your approved [storefront configuration source](/setup/configuration/commerce-configuration/). Merge it with the existing settings; do not replace the entire configuration.
@@ -194,6 +202,6 @@ After changing shared configuration, follow [Confirm the loaded configuration](/
 - The invoice's aggregate subtotal and grand total still come from the backend. Bundle line subtotals use the backend-provided amount without additional storefront aggregation.
 - Discounts appear separately in invoice totals. Item-level discount data is available in the model, but is not displayed as an additional line discount column.
 - Aggregate invoice taxes continue to provide the tax total.
-- The UI supports the [Order dictionary](/dropins/order/dictionary/). Built-in PDF headings use fixed English labels, and the default download uses the renderer's `en-US` locale.
+- The UI and built-in PDF labels support the [Order dictionary](/dropins/order/dictionary/). The default PDF download uses the renderer's `en-US` locale for number and date formatting; translating labels does not change that locale.
 
 For a list of invoices within the order, see [`OrderInvoices`](/dropins/order/containers/order-invoices/).
