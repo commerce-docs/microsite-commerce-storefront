@@ -187,6 +187,91 @@ interface ProductModel {
 }
 ```
 
+### Attribute
+
+Used in: [`ProductModel.attributes`](#productmodel).
+
+```ts
+interface Attribute {
+  id: string;
+  label: string;
+  value: string;
+  roles?: string[];
+}
+```
+
+`value` is a JSON string or, for some attributes, an already-parsed object. Its shape depends on the attribute's `id`. Attributes whose `id` starts with `ac_`, such as `ac_giftcard`, `ac_downloadable`, and `ac_customizable_options`, contain attribute-specific JSON payloads.
+
+#### `ac_customizable_options`
+
+This attribute contains Magento Customizable Options attached to a product. These include priced selectable choices (dropdown menus, radio buttons, checkboxes, and multi-select options) and shopper-input fields (text, multiline text, date, date/time, and time):
+
+```json
+{
+  "schemaVersion": 1,
+  "selectable": [
+    {
+      "id": "1",
+      "label": "Add Pressure Gauges?",
+      "renderType": "drop_down",
+      "type": "custom_option",
+      "required": "1",
+      "sortOrder": "1",
+      "values": [
+        {
+          "id": "Y3VzdG9tLW9wdGlvbi8xLzE=",
+          "label": "No Thanks",
+          "price": "0.000000",
+          "priceType": "fixed",
+          "sku": "PG-NO",
+          "sortOrder": "1",
+          "isDefault": false
+        },
+        {
+          "id": "Y3VzdG9tLW9wdGlvbi8xLzI=",
+          "label": "Yes - 3 x GT16-3S",
+          "price": "108.000000",
+          "priceType": "fixed",
+          "sku": "PG-YES",
+          "sortOrder": "2",
+          "isDefault": false
+        }
+      ]
+    }
+  ],
+  "shopperInput": [
+    {
+      "id": "Y3VzdG9tLW9wdGlvbi8y",
+      "label": "Engraving text",
+      "renderType": "field",
+      "required": "0",
+      "price": "15.000000",
+      "sku": "ENGRAVE",
+      "sortOrder": "2",
+      "range": { "to": "30" },
+      "productSku": "TEST-CUSTOPT-SIMPLE"
+    }
+  ]
+}
+```
+
+- The example shows a parsed Catalog Service payload before prices are converted to numbers. The typed PDP accessor converts `price` fields from numeric strings (for example, `"108.000000"`) to numbers for rendering. If you read the raw attribute yourself, parse its JSON and convert prices before calculations or formatting.
+- `schemaVersion` identifies the attribute payload format. The `selectable` array contains predefined choices, and `shopperInput` contains fields for shopper-entered values.
+- `required` is a string flag, not a boolean. A value of `"1"` or `"true"` marks a required option. The `sortOrder` field defines the display order.
+- `selectable[].values[].id` and `shopperInput[].id` are base64-encoded `custom-option/<optionId>[/<valueId>]` tokens. The cart drop-in's [`addProductsToCart`](/dropins/cart/functions/#addproductstocart) expects these tokens in `optionsUIDs` for selectable choices and `enteredOptions` for shopper-input values. No mapping step is required before adding the product to the cart.
+- A product with no customizable options has no `ac_customizable_options` entry in `attributes`.
+
+<Aside type="note">
+  The
+  [`ProductCustomizableOptions`](/dropins/product-details/containers/product-customizable-options/)
+  container renders selectable choices and `field`, `area`, `date`, `date_time`, and `time`
+  shopper-input fields. Shopper inputs update `enteredOptions` with the encoded option UID and
+  string value. Clearing a field removes its entry. File options appear disabled. The container
+  does not enforce required options or update the displayed product total when options change.
+  See [Render customizable options](/dropins/product-details/tutorials/render-customizable-options/)
+  for customization steps.
+</Aside>
+
 ### ValuesModel
 
 Used in: [`pdp/values`](#pdpvalues-emits-and-listens).
@@ -200,3 +285,4 @@ interface ValuesModel {
 }
 ```
 
+For customizable options, `optionsUIDs` contains encoded selectable-value UIDs, and `enteredOptions` contains encoded shopper-input option UIDs with string values. Text is preserved, including whitespace and line breaks. Date and time inputs use the [cart-compatible formats](/dropins/product-details/containers/product-customizable-options/#shopper-input-controls) produced by the container.

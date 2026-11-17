@@ -17,7 +17,7 @@ import ToolsAemLiveNote from 'src/content/fragments/aem-live-tools-note.mdx';
 - <Link href="/dropins/all/introduction/" text="Storefront drop-in components" />.
 - <Link href="https://experienceleague.adobe.com/en/docs/commerce/catalog-service/guide-overview" text="Catalog Service" />.
 - <Link href="https://experienceleague.adobe.com/en/docs/commerce/live-search/overview" text="Live Search" />.
-- <Link href="https://experienceleaguecommunities.adobe.com/t5/adobe-experience-manager/aem-gems-building-storefronts-on-edge-delivery-services-with/m-p/652692" text="[AEM Gems] Building Storefronts on Edge Delivery Services with Adobe Commerce" />.
+- <Link href="https://experienceleaguecommunities.adobe.com/adobe-experience-manager-sites-8/aem-gems-building-storefronts-on-edge-delivery-services-with-adobe-commerce-226392" text="[AEM Gems] Building Storefronts on Edge Delivery Services with Adobe Commerce" />.
 - <Link href="https://adapt.to/2023/schedule/build-super-fast-storefront-experiences-with-edge-delivery-services-and-adobe-commerce" text="[AdaptTo] Build Super Fast Storefront Experiences with Edge Delivery Services and Adobe Commerce" />.
 - <Link href="https://github.com/adobe/wknd-summit2024" text="Adobe Summit 2024 Commerce lab materials (GitHub repository)" />.
 
@@ -64,7 +64,7 @@ For storefront-wide guidance see [Performance best practices](/get-started/perfo
 
 ### Loading order
 
-- Everything that is not relevant for LCP can be loaded progressively (dynamic imports) or delayed (`delayed.js`).
+- Everything that is not relevant for LCP can be loaded progressively (dynamic imports) or delayed (`consented.js`).
 - LCP relevant blocks (for example, product details, product list page) must be loaded in the eager phase. This means that they need to be the first block on the page and added to the `LCP_BLOCKS` array.
 - Only load elements that are required. Elements that are not immediately required should be separated and loaded when needed.
   - **Example 1:** Logic for newsletter sign-up can be loaded when the user clicks on the subscribe button.
@@ -187,23 +187,11 @@ If the `x-error` header shows a failure when loading an `.md` file from content-
 
 Product detail pages (PDPs) may return a 404 when the requested URL cannot be resolved to a document in the Edge Delivery content pipeline. In most cases, this indicates that no corresponding content resource exists or is accessible for that path. Verify the following:
 
-**Overlay / BYOM not set up:** If your project depends on prerendering or BYOM (bring your own markup) to serve PDPs, make sure it is fully configured. See [AEM Commerce prerender](/setup/configuration/aem-prerender/).
-- **Folder mapping (deprecated) and uppercase SKUs:** Folder mapping is deprecated and is no longer the recommended approach. To add or update folder mappings, use the Config Service API instead:
+- **Manually authored pages:** Confirm that the document at the requested path, including any store view prefix, has been previewed and published.
+- **Generated pages:** If your project uses Bring Your Own Markup (BYOM), including [AEM Commerce Prerender](/setup/configuration/aem-prerender/), confirm that it generates and publishes a page at the requested path.
+- **Existing folder mapping (deprecated):** If your storefront uses folder mapping, verify the locale-to-template mappings using [Update folder mapping](/setup/configuration/multistore-setup/#update-folder-mapping). Ensure that appropriate metadata is set for each product/path.
 
-  ```http
-  GET  https://admin.hlx.page/config/{ORG}/sites/{SITE}/folders.json
-  {/* Modify the JSON object and POST it back to the same endpoint */}
-  POST https://admin.hlx.page/config/{ORG}/sites/{SITE}/folders.json
-  ```
-
-  Use GET to read the current mapping, edit the JSON object, then POST it back to the same URL.
-
-  See the <Link href={"https://www.aem.live/docs/admin.html"} text={"Admin API reference"} /> and the <Link href={"https://www.aem.live/developer/folder-mapping"} text={"folder mapping deprecation notice"} /> for details.
-
-  If you are still using folder mapping, note that URLs must be lowercase. If your SKUs contain uppercase letters, you need to provide metadata (for example, using bulk metadata) so the correct content is matched to each URL. See:
-
-  - <Link href={"https://www.aem.live/docs/bulk-metadata"} text={"Bulk metadata"} />
-  - [SEO metadata](/setup/seo/metadata/#generate-metadata)
+For localized product paths and `sku` metadata requirements, follow [Provide product pages for each store view](/setup/configuration/multistore-setup/#provide-product-pages-for-each-store-view). URLs must be lowercase; preserve the catalog SKU's original case in metadata. See [SEO metadata](/setup/seo/metadata/#generate-metadata).
 
 ![Example storefront URL path for a product detail page](@images/troubleshoot/eds-pdp-url-path.png)
 

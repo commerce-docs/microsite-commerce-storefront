@@ -1,0 +1,186 @@
+---
+title: October 2026 suite
+description: Explore public requisition lists, saved-card checkout, custom product options, and Drop-in SDK updates in the October 2026 Adobe Commerce storefront suite.
+---
+
+import Aside from '@components/Aside.astro';
+import Link from '@components/Link.astro';
+import TableWrapper from '@components/TableWrapper.astro';
+
+B2B buyers can share public requisition lists with recipients who can add selected products to their carts without signing in. Shoppers can pay with saved cards and select custom product options on the product details page. The Storefront Compatibility Packages add invoice data and public-list support across the supported Commerce versions. See the [changelog](/releases/changelog/) for the full list of changes.
+
+<Aside type="caution" title="Breaking changes">
+- **Drop-in SDK**: Upgrade `@dropins/tools` before upgrading Elsie and rebuilding custom drop-ins. Review custom build configuration for the updated shared tooling. Existing published drop-ins remain compatible and do not require a rebuild{/* ([#276](https://github.com/adobe-commerce/StorefrontSDK/pull/276), [#345](https://github.com/adobe-commerce/StorefrontSDK/pull/345)) */}.
+- **Requisition List**: Version 2 adds public sharing. Review custom integrations for the new public-list APIs before upgrading from version 1{/* ([#169](https://github.com/adobe-commerce/storefront-requisition-list/pull/169), [#170](https://github.com/adobe-commerce/storefront-requisition-list/pull/170)) */}.
+- **Storefront Compatibility B2B Package**: The `sharePublicRequisitionList` mutation no longer returns `token`. Update custom integrations to read the public share token from `RequisitionList.token` instead{/* ([#201](https://github.com/magento-commerce/storefront-compatibility-b2b/pull/201)) */}.
+</Aside>
+
+<Aside type="note" title="Consent update released separately">
+Analytics scripts load only after consent is granted. This change was released and documented separately before this suite. The URL-based consent override is for testing only. Connect production storefronts to a consent management platform. See [analytics consent](/setup/analytics/consent/) for configuration details (<Link href="https://github.com/hlxsites/aem-boilerplate-commerce/pull/1486" text="#1486" />).
+</Aside>
+
+## Highlights
+
+### Public requisition lists for guest shoppers
+
+B2B buyers can share a public requisition list by email or link. Recipients can review products and add selected items to their carts without signing in{/* ([#169](https://github.com/adobe-commerce/storefront-requisition-list/pull/169), [#170](https://github.com/adobe-commerce/storefront-requisition-list/pull/170)) */}.
+
+Public sharing must be enabled in the store configuration. Stores can also set how long links remain valid and how many recipients can receive a sharing email{/* ([#190](https://github.com/magento-commerce/storefront-compatibility-b2b/pull/190)) */}.
+
+### Checkout with saved cards
+
+Shoppers can save a card for future purchases and select it during checkout. Checkout v3.5.0 and Payment Services v4.3.0 support the saved-card flow, including switching back to another payment method. The default Boilerplate checkout block does not wire these features together; merchants and system integrators can customize it by following [Vaulted cards in checkout](/how-tos/vaulted-cards-in-checkout/). 
+{/* ([#58](https://github.com/adobe-commerce/storefront-payment-services/pull/58), [#67](https://github.com/adobe-commerce/storefront-payment-services/pull/67), [#69](https://github.com/adobe-commerce/storefront-payment-services/pull/69), [#370](https://github.com/adobe-commerce/storefront-checkout/pull/370)).*/}
+
+### Customizable product options
+
+Shoppers can select custom product options using dropdown menus, radio buttons, and checkboxes on the product details page. Options that allow multiple selections use a labeled checkbox list rather than a native multi-select control{/* ([#103](https://github.com/adobe-commerce/storefront-pdp/pull/103)) */}.
+
+### Faster sign-in loading
+
+Visitors who do not open a sign-in control avoid downloading authentication code during the initial page load. B2C and B2B headers defer those downloads until a shopper opens sign-in or chooses an account action (<Link href="https://github.com/hlxsites/aem-boilerplate-commerce/pull/1463" text="#1463" />, B2C) (<Link href="https://github.com/hlxsites/aem-boilerplate-commerce/pull/1468" text="#1468" />, B2B).
+
+### Recommendation units by label
+
+Select recommendation units by label in the block configuration instead of relying only on a unit ID. The Product Recommendations drop-in can request units by label, unit ID, or both. When both selectors match, it displays the unit that matches the label{/* ([#50](https://github.com/adobe-commerce/storefront-recommendations/pull/50)) */} (<Link href="https://github.com/hlxsites/aem-boilerplate-commerce/pull/1451" text="#1451" />).
+
+## Updated boilerplate
+
+### Infrastructure
+
+- **Drop-in SDK**: The B2C and B2B suite configurations pin Drop-in SDK 3.0.0 and `@dropins/build-tools` 1.2.2 (<Link href="https://github.com/hlxsites/aem-boilerplate-commerce/pull/1519" text="#1519" />, B2C) (<Link href="https://github.com/hlxsites/aem-boilerplate-commerce/pull/1521" text="#1521" />, B2B).
+
+### Document authoring
+
+No Document Authoring changes in the boilerplate for this release suite.
+
+### Fixes and improvements
+
+- **Recommendations block**: Select a recommendation unit by its `label` value in the block configuration. The block requests the matching unit (<Link href="https://github.com/hlxsites/aem-boilerplate-commerce/pull/1451" text="#1451" />).
+- **Product metadata**: The product details block no longer generates the page title, Open Graph tags, or JSON-LD structured data in the browser. Use a prerendering solution to provide this metadata to crawlers (<Link href="https://github.com/hlxsites/aem-boilerplate-commerce/pull/1458" text="#1458" />).
+- **Header**: B2C and B2B headers defer authentication-module downloads until a shopper opens a sign-in control (<Link href="https://github.com/hlxsites/aem-boilerplate-commerce/pull/1463" text="#1463" />, B2C) (<Link href="https://github.com/hlxsites/aem-boilerplate-commerce/pull/1468" text="#1468" />, B2B).
+
+## Updated Drop-in SDK
+
+Drop-in SDK 3.0.0 reduces JavaScript requests and updates the shared tools used to build drop-ins. Upgrade `@dropins/tools` before upgrading Elsie and rebuilding custom drop-ins. Existing published drop-ins remain compatible and do not require a rebuild{/* ([#276](https://github.com/adobe-commerce/StorefrontSDK/pull/276), [#345](https://github.com/adobe-commerce/StorefrontSDK/pull/345)) */}.
+
+<TableWrapper nowrap={[0]}>
+
+| Package | Version |
+|---------|---------|
+| `@dropins/tools` | 3.0.0 |
+| `@adobe-commerce/elsie` | 3.0.0 |
+| `@adobe-commerce/recaptcha` | 1.3.1 |
+| `@adobe-commerce/event-bus` | 1.1.2 |
+| `@adobe-commerce/fetch-graphql` | 1.3.2 |
+| `@adobe-commerce/storefront-design` | 1.1.2 |
+| `@dropins/build-tools` | 1.2.2 |
+
+</TableWrapper>
+
+### New features
+
+- **Shared development tools**: Reuse Elsie's Cypress linting presets, optional library configuration, and shared test and Storybook tooling instead of maintaining separate copies{/* ([#346](https://github.com/adobe-commerce/StorefrontSDK/pull/346), [#352](https://github.com/adobe-commerce/StorefrontSDK/pull/352), [#356](https://github.com/adobe-commerce/StorefrontSDK/pull/356)) */}.
+- **Custom build entries**: Shared Vite configuration now provides `withEntries` to customize build entry points{/* ([#357](https://github.com/adobe-commerce/StorefrontSDK/pull/357)) */}.
+### Improvements and fixes
+
+- **Source development**: The SDK source repository now uses pnpm instead of Yarn for development and release workflows{/* ([#276](https://github.com/adobe-commerce/StorefrontSDK/pull/276)) */}.
+- **Accessible labels**: `Picker` controls now prefer visible labels over internal names. An explicit checkbox `id` keeps its label and description associated with the correct control when multiple checkboxes share a name{/* ([#316](https://github.com/adobe-commerce/StorefrontSDK/pull/316), [#317](https://github.com/adobe-commerce/StorefrontSDK/pull/317)) */}.
+- **Portal stability**: The `Portal` component now uses Preact's `createPortal` to prevent intermittent DOM insertion errors when nearby content changes{/* ([#337](https://github.com/adobe-commerce/StorefrontSDK/pull/337)) */}.
+- **Fewer JavaScript requests**: Shared runtime chunks consolidate code that previously loaded in separate files. Rebuilt drop-ins use a combined Preact entry, while existing drop-ins can continue using the previous entries{/* ([#345](https://github.com/adobe-commerce/StorefrontSDK/pull/345)) */}.
+
+## Updated storefront tools
+
+- **Site Creator library**: Newly created sites store the Document Authoring library in `docs/library` instead of the hidden `.da/library` folder. Source templates must include `docs/**` in `full-index.json` so Site Creator can copy the library. Library content is previewed but not published{/* ([#124](https://github.com/adobe-commerce/storefront-tools/pull/124)) */}.
+- **Template access**: Site Creator can copy approved templates without giving users write access to the source site. It reads template content through a worker using a read-only service account{/* ([#126](https://github.com/adobe-commerce/storefront-tools/pull/126)) */}.
+
+## Updated B2C drop-in components
+
+<TableWrapper nowrap={[0]}>
+
+| Component | Improvements |
+|-----------|--------------|
+| [**Cart**](/dropins/cart/) v3.4.1 | Screen readers now announce discount-code and gift-card errors. The Cart drop-in also keeps keyboard focus on a checkbox when its contents update{/* ([#179](https://github.com/adobe-commerce/storefront-cart/pull/179), [#182](https://github.com/adobe-commerce/storefront-cart/pull/182)) */}. |
+| [**Checkout**](/dropins/checkout/) v3.5.0 | Shoppers can select a saved card or save a card for later. The drop-in submits orders with vaulted cards through Payment Services{/* ([#58](https://github.com/adobe-commerce/storefront-payment-services/pull/58), [#69](https://github.com/adobe-commerce/storefront-payment-services/pull/69), [#370](https://github.com/adobe-commerce/storefront-checkout/pull/370)) */}. |
+| [**Order**](/dropins/order/) v4.1.1 | No user-facing changes in this release. |
+| [**Payment Services**](/dropins/payment-services/) v4.3.0 | The drop-in adds a `VaultedCreditCard` container and supports saving and submitting vaulted cards{/* ([#58](https://github.com/adobe-commerce/storefront-payment-services/pull/58), [#67](https://github.com/adobe-commerce/storefront-payment-services/pull/67), [#69](https://github.com/adobe-commerce/storefront-payment-services/pull/69)) */}. |
+| [**Personalization**](/dropins/personalization/) v3.2.3 | No user-facing changes in this release. |
+| [**Product Details Page**](/dropins/product-details/) v3.4.0 | Shoppers can configure dropdown, radio, and checkbox custom options. The update also restores bundle quantity controls and improves keyboard and screen-reader access to the image preview{/* ([#91](https://github.com/adobe-commerce/storefront-pdp/pull/91), [#97](https://github.com/adobe-commerce/storefront-pdp/pull/97), [#103](https://github.com/adobe-commerce/storefront-pdp/pull/103)) */}. |
+| [**Product Discovery**](/dropins/product-discovery/) v3.1.3 | Sorting now works when a product attribute code contains an underscore, such as `temperature_max`{/* ([#112](https://github.com/adobe-commerce/storefront-search-dropin/pull/112)) */}. |
+| [**Product Recommendations**](/dropins/recommendations/) v4.1.0 | Recommendation units can be selected by label. Product images use the catalog image label as alt text, and visible titles use semantic headings{/* ([#47](https://github.com/adobe-commerce/storefront-recommendations/pull/47), [#50](https://github.com/adobe-commerce/storefront-recommendations/pull/50), [#53](https://github.com/adobe-commerce/storefront-recommendations/pull/53)) */}. |
+| [**User Account**](/dropins/user-account/) v4.2.1 | Screen readers now hear whether saved-address choices belong to the shipping or billing address group{/* ([#137](https://github.com/adobe-commerce/storefront-account/pull/137)) */}. |
+| [**User Auth**](/dropins/user-auth/) v4.1.1 | Authentication forms now leave the loading state and show an error when a network request fails{/* ([#123](https://github.com/adobe-commerce/storefront-auth/pull/123)) */}. |
+| [**Wishlist**](/dropins/wishlist/) v3.5.1 | The wishlist toggle's accessible name now starts with its visible label, so voice-control users can activate it using the text they see{/* ([#123](https://github.com/adobe-commerce/storefront-wishlist/pull/123)) */}. |
+
+</TableWrapper>
+
+## Updated B2B drop-in components
+
+<TableWrapper nowrap={[0]}>
+
+| Component | Improvements |
+|-----------|--------------|
+| [Company Management](/dropins-b2b/company-management/) v1.5.1 | Buyer-facing behavior is unchanged. The source repository now uses pnpm{/* ([#127](https://github.com/adobe-commerce/storefront-company-management/pull/127)) */}. |
+| [Company Switcher](/dropins-b2b/company-switcher/) v1.3.1 | Buyer-facing behavior is unchanged. The source repository now uses pnpm{/* ([#76](https://github.com/adobe-commerce/storefront-company-switcher/pull/76)) */}. |
+| [Purchase Order](/dropins-b2b/purchase-order/) v1.2.3 | Buyer-facing behavior is unchanged. The source repository now uses pnpm{/* ([#94](https://github.com/adobe-commerce/storefront-purchase-order/pull/94)) */}. |
+| [Quick Order](/dropins-b2b/quick-order/) v1.1.1 | Buyer-facing behavior is unchanged. The source repository now uses pnpm{/* ([#31](https://github.com/adobe-commerce/storefront-quick-order/pull/31)) */}. |
+| [Quote Management](/dropins-b2b/quote-management/) v1.3.1 | Buyer-facing behavior is unchanged. The source repository now uses pnpm{/* ([#131](https://github.com/adobe-commerce/storefront-quote-management/pull/131)) */}. |
+| [Requisition List](/dropins-b2b/requisition-list/) v2.0.1 | When public sharing is enabled, buyers can share lists by email or link. Recipients can add selected items to their carts without signing in. Product links require `routeProduct` and a product URL key{/* ([#169](https://github.com/adobe-commerce/storefront-requisition-list/pull/169), [#170](https://github.com/adobe-commerce/storefront-requisition-list/pull/170), [#171](https://github.com/adobe-commerce/storefront-requisition-list/pull/171)) */}. |
+
+</TableWrapper>
+
+## Known issues
+
+- **Saved-card selection**: Checkout does not retain the selected saved card after a page reload{/* ([#370](https://github.com/adobe-commerce/storefront-checkout/pull/370)) */}.
+- **Billing address**: Checkout does not copy the saved card's billing address to the order{/* ([#370](https://github.com/adobe-commerce/storefront-checkout/pull/370)) */}.
+
+## Component compatibility
+
+The following component versions define this release suite.
+
+### Commerce foundation
+
+<TableWrapper nowrap={[0]}>
+
+| Adobe Commerce | Storefront Compatibility Package |
+|----------------|----------------------------------|
+| `2.4.7` | `4.7.22` |
+| `2.4.8` | `4.8.34` |
+| `2.4.9` | `4.9.9`. For Adobe Commerce as a Cloud Service with Adobe Commerce Optimizer only. See [v2.4.9 package details](/setup/configuration/storefront-compatibility/v249/). |
+
+</TableWrapper>
+
+<TableWrapper nowrap={[0]}>
+
+| Adobe Commerce B2B | Storefront Compatibility B2B Package |
+|--------------------|--------------------------------------|
+| `1.5.2` | `1.0.32` |
+
+</TableWrapper>
+
+### Drop-in SDK
+
+See [Updated Drop-in SDK](#updated-drop-in-sdk) for package versions.
+
+### B2C drop-ins
+
+- `@dropins/storefront-account@~4.2.1`
+- `@dropins/storefront-auth@~4.1.1`
+- `@dropins/storefront-cart@~3.4.1`
+- `@dropins/storefront-checkout@~3.5.0`
+- `@dropins/storefront-order@~4.1.1`
+- `@dropins/storefront-payment-services@~4.3.0`
+- `@dropins/storefront-pdp@~3.4.0`
+- `@dropins/storefront-personalization@~3.2.3`
+- `@dropins/storefront-product-discovery@~3.1.3`
+- `@dropins/storefront-recommendations@~4.1.0`
+- `@dropins/storefront-wishlist@~3.5.1`
+
+### B2B drop-ins
+
+- `@dropins/storefront-company-management@~1.5.1`
+- `@dropins/storefront-company-switcher@~1.3.1`
+- `@dropins/storefront-purchase-order@~1.2.3`
+- `@dropins/storefront-quick-order@~1.1.1`
+- `@dropins/storefront-quote-management@~1.3.1`
+- `@dropins/storefront-requisition-list@~2.0.1`

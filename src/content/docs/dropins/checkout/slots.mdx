@@ -19,7 +19,7 @@ The Checkout drop-in exposes slots for customizing specific UI sections. Use slo
 | Container | Slots |
 |-----------|-------|
 | [`LoginForm`](#loginform-slots) | `Heading`, `Preferences`, `Title` |
-| [`PaymentMethods`](#paymentmethods-slots) | `Methods`, `Title` |
+| [`PaymentMethods`](#paymentmethods-slots) | `Methods`, `StoredMethods`, `Title` |
 | [`PlaceOrder`](#placeorder-slots) | `Content` |
 | [`ShippingMethods`](#shippingmethods-slots) | `ShippingMethodItem`, `Title` |
 | [`TermsAndConditions`](#termsandconditions-slots) | `Agreements` |
@@ -131,6 +131,7 @@ The slots for the `PaymentMethods` container allow you to customize its appearan
 interface PaymentMethodsProps {
   slots?: {
     Methods?: PaymentMethodHandlers;
+    StoredMethods?: StoredPaymentMethodHandlers;
     Title?: SlotProps<Record<string, never>>;
   };
 }
@@ -139,6 +140,38 @@ interface PaymentMethodsProps {
 ### Methods slot
 
 The Methods slot allows you to register custom payment method handlers, replacing or augmenting the built-in payment method UI. Pass an object whose keys are payment method codes and values are handler functions.
+
+### StoredMethods slot
+
+The `StoredMethods` slot registers handlers that render saved payment methods. The container retrieves saved methods for signed-in customers when at least one handler is registered. Without these handlers, it does not fetch or display saved methods.
+
+Pass an object keyed by payment handler code. Each handler supports these options:
+
+<TableWrapper nowrap={[0]}>
+
+| Option | Type | Description |
+| --- | --- | --- |
+| `render` | `SlotProps<StoredMethodRenderContext>` | Renders an individual saved payment method. |
+| `tokenCode` | `string` | Matches the saved method's `code`. Defaults to the handler's key when omitted. |
+| `enabled` | `boolean` | Overrides whether the handler is enabled. When omitted, the handler is enabled only if its key matches an available payment method code. |
+
+</TableWrapper>
+
+The render context includes:
+
+<TableWrapper nowrap={[0]}>
+
+| Property | Type | Description |
+| --- | --- | --- |
+| `cartId` | `string` | Current cart ID, or an empty string if no cart ID is available. |
+| `details` | `string \| undefined` | Saved payment details passed to the renderer. |
+| `publicHash` | `string \| undefined` | Identifier for the saved payment method. |
+| `selected` | `boolean` | Whether this saved method is selected. |
+| `replaceHTML` | `(domElement: HTMLElement) => void` | Replaces the slot content with the supplied element. |
+
+</TableWrapper>
+
+For a complete Payment Services integration using this slot, see [Vaulted cards in checkout](/how-tos/vaulted-cards-in-checkout/#render-vaulted-card-options).
 
 ### Title slot
 

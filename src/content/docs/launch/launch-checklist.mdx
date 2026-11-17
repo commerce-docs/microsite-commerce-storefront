@@ -28,6 +28,19 @@ If your launch includes Adobe Commerce on Cloud, Adobe Commerce Optimizer, and a
 * [ ] Confirm that storefront branding matches your CSS design tokens, typography, and colors. See [Customize blocks](/blocks/customize-blocks/).
 </Checklist>
 
+<Checklist checklistKey="consent">
+### Consent and privacy
+
+* [ ] Before launch, connect the merchant's consent management platform (CMP). The boilerplate denies consent by default, but does not include a production CMP or consent dialog. The merchant or system integrator (SI) must connect the CMP and its banner, form, or popup. See [Consent and CMP integration](/setup/analytics/consent/).
+* [ ] Configure the CMP's consent experience, preference storage, and categories according to the merchant's requirements. The boilerplate does not supply a banner, dialog, or saved preference.
+* [ ] Replace or adapt the `consent-check.js` placeholder to read the CMP decision, load `consented.js` after acceptance, and dispatch `consent.update` for the recommendation block. Do not use the query parameter as production consent.
+* [ ] Test acceptance and rejection with the integrated CMP and inspect network requests. Before consent, analytics SDKs and collectors must remain unloaded. Recommendation requests may still run but must exclude history and cart data. Local history recording continues.
+* [ ] Review the custom `localStorage` history recording against the merchant's consent policy and adapt it if storage must also be blocked before consent. Do not assume Adobe Commerce Cookie Restriction Mode or `mg_dnt` controls those writes. If Commerce components in the implementation rely on `mg_dnt`, validate their CMP integration separately. See [Commerce cookie-restriction boundaries](/setup/analytics/consent/#commerce-cookie-restriction-mode-and-mg_dnt).
+* [ ] If the merchant supports revocation (withdrawing consent), implement and test it separately. The boilerplate does not provide a complete revocation flow.
+* [ ] If Adobe Experience Platform (AEP) is configured, test the configured datastream.
+* [ ] Migrate customized `delayed.js` logic and check for trackers elsewhere that bypass consent. Brief support and launch teams about the limits on analytics and behavior-based recommendation data before consent. Publish the documentation with the code deployment.
+</Checklist>
+
 {/* Mirrors EL Optimizer checklist: Finalize Storefront Experience > SEO and Indexing — https://experienceleague.adobe.com/en/docs/commerce/optimizer/launch/launch-checklist. Last diffed 2026-08-05. */}
 <Checklist checklistKey="seo">
 ### SEO and indexing
@@ -66,7 +79,7 @@ If your launch includes Adobe Commerce on Cloud, Adobe Commerce Optimizer, and a
 
 * [ ] Follow [Performance best practices](/get-started/performance/) for your storefront.
 * [ ] (Optional) Set up Google Analytics and Google Tag Manager.
-* [ ] Validate your <Link href={"https://github.com/adobe/commerce-events/tree/main/examples/events/snowplow-debugger"} text={"storefront\n      events"} /> implementation, then confirm events appear in Live Search and Product Recommendations dashboards in the Adobe Commerce Admin.
+* [ ] After granting consent through the CMP, validate your <Link href={"https://github.com/adobe/commerce-events/tree/main/examples/events/snowplow-debugger"} text={"storefront\n      events"} /> implementation, then confirm events appear in Live Search and Product Recommendations dashboards in the Adobe Commerce Admin. Confirm no consent-dependent events are sent before acceptance.
 * [ ] Validate that the `environment` field in your [Storefront configuration](/setup/configuration/commerce-configuration/#analytics) is set to `Testing` while you build, then change it to `Production` when you launch. See [Analytics](/setup/analytics/instrumentation/).
 * [ ] Confirm that your Lighthouse scores are green on key templates and aim for a strong score (for example, `100` on mobile and desktop where practical), using the same checks you already ran on your `.aem.live` preview site.
 </Checklist>
@@ -76,8 +89,8 @@ If your launch includes Adobe Commerce on Cloud, Adobe Commerce Optimizer, and a
 ### Analytics and monitoring
 
 * [ ] Confirm that Operational Telemetry is enabled before launch so you can compare performance before and after you switch traffic. Adobe documents this feature as Operational Telemetry; teams often call it Real User Monitoring (RUM). See <Link href={"https://www.aem.live/docs/rum"} text={"Operational Telemetry on the Edge Delivery Services documentation site"} /> and <Link href={"https://www.aem.live/developer/rum"} text={"Operational Telemetry developer documentation"} /> if you implement or tune the collection. If you proxy RUM through your origin, follow [CDN configuration](/setup/configuration/content-delivery-network/#proxy-rum-through-the-origin-to-avoid-a-tls-handshake).
-* [ ] If you use Adobe Experience Platform, confirm data collection is configured for the production site. See [Adobe Experience Platform](/setup/analytics/adobe-experience-platform/) for storefront credentials, datastreams, and how events reach the Edge Network.
-* [ ] On the production hostname, confirm that marketing technology (MarTech) tags fire and send data to the right tools. For the Adobe Client Data Layer, storefront events, and Commerce analytics settings, see [Analytics instrumentation](/setup/analytics/instrumentation/) and the [analytics section of Storefront configuration](/setup/configuration/commerce-configuration/#analytics).
+* [ ] If you use Adobe Experience Platform, confirm data collection is configured for the production site and respects acceptance and revocation. See [Adobe Experience Platform](/setup/analytics/adobe-experience-platform/) for storefront credentials, datastreams, and how events reach the Edge Network.
+* [ ] On the production hostname, confirm that consent-dependent marketing technology (MarTech) tags fire only after acceptance and send data to the right tools. For the Adobe Client Data Layer, storefront events, and Commerce analytics settings, see [Analytics instrumentation](/setup/analytics/instrumentation/) and the [analytics section of Storefront configuration](/setup/configuration/commerce-configuration/#analytics).
 * [ ] Write down current analytics baselines (page views, bounce rate, and similar metrics) from your reporting tools so your team expects a shift after the new site ships. Separately, record Web Vitals and Lighthouse baselines using [Performance best practices](/get-started/performance/) so you can compare site speed before and after launch.
 * [ ] Walk a test order from add to cart through checkout to the order confirmation page and confirm each step is tracked. See [Validation and testing](/setup/analytics/instrumentation/#validation-and-testing) in Analytics instrumentation (checkout-related events are listed under [Event collection and validation](/setup/analytics/instrumentation/#event-collection-and-validation)), and use the <Link href={"https://github.com/adobe/commerce-events/tree/main/examples/events/snowplow-debugger"} text={"Snowplow debugger example"} /> in the commerce-events repository if you need a structured view of storefront events.
 </Checklist>

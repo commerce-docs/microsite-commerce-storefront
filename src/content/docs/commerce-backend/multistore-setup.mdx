@@ -41,7 +41,7 @@ Each store or locale is defined in configuration files. These files specify whic
 
 ### Content organization
 
-Content is organized primarily by language. US English files should be placed in the `en` directory of the project root. All other language- and region-specific files should be placed in a directory that is named in the format `language-code-region-code` (using hyphens). For example, the `/en/` directory contains data for the US market, while the `/en-ca/` directory contains data for Canada. French content should be placed in directories with names like `fr-fr` for France and `fr-ca` for Canada.
+This walkthrough uses locale folders such as `/en/`, `/en-ca/`, and `/fr-ca/`. Choose a structure that fits your language and regional requirements, as described in [Manage shared and localized content](#manage-shared-and-localized-content). Keep the chosen paths consistent with your storefront configuration.
 
 <FileTree>
 - **/en/** _-- English store (Default root language)_
@@ -53,6 +53,17 @@ Content is organized primarily by language. US English files should be placed in
   - index _-- The home page of the English Canadian store._
   - store-switcher _-- Manages the list of stores and their URL for the Canadian store._
 </FileTree>
+
+### Manage shared and localized content
+
+Choose the content workflow separately from the Commerce store view settings:
+
+- *Locale folders within one site*: A rollout copies documents from a language folder into regional or locale folders. It does not translate the content. See <Link href="https://www.aem.live/docs/ew/administering/translation-strategy" text="Strategies for translation, localization, and rollout" /> to plan the structure and <Link href="https://www.aem.live/docs/ew/authoring/translation-projects" text="Translation projects" /> to run the workflow.
+
+  Review the conflict settings before updating localized content. Rollouts can merge changes into existing documents, but spreadsheets, JSON, and other non-HTML files are always overwritten.
+- *Shared content across sites*: <Link href="https://www.aem.live/docs/ew/administering/multi-site-manager" text="Multi-Site Manager (MSM)" /> lets sites reuse content from a base site and keep local versions of individual pages. Follow that guide to configure the content source and Experience Workspace. MSM is optional for the single-site subfolder approach on this page.
+
+Neither workflow replaces the Commerce headers, store switcher, or product-page setup described below.
 
 ### Store-specific files
 
@@ -81,7 +92,7 @@ Before implementing multistore functionality, ensure you have:
 
 ## Implementation walkthrough
 
-This walkthrough demonstrates the process of expanding the Acme brand from the United States to the Canadian market with two new locales: Canadian English (`en-ca`) and Canadian French (`fr-ca`).
+This walkthrough expands a storefront from the United States to the Canadian market with two new locales: Canadian English (`en-ca`) and Canadian French (`fr-ca`).
 
 <Tasks>
 
@@ -118,11 +129,7 @@ To support the new store views, set up the folder structure in your Document Aut
    - Select "New folder"
    - Name it `fr-ca`
 
-4. **Copy content from the default root folder** into each new store view folder:
-   - Select all content from the `/en/` folder
-   - Copy the content
-   - Navigate to the `en-ca` folder and paste
-   - Repeat for the `fr-ca` folder
+4. Populate `/en-ca/` with English content and `/fr-ca/` with French content. You can copy documents from `/en/`, but translate the French content before publishing it. To automate translation and rollout, follow [Manage shared and localized content](#manage-shared-and-localized-content). Review existing destination content before copying or rolling out updates.
 </Steps>
 
 <Aside type="note" title="Folder naming">
@@ -163,15 +170,31 @@ The store view codes in Adobe Commerce Admin must exactly match the folder names
 </Task>
 
 <Task>
-### Update folder mapping
+### Provide product pages for each store view
 
-Product Detail Pages (PDP) are mapped to a single document at `products/default`. When adding a new store view, you must add a corresponding folder mapping for the new URLs using the **Config Service API**.
+Product detail pages (PDPs) can come from authored documents or HTML supplied through <Link href="https://www.aem.live/developer/byom" text="Bring Your Own Markup (BYOM)" />, such as [AEM Commerce Prerender](/setup/configuration/aem-prerender/). Existing storefronts may use folder mapping, but it is discouraged for catalog pages and is not required for multistore. See <Link href="https://www.aem.live/developer/folder-mapping" text="folder mapping guidance and alternatives" />.
 
-#### Step 1: Authenticate
+#### Authored or generated pages
+
+If you do not use folder mapping, customize your authoring or generation implementation for every store view. A locale folder and Commerce configuration alone do not create product pages.
+
+<Steps>
+1. Create a document or generate HTML for each product path under every store view, such as `/en-ca/products/widget/p12345` and `/fr-ca/products/widget/p12345`. Include a Product Details block in authored documents, or its equivalent `product-details` block markup in generated HTML.
+1. Set the `sku` page metadata to the product's catalog SKU, preserving its original case. For example, the page at `/en-ca/products/widget/p12345` can have `sku` metadata of `P12345`. For authored pages, set this in the page metadata. For BYOM HTML, include it as `<meta name="sku" content="P12345">` or in a metadata block. See [SEO metadata](/setup/seo/metadata/) for metadata guidance.
+1. Preview and publish each page at its full store view path using your content workflow. For generated pages, confirm that your generation and publishing implementation handles each locale path and its intended catalog context; adapt it if needed.
+</Steps>
+
+Open a product page in each locale and confirm that it loads the intended product, language, currency, and price. Inspect the document's `<head>` in browser developer tools to confirm the `sku` metadata.
+
+#### Update folder mapping
+
+**Existing folder-mapped implementations only:** Skip this section if you use authored pages or BYOM. If your storefront still maps product URLs to a shared template, add a mapping for each store view using the Config Service API. In the example below, `/en-ca/products/` uses `/en-ca/products/default`; the equivalent template must exist for each mapping.
+
+##### Step 1: Authenticate
 
 Go to `https://admin.hlx.page/login`, then go to your selected IDP login URL, and sign in. Retrieve the auth token from your browser's cookie storage (available in Developer Tools → Application → Cookies). Use that token to authenticate Admin API requests, with the headers and request format described in the <Link href="https://www.aem.live/docs/config-service-setup" text="Config Service setup guide" /> and the <Link href="https://www.aem.live/docs/admin.html" text="Admin API reference" />.
 
-#### Step 2: Get the current folder configuration
+##### Step 2: Get the current folder configuration
 
 ```http
 GET https://admin.hlx.page/config/{ORG}/sites/{SITE}/folders.json
@@ -186,9 +209,9 @@ The response is a JSON object mapping URL path prefixes to template document pat
 }
 ```
 
-If you don't receive a response, you may not have folder mapping yet. To handle this case, create the JSON object manually in step 3.
+If the request fails, resolve the authentication, permission, or configuration error before continuing.
 
-#### Step 3: Modify and POST the updated configuration
+##### Step 3: Modify and POST the updated configuration
 
 Add your new store view mappings and POST the complete object back to the same endpoint:
 
@@ -322,6 +345,7 @@ To ensure proper functionality before publishing, test your new store views.
      - `Magento-Store-Code`
      - `Magento-Website-Code`
      - `Magento-Store-View-Code`
+   - Open a product URL under each locale and confirm that a page is available with the intended `sku` metadata and localized product data
 
 5. **Test the store switcher**:
    - Verify the store switcher correctly shows the current store view
@@ -412,7 +436,8 @@ Your multistore infrastructure is now ready to support multiple locales with pro
 ### Common Issues
 
 #### Store View Not Loading
-- **Check the folder mapping**: Verify that the folder mapping is correct by querying the Config Service: `GET https://admin.hlx.page/config/{ORG}/sites/{SITE}/folders.json`. All folder mapping changes must go through the Config Service API.
+- **Check product-page availability**: For authored pages or BYOM, verify that each requested locale path has a published document or generated page with the correct `sku` metadata. See [Provide product pages for each store view](#provide-product-pages-for-each-store-view).
+- **For existing folder-mapped implementations only**: Verify the locale-to-template mappings with `GET https://admin.hlx.page/config/{ORG}/sites/{SITE}/folders.json`. Make mapping changes through the Config Service API. Do not add mappings to fix missing authored or BYOM pages.
 - **Verify the headers**: Ensure that the headers in `config.json` or Configuration Service match the store view codes in Adobe Commerce Admin
 - **Check the session storage**: Use browser developer tools to verify that the correct headers are being sent
 
@@ -447,5 +472,7 @@ Your multistore infrastructure is now ready to support multiple locales with pro
 - [Wishlist multistore support](/dropins/wishlist/multistore/) — Per-store-view wishlist data isolation
 - [Analytics](/setup/analytics/instrumentation) — Analytics configuration for store views
 - <Link href={"https://experienceleague.adobe.com/en/docs/commerce-admin/stores-sales/site-store/store-views"} text={"Store view configuration"} /> - Adobe Commerce Admin guide
-- <Link href={"https://www.aem.live/developer/folder-mapping"} text={"Folder Mapping"} /> - Edge Delivery Services documentation
+- <Link href="https://www.aem.live/developer/folder-mapping" text="Folder mapping guidance and alternatives" /> — For existing folder-mapped implementations only
 - <Link href={"https://www.aem.live/docs/config-service-setup"} text={"Config Service Setup"} /> - Configuration Service documentation
+- <Link href="https://www.aem.live/docs/ew/administering/multi-site-manager" text="Multi-Site Manager (MSM)" /> — Share content between base and satellite sites
+- <Link href="https://www.aem.live/docs/ew/administering/translation-strategy" text="Strategies for translation, localization, and rollout" /> — Choose language and locale folders and plan content rollouts

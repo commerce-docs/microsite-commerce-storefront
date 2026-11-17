@@ -148,9 +148,11 @@ export function generateRedirects(basePath) {
         '/get-started/configurations': `${basePath}/setup/configuration/commerce-configuration`,
         '/get-started/release': `${basePath}/releases/`,
         '/get-started/run-lighthouse': `${basePath}/get-started/performance`,
-        '/get-started/overview/': `${basePath}/get-started/`,
+        '/get-started/overview/': `${basePath}/#storefront-overview`,
+        '/overview/': `${basePath}/#storefront-overview`,
+        '/get-started/storefront-overview/': `${basePath}/#storefront-overview`,
+        '/merchants/quick-start/storefront-overview/': `${basePath}/#storefront-overview`,
         '/get-started/seo': `${basePath}/setup/seo/`,
-        '/get-started/seo/': `${basePath}/setup/seo/`,
         '/get-started/dropins-mcp': `${basePath}/ai/dropins-ai-tools`,
         '/ai/dropins-mcp': `${basePath}/ai/dropins-ai-tools`,
         '/reference/dropins-mcp': `${basePath}/reference/dropins-ai-tools`,
@@ -207,14 +209,14 @@ export function generateRedirects(basePath) {
         '/sdk/reference/common-events': `${basePath}/dropins/all/events`,
 
         // ========= MERCHANT REDIRECTS =========
-        // Quick start redirects (storefront-builder → quick-start)
+        // Legacy Storefront Builder routes
         '/merchants/get-started/': `${basePath}/merchants/quick-start`,
         '/merchants/storefront-builder/create-content': `${basePath}/merchants/quick-start/create-content`,
         '/merchants/storefront-builder/document-authoring': `${basePath}/merchants/quick-start/document-authoring`,
         '/merchants/storefront-builder/visual-editor': `${basePath}/merchants/quick-start/experience-workspace`,
-        '/merchants/storefront-builder/content-commerce-blocks': `${basePath}/merchants/quick-start/content-commerce-blocks`,
-        '/merchants/storefront-builder/page-metadata': `${basePath}/merchants/quick-start/page-metadata`,
-        '/merchants/storefront-builder/section-metadata': `${basePath}/merchants/quick-start/section-metadata`,
+        '/merchants/storefront-builder/content-commerce-blocks': `${basePath}/merchants/blocks/content-commerce-blocks`,
+        '/merchants/storefront-builder/page-metadata': `${basePath}/merchants/blocks/page-metadata`,
+        '/merchants/storefront-builder/section-metadata': `${basePath}/merchants/blocks/section-metadata`,
         '/merchants/storefront-builder/your-first-page': `${basePath}/how-tos/create-commerce-page`,
         '/merchants/storefront-builder/overview/': `${basePath}/merchants/storefront-builder/`,
         '/merchants/storefront-builder/create-your-content/': `${basePath}/merchants/storefront-builder/create-content/`,

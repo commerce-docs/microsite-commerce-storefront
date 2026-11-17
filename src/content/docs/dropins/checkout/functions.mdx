@@ -28,6 +28,7 @@ The Checkout drop-in provides API functions that enable you to programmatically 
 | [`getNegotiableQuote`](#getnegotiablequote) | Retrieves a negotiable quote for B2B customers. |
 | [`getStoreConfig`](#getstoreconfig) | The `storeConfig` query defines information about a store's configuration. |
 | [`getStoreConfigCache`](#getstoreconfigcache) | API function for the drop-in. |
+| [`getStoredPaymentMethods`](#getstoredpaymentmethods) | Retrieves the signed-in customer's saved payment methods. |
 | [`initializeCheckout`](#initializecheckout) | API function for the drop-in. |
 | [`isEmailAvailable`](#isemailavailable) | Calls the `isEmailAvailable` query. |
 | [`resetCheckout`](#resetcheckout) | API function for the drop-in. |
@@ -200,6 +201,33 @@ Does not emit any drop-in events.
 ### Returns
 
 Returns `void`.
+
+## getStoredPaymentMethods
+
+Retrieves the signed-in customer's saved payment methods. This function takes no arguments and returns a promise containing an array of payment methods. Each method includes `code`, `title`, and optional `additionalData`.
+
+```ts
+function getStoredPaymentMethods(): Promise<PaymentMethod[]>
+```
+
+The function returns an empty array for guests, when no saved methods are available, or if the request fails. An empty result does not distinguish a failed request from a customer with no saved methods.
+
+The [`StoredMethods` slot](/dropins/checkout/slots/#storedmethods-slot) uses these methods to render saved-card options in checkout.
+
+### Events
+
+Does not emit any drop-in events.
+
+### Example
+
+```js
+import { getStoredPaymentMethods } from '@dropins/storefront-checkout/api.js';
+
+const storedMethods = await getStoredPaymentMethods();
+console.log(storedMethods);
+```
+
+Call this function after checkout has established the customer's signed-in state. The logged array contains the saved payment methods, or is empty in the cases described above.
 
 ## initializeCheckout
 
@@ -497,4 +525,3 @@ type ShippingMethod = {
 
 
 
-{/* This documentation is auto-generated from the drop-in source repository: REPO_URL */}

@@ -25,6 +25,7 @@ The Product Details drop-in provides API functions that enable you to programmat
 | [`getProductData`](#getproductdata) | Returns the product data for a given product SKU. |
 | [`getProductsData`](#getproductsdata) | Fetches multiple products by SKUs with optional per-product option configuration. |
 | [`getRefinedProduct`](#getrefinedproduct) | Returns refined product data with specific options selected. |
+| [`isCustomOptionUID`](#iscustomoptionuid) | Checks whether an encoded option UID identifies a custom product option. |
 | [`isProductConfigurationValid`](#isproductconfigurationvalid) | Checks if the current product configuration is valid. |
 | [`setProductConfigurationValid`](#setproductconfigurationvalid) | Sets a callback to be called when product configuration validity changes. |
 | [`setProductConfigurationValues`](#setproductconfigurationvalues) | Sets a callback to be called when product configuration values change. |
@@ -204,6 +205,38 @@ Does not emit any drop-in events.
 
 Returns [`ProductModel`](#productmodel) or `null`.
 
+## isCustomOptionUID
+
+Checks whether a base64-encoded option UID identifies a custom product option. Use this function to distinguish custom option selections from configurable product selections.
+
+```ts
+function isCustomOptionUID(uid: string): boolean
+```
+
+<TableWrapper nowrap={[0]}>
+
+| Parameter | Type | Req? | Description |
+| --- | --- | --- | --- |
+| `uid` | `string` | Yes | Base64-encoded product option identifier. |
+
+</TableWrapper>
+
+Returns `true` when the decoded value starts with `custom-option/`. Returns `false` for other prefixes or values that cannot be decoded. This function does not make a network request or emit drop-in events.
+
+### Example
+
+```js
+import { isCustomOptionUID } from '@dropins/storefront-pdp/api.js';
+
+const customOptionUid = btoa('custom-option/2/5');
+const configurableOptionUid = btoa('configurable/193/23');
+
+console.log(isCustomOptionUID(customOptionUid));
+console.log(isCustomOptionUID(configurableOptionUid));
+```
+
+The first call returns `true`; the second returns `false`. The example encodes two option identifiers to show how the function distinguishes their prefixes.
+
 ## isProductConfigurationValid
 
 The `isProductConfigurationValid` function checks if the current product configuration is valid.
@@ -352,4 +385,3 @@ interface ValuesModel {
 
 
 
-{/* This documentation is auto-generated from the drop-in source repository: REPO_URL */}

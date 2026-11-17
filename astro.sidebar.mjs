@@ -24,41 +24,27 @@ export function generateSidebar() {
           label: 'Getting started',
           collapsed: false,
           items: [
-            { label: 'Overview', link: '/get-started/' },
-            { label: 'Prerequisites', link: '/get-started/before-you-start/' },
-            { label: 'Backend options', link: '/get-started/backends/' },
-            { label: 'Luma Bridge', link: '/setup/discovery/luma-bridge/' },
+            { label: 'Getting started as a developer', link: '/get-started/' },
             { label: 'Create a storefront', link: '/get-started/create-storefront/' },
-            {
-              label: 'AI tools',
-              collapsed: true,
-              items: [
-                { label: 'Install the AI tools', link: '/ai/' },
-                { label: 'Boilerplate skills', link: '/ai/boilerplate-skills/' },
-                { label: 'Dropins AI tools', link: '/ai/dropins-ai-tools/' },
-                { label: 'Wayfinder', link: '/ai/wayfinder/' },
-                { label: 'LLM files', link: '/ai/static-text-files/' },
-              ],
-            },
-            {
-              label: 'Boilerplate',
-              collapsed: true,
-              items: [
-                { label: 'Overview', link: '/boilerplate/' },
-                { label: 'Universal Editor (deprecated)', link: '/boilerplate/universal-editor/' },
-                { label: 'Boilerplate updates', link: '/boilerplate/updates/' },
-              ],
-            },
-            {
-              label: 'Licensing',
-              collapsed: true,
-              autogenerate: { directory: '/licensing/' },
-            },
+            { label: 'Run your storefront locally', link: '/get-started/run-locally/' },
+            { label: 'Make your first change', link: '/get-started/first-change/' },
+            { label: 'Install the AI tools', link: '/ai/' },
+            { label: 'Make a change with AI', link: '/ai/develop-with-ai/' },
+          ],
+        },
+        {
+          label: 'AI tools',
+          collapsed: true,
+          items: [
+            { label: 'Boilerplate skills', link: '/ai/boilerplate-skills/' },
+            { label: 'Dropins AI tools', link: '/ai/dropins-ai-tools/' },
+            { label: 'Wayfinder', link: '/ai/wayfinder/' },
+            { label: 'LLM files', link: '/ai/static-text-files/' },
           ],
         },
         {
           label: 'Architecture',
-          collapsed: false,
+          collapsed: true,
           items: [
             { label: 'Overview', link: '/get-started/architecture/' },
             { label: 'How a page loads', link: '/get-started/architecture/how-a-page-loads/' },
@@ -69,6 +55,25 @@ export function generateSidebar() {
               link: '/get-started/architecture/commerce-services-and-backends/',
             },
             { label: 'Event bus', link: '/dropins/all/events/' },
+          ],
+        },
+        {
+          label: 'Project setup',
+          collapsed: true,
+          items: [
+            { label: 'Prerequisites', link: '/get-started/before-you-start/' },
+            { label: 'Backend options', link: '/get-started/backends/' },
+            { label: 'Storefront configuration', link: '/setup/configuration/commerce-configuration/' },
+            { label: 'Verify your storefront setup', link: '/get-started/verify-setup/' },
+          ],
+        },
+        {
+          label: 'Boilerplate',
+          collapsed: true,
+          items: [
+            { label: 'Overview', link: '/boilerplate/' },
+            { label: 'Universal Editor (deprecated)', link: '/boilerplate/universal-editor/' },
+            { label: 'Boilerplate updates', link: '/boilerplate/updates/' },
           ],
         },
         {
@@ -88,6 +93,14 @@ export function generateSidebar() {
           collapsed: true,
           items: [
             { label: 'Overview', link: '/dropins/all/introduction/' },
+            {
+              label: 'Licensing',
+              collapsed: false,
+              items: [
+                { label: 'Licensing requirements', link: '/licensing/' },
+                { label: 'License agreement', link: '/licensing/license-agreement/' },
+              ],
+            },
             { label: 'Containers', link: '/dropins/all/containers/' },
             { label: 'Slots', link: '/dropins/all/slots/' },
             { label: 'Common events', link: '/dropins/all/common-events/' },
@@ -122,7 +135,6 @@ export function generateSidebar() {
           collapsed: true,
           items: [
             { label: 'Overview', link: '/setup/configuration/' },
-            { label: 'Storefront configuration', link: '/setup/configuration/commerce-configuration/' },
             {
               label: 'Compatibility Package',
               collapsed: true,
@@ -151,6 +163,7 @@ export function generateSidebar() {
           collapsed: true,
           items: [
             { label: 'Overview', link: '/setup/launch/' },
+            { label: 'Consent and CMP integration', link: '/setup/analytics/consent/' },
             { label: 'Adobe Experience Platform', link: '/setup/analytics/adobe-experience-platform/' },
             { label: 'Analytics instrumentation', link: '/setup/analytics/instrumentation/' },
             { label: 'Browser compatibility', link: '/get-started/browser-compatibility/' },
@@ -193,9 +206,13 @@ export function generateSidebar() {
           label: 'Getting started',
           collapsed: false,
           items: [
-            { label: 'Overview', link: '/merchants/quick-start/' },
+            { label: 'Getting started as an author', link: '/merchants/quick-start/' },
             {
-              label: 'What is Commerce Storefront?',
+              label: 'Create your first commerce page',
+              link: '/how-tos/create-commerce-page/',
+            },
+            {
+              label: 'Storefront authoring tools',
               link: '/merchants/quick-start/create-content/',
             },
             { label: 'How a page comes together', link: '/merchants/quick-start/content-model/' },
@@ -507,12 +524,11 @@ export function generateSidebar() {
           label: 'Author How-tos',
           collapsed: false,
           items: [
-            { label: 'Browse All', link: '/how-tos/#for-authors' },
+            { label: 'Browse All', link: '/how-tos/#how-tos-for-authors' },
             {
               label: 'Pages and blocks',
               collapsed: true,
               items: [
-                { label: 'Create a commerce page', link: '/how-tos/create-commerce-page/' },
                 { label: 'Build a category page manually', link: '/how-tos/manual-category-page/' },
                 { label: 'Add a block to a page', link: '/how-tos/add-block-to-page/' },
                 { label: 'Add page metadata', link: '/how-tos/add-page-metadata/' },
@@ -556,7 +572,7 @@ export function generateSidebar() {
           label: 'Developer How-tos',
           collapsed: false,
           items: [
-            { label: 'Browse All', link: '/how-tos/#for-developers' },
+            { label: 'Browse All', link: '/how-tos/#how-tos-for-developers' },
             {
               label: 'Product and category pages',
               collapsed: true,
@@ -760,7 +776,8 @@ export function generateSidebar() {
                     { label: 'ApplePay', link: '/dropins/payment-services/containers/apple-pay/' },
                     { label: 'CreditCard', link: '/dropins/payment-services/containers/credit-card/' },
                     { label: 'GooglePay', link: '/dropins/payment-services/containers/google-pay/' },
-                    { label: 'PayPalButtons', link: '/dropins/payment-services/containers/paypal-buttons/' }
+                    { label: 'PayPalButtons', link: '/dropins/payment-services/containers/paypal-buttons/' },
+                    { label: 'VaultedCreditCard', link: '/dropins/payment-services/containers/vaulted-credit-card/' }
                   ],
                 },
               ],
@@ -793,6 +810,13 @@ export function generateSidebar() {
               items: [
                 { label: 'Overview', link: '/dropins/product-details/' },
                 { label: 'Quick Start', link: '/dropins/product-details/quick-start/' },
+                {
+                  label: 'How-Tos',
+                  collapsed: true,
+                  items: [
+                    { label: 'Render customizable options', link: '/dropins/product-details/tutorials/render-customizable-options/' },
+                  ],
+                },
                 { label: 'Initialization', link: '/dropins/product-details/initialization/' },
                 { label: 'Functions', link: '/dropins/product-details/functions/' },
                 { label: 'Events', link: '/dropins/product-details/events/' },
@@ -805,6 +829,7 @@ export function generateSidebar() {
                   items: [
                     { label: 'Overview', link: '/dropins/product-details/containers/' },
                     { label: 'ProductAttributes', link: '/dropins/product-details/containers/product-attributes/' },
+                    { label: 'ProductCustomizableOptions', link: '/dropins/product-details/containers/product-customizable-options/' },
                     { label: 'ProductDescription', link: '/dropins/product-details/containers/product-description/' },
                     { label: 'ProductDetails container (deprecated)', link: '/dropins/product-details/containers/product-details/' },
                     { label: 'ProductDownloadableOptions', link: '/dropins/product-details/containers/product-downloadable-options/' },
@@ -1274,6 +1299,7 @@ export function generateSidebar() {
           label: 'Release Notes',
           items: [
             { label: 'Overview', link: '/releases/' },
+            { label: 'October 2026 suite', link: '/releases/2026-10/' },
             { label: 'September 2026 suite', link: '/releases/2026-09/' },
             { label: 'July 2026 suite', link: '/releases/2026-07/' },
             { label: 'June 2026 suite', link: '/releases/2026-06/' },
