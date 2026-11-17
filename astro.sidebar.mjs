@@ -608,6 +608,7 @@ export function generateSidebar() {
                 { label: 'Add stored payment methods to My Account', link: '/how-tos/payment-services-my-account/' },
                 { label: 'Customize the address form layout', link: '/how-tos/customize-layout/' },
                 { label: 'Display an additional wishlist', link: '/how-tos/render-additional-wishlist/' },
+                { label: 'Sign in shoppers for AI agents', link: '/how-tos/sign-in-shoppers-for-ai-agents/' },
                 { label: 'Validate a saved address', link: '/how-tos/validate-address/' },
               ],
             },
