@@ -119,15 +119,23 @@ The endpoints properties define the GraphQL API endpoints for your Commerce back
 
 - **`commerce-core-endpoint`** (read/write) — Core GraphQL endpoint for queries and mutations. This endpoint handles all write operations and some read operations. See <Link href="https://developer.adobe.com/commerce/webapi/reference/graphql/latest/" text="Adobe Commerce GraphQL API" /> for details.
 
-- **`commerce-endpoint`** (catalog data retrieval): The GraphQL endpoint for the Storefront Services Catalog Service, or the Merchandising Services with CCDM. The selected backend determines the supported catalog API. For details, see the following documentation:
-  - For Adobe Commerce as a Cloud Service, see the <Link href="https://experienceleague.adobe.com/en/docs/commerce/catalog-service/get-started" text="Catalog Service Guide" />.
-   - For Adobe Commerce Optimizer, see the <Link href="https://developer.adobe.com/commerce/services/optimizer/merchandising-services/using-the-api/#base-url" text="Merchandising Services Developer Guide" />.
+- **`commerce-endpoint`** (read-only) — Services GraphQL endpoint optimized for read-only operations with Catalog Service, Live Search, and Product Recommendations. It is also optimized for performance for product data retrieval. For details, see the following documentation:
+  - For Adobe Commerce as a Cloud Service with Storefront Services, see the <Link href="https://experienceleague.adobe.com/en/docs/commerce/catalog-service/get-started" text="Catalog Service Guide" />.
+  - For Adobe Commerce Optimizer or Adobe Commerce as a Cloud Service with Merchandising Services, see the <Link href="https://developer.adobe.com/commerce/services/optimizer/merchandising-services/using-the-api/#base-url" text="Merchandising Services Developer Guide" />.
 
 ### Headers
 
 The headers section defines HTTP headers required for API authentication and store context. Headers are organized by scope to apply different authentication and context settings for different request types. The specific headers required depend on your Commerce environment type.
 
-<Tabs>
+Select the tab for your backend. Your choice also selects the matching tab in [Configuration Examples](#configuration-examples). If you use Adobe Commerce as a Cloud Service and are not sure which catalog model your instance uses, ask your Commerce administrator.
+
+<a id="merchandising-services-with-ccdm-context"></a>
+
+<a id="catalog-views-and-policies-context"></a>
+
+For Merchandising Services, select **Adobe Commerce as a Cloud Service (Merchandising Services)**.
+
+<Tabs syncKey="commerce-backend">
 
 <TabItem label="Adobe Commerce (PaaS)">
 
@@ -164,13 +172,43 @@ Adobe Commerce PaaS environments use standard Adobe Commerce header naming conve
 
 </TabItem>
 
-<TabItem label="Adobe Commerce as a Cloud Service">
+<TabItem label="Adobe Commerce as a Cloud Service (Merchandising Services)">
 
-Adobe Commerce as a Cloud Service supports two catalog configurations. Use the header model for your environment rather than combining the two models.
+Adobe Commerce as a Cloud Service with Merchandising Services uses <Link href="https://developer.adobe.com/commerce/services/optimizer/merchandising-services/using-the-api/#headers" text="`AC-*` catalog headers" /> instead of `Magento-*` headers. It also requires the [`adobe-commerce-optimizer`](#adobe-commerce-optimizer-flag) flag. New Adobe Commerce as a Cloud Service organizations use Merchandising Services by default. See <Link href="https://experienceleague.adobe.com/en/docs/commerce/cloud-service/merchandising-services#availability-and-migration" text="Merchandising Services availability and migration" />. Changing storefront headers does not switch an existing instance to Merchandising Services. The storefront drop-ins work with either catalog model without code changes.
 
-#### Storefront services context
+The <Link href="https://da.live/app/adobe-commerce/storefront-tools/tools/config-generator/config-generator" text="config generator" /> does not detect Merchandising Services. For an Adobe Commerce as a Cloud Service endpoint, it generates `Magento-*` catalog headers and sets `adobe-commerce-optimizer` to `false`. Replace those values with the headers and flag below.
 
-Environments using Catalog Service with the Storefront Services use <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/catalog-service/queries/categories#required-headers" target="_blank" text ="`Magento-*` catalog headers"  />. This configuration does not require API keys or environment IDs.
+```json
+{
+  "adobe-commerce-optimizer": true,
+  "headers": {
+    "all": {
+      "Store": "{{STORE_VIEW_CODE}}"
+    },
+    "cs": {
+      "AC-View-ID": "{{CATALOG_VIEW_ID}}",
+      "AC-Price-Book-ID": "{{PRICE_BOOK_ID}}",
+      "AC-Policy-{{POLICY_TRIGGER_NAME}}": "{{POLICY_VALUE}}"
+    }
+  }
+}
+```
+
+**Header Scopes:**
+
+- **`all`** - Headers applied to all GraphQL requests
+  - **`Store`** - Store view code for Core GraphQL requests. See <Link href="https://developer.adobe.com/commerce/webapi/graphql/usage/headers/" text="GraphQL Headers" /> for details.
+
+- **`cs`** - Headers for catalog requests
+  - **`AC-View-ID`** - (Required) The unique ID of the catalog view that products are sold through. See <Link href="https://experienceleague.adobe.com/en/docs/commerce-admin/merchandising-with-ccdm/setup/catalog-view" text="Catalog views" /> for details.
+  - **`AC-Policy-{{POLICY_TRIGGER_NAME}}`** - (Optional) Policy trigger for filtering products. The header name must match the policy's configured trigger, for example `AC-Policy-Brand`. See <Link href="https://experienceleague.adobe.com/en/docs/commerce-admin/merchandising-with-ccdm/setup/policies" text="Policies" /> for details.
+  - **`AC-Price-Book-ID`** - (Optional) The price book ID to use for pricing.
+
+</TabItem>
+
+<TabItem label="Adobe Commerce as a Cloud Service (Storefront Services)">
+
+Existing Adobe Commerce as a Cloud Service instances on the original catalog model use Catalog Service with the Storefront Services and <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/catalog-service/queries/categories#required-headers" text="`Magento-*` catalog headers" />. This configuration does not require API keys or environment IDs.
 
 ```json
 {
@@ -197,64 +235,11 @@ Environments using Catalog Service with the Storefront Services use <Link href="
   - **`Magento-Store-View-Code`** - Store view for Catalog Service requests. See <Link href="https://experienceleague.adobe.com/en/docs/commerce-admin/stores-sales/site-store/store-views" text="Store views" /> for details.
   - **`Magento-Website-Code`** - Website to connect to. See <Link href="https://experienceleague.adobe.com/en/docs/commerce-operations/configuration-guide/multi-sites/ms-admin#step-2-create-websites" text="Create websites" /> for details.
 
-#### Merchandising Services with CCDM context
-
-Adobe Commerce as a Cloud Service with Merchandising Services uses the composable catalog data model (CCDM). This model separates:
-
-- **Product data:** SKUs, attributes, metadata, assets, and prices.
-- **Product context:** Catalog views, policies, and catalog source locales that define the catalog available to a storefront.
-
-This separation lets you tailor storefront catalogs without duplicating the base product data. Catalog views define the available products and pricing, and policies filter the product assortment. See the <Link href="https://developer.adobe.com/commerce/services/optimizer/" text="Merchandising Services Developer Guide" /> for the data model and its APIs.
-
-The Merchandising Services configuration uses <Link href="https://developer-stage.adobe.com/commerce/services/optimizer/merchandising-services/using-the-api/#headers" "target="_blank" text="`AC-*` catalog headers" /> instead of `Magento-*` headers.
-
-Use this configuration for an instance already provisioned with Merchandising Services. Changing storefront headers does not switch an existing instance to this catalog model. See the <Link href="https://experienceleague.adobe.com/en/docs/commerce/cloud-service/merchandising-services" text="Merchandising Services overview" /> for availability and adoption details.
-
-Storefront drop-ins handle the catalog-model transition without code changes. The configuration below sets the catalog request context for your environment.
-
-The current configuration generator does not provide a separate Merchandising Services with CCDM option for Adobe Commerce as a Cloud Service. If you use generated configuration, review its output and replace the catalog headers with the values below. Endpoint detection alone does not complete this setup.
-
-Merge the following configuration fragment into `public.default` in `config.json` or your site's public configuration. This fragment is not a complete `config.json` file. Keep any other required settings, including the core GraphQL endpoint, from your approved environment configuration.
-
-```json
-{
-  "commerce-endpoint": "{{CATALOG_GRAPHQL_ENDPOINT}}",
-  "headers": {
-    "all": {
-      "Store": "{{STORE_VIEW_CODE}}"
-    },
-    "cs": {
-      "AC-View-ID": "{{CATALOG_VIEW_ID}}",
-      "AC-Price-Book-ID": "{{PRICE_BOOK_ID}}",
-      "AC-Policy-{{POLICY_TRIGGER_NAME}}": "{{POLICY_VALUE}}"
-    }
-  }
-}
-```
-
-Replace the placeholders with values from your environment:
-
-- `commerce-endpoint`: Replace `{{CATALOG_GRAPHQL_ENDPOINT}}` with the full catalog GraphQL URL supplied for your environment. Do not construct this URL from a region or tenant ID.
-- `headers.all.Store`: The store view code for core GraphQL requests. It is optional for the default store view when no other store selection is present. Set it explicitly for another store view.
-- `headers.cs.AC-View-ID`: Required. Replace `{{CATALOG_VIEW_ID}}` with the catalog view UUID. If Site Creator generated the configuration, add this value if it is missing.
-- `headers.cs.AC-Price-Book-ID`: Optional. Replace `{{PRICE_BOOK_ID}}` with the price book ID when selecting a specific price book, or remove this entry.
-- `headers.cs.AC-Policy-{{POLICY_TRIGGER_NAME}}`: Optional. The header name must match the policy's configured HTTP header trigger. Replace `{{POLICY_TRIGGER_NAME}}` with the part after `AC-Policy-` and `{{POLICY_VALUE}}` with the trigger value, or remove this entry. For example, the trigger `AC-Policy-Brand` uses that same header name.
-
-Keep these `AC-*` catalog headers in `headers.cs`. Do not add `Magento-*` catalog headers to this scope. For header details, see the <Link href="https://developer.adobe.com/commerce/services/optimizer/merchandising-services/using-the-api/#headers" text="Merchandising API headers reference" />.
-
-When `commerce-core-endpoint` is absent, the storefront also uses `commerce-endpoint` for core GraphQL requests. Leave `commerce-core-endpoint` unset only if the supplied endpoint supports both catalog and transactional operations. Otherwise, configure the separate core endpoint.
-
-The `adobe-commerce-optimizer` flag controls whether recommendation requests can include the current product's price. Before using this configuration, confirm the flag and analytics values with the environment's integration owner. Do not copy the generated storefront services defaults without confirming these values.
-
-Customer-authenticated operations, such as a signed-in shopper's cart or order history, also need `Authorization: Bearer {{CUSTOMER_TOKEN}}`. Supply the current shopper's token dynamically with the request. Never save a customer token in public configuration. Guest cart creation does not require a customer token.
-
-Raw POST requests also need `Content-Type: application/json`. The storefront GraphQL client handles this header; it does not belong in the static catalog context above. See <Link href="https://developer.adobe.com/commerce/webapi/graphql/usage/headers/" text="GraphQL request headers" />.
-
 </TabItem>
 
 <TabItem label="Adobe Commerce Optimizer">
 
-Adobe Commerce Optimizer uses different header naming conventions and requires Commerce Optimizer-specific headers as defined in the <Link href="https://developer.adobe.com/commerce/services/optimizer/merchandising-services/using-the-api/#headers" text="Merchandising Services API documentation" />.
+Adobe Commerce Optimizer uses different header naming conventions and requires Commerce Optimizer-specific headers as defined in the <Link href="https://developer.adobe.com/commerce/services/optimizer/merchandising-services/using-the-api/#headers" text="Merchandising Services API documentation" />. It also requires the [`adobe-commerce-optimizer`](#adobe-commerce-optimizer-flag) flag.
 
 ```json
 {
@@ -270,7 +255,7 @@ Adobe Commerce Optimizer uses different header naming conventions and requires C
 
 **Header Scopes:**
 
-- **`cs`** - Headers applied to all GraphQL requests
+- **`cs`** - Headers for catalog requests
   - **`AC-View-ID`** - (Required) The unique ID assigned to the catalog view that products will be sold through. You can find this in the <Link href="https://experienceleague.adobe.com/en/docs/commerce/optimizer/setup/catalog-view" text="Adobe Commerce Optimizer UI" />.
   - **`AC-Policy-{{POLICY_TRIGGER_NAME}}`** - (Optional) Policy trigger for filtering products by attribute. Replace the trigger name and `{{POLICY_VALUE}}` with the configured policy name and value. For example, `AC-Policy-Brand:Cruz` filters by a trigger named `Brand` with the value `Cruz`. You can specify multiple policy headers per request.
   - **`AC-Price-Book-ID`** - (Optional) Specifies the Price Book ID to use for pricing. Each catalog view defines a default Price Book. If a customer has an assigned Price Book, it is used when it falls within the allowed Price Books for the catalog view. Otherwise, the default Price Book for the catalog view is used. See <Link href="/setup/configuration/price-book-setup/" text="Price Book ID setup" /> for implementation details.
@@ -283,13 +268,11 @@ Adobe Commerce Optimizer uses different header naming conventions and requires C
 
 The analytics section contains store and environment metadata for tracking and reporting. The specific values depend on your Commerce environment type.
 
-For Adobe Commerce as a Cloud Service with Merchandising Services, use analytics values approved for your environment. Do not copy the storefront services or standalone Adobe Commerce Optimizer analytics template based only on the catalog header model.
-
 <Tabs>
 
-<TabItem label="Adobe Commerce (PaaS) / storefront services">
+<TabItem label="Adobe Commerce (PaaS) / SaaS">
 
-For Adobe Commerce PaaS environments and Adobe Commerce as a Cloud Service that use Storefront Services, use standard Commerce store and website identifiers from your Commerce environment. You can obtain these values using a `storeConfig` query.
+For Adobe Commerce PaaS and Adobe Commerce as a Cloud Service environments, use standard Commerce store and website identifiers from your Commerce Environment. You can obtain these values using a `storeConfig` query.
 
 ```json
 {
@@ -352,7 +335,8 @@ For Adobe Commerce Optimizer environments, use a simplified analytics configurat
     "store-url": "{{STORE_URL}}",
     "store-view-currency-code": "{{CURRENCY_CODE}}",
     "storefront-template": "{{TEMPLATE_TYPE}}",
-    "view-id": "{{CATALOG_VIEW_ID}}"
+    "view-id": "{{CATALOG_VIEW_ID}}",
+    "locale": "{{LOCALE}}"
   }
 }
 ```
@@ -368,6 +352,7 @@ For Adobe Commerce Optimizer environments, use a simplified analytics configurat
 - **`store-view-currency-code`** - Currency code for the store view (for example, "USD", "EUR")
 - **`storefront-template`** - (Optional) Storefront template type (for example, "Other")
 - **`view-id`** - The unique ID assigned to the catalog view from the Adobe Commerce Optimizer UI
+- **`locale`** - (Optional) Locale sent with the storefront analytics context when set (for example, `"en-US"`)
 
 </TabItem>
 
@@ -418,7 +403,7 @@ The multistore section manages configurations for multiple store views and inter
 - **Header overrides** - Override default headers for specific store views
 - **Store context** - Define different store, website, and store view codes for each locale
 
-For content paths and store view setup, see [Multistore setup](/setup/configuration/multistore-setup/).
+For content paths and store view setup, see [Multistore setup](/setup/configuration/multistore-setup/). The example above uses `Magento-*` catalog headers. For the Merchandising Services values to set for each store view, see [Multistore setup](/setup/configuration/multistore-setup/#implementation-walkthrough).
 
 
 ### Additional Configuration Options
@@ -427,12 +412,14 @@ Some configuration options can be set to enable or disable certain boilerplate f
 
 ```json
 {
+  "adobe-commerce-optimizer": boolean,
   "commerce-assets-enabled": boolean,
   "commerce-b2b-enabled": boolean,
   "commerce-companies-enabled": boolean,
 }
 ```
 
+- <a id="adobe-commerce-optimizer-flag"></a>**`adobe-commerce-optimizer`** - Boolean flag for storefronts that use `AC-*` catalog headers: Adobe Commerce Optimizer and Adobe Commerce as a Cloud Service with Merchandising Services. When enabled, the storefront sends the catalog view and price book headers with core requests and applies shopper price books. Use the JSON boolean `true`, not the string `"true"`. Leave it unset or `false` for `Magento-*` catalog headers. When it is enabled, the storefront does not send the customer group header those configurations use.
 - **`commerce-assets-enabled`** - Boolean flag to enable or disable AEM Assets within the storefront
 - **`commerce-b2b-enabled`** - Boolean flag to enable or disable B2B-related global and shared logic within the storefront. When enabled, this flag is passed to the Auth initializer as `customerPermissionRoles: true` to enable customer role permissions API. This flag controls B2B functionality at the authentication and authorization level, enabling the drop-in to fetch B2B customer role permissions automatically on initialization and re-fetch when authentication state changes. See the [User Auth initialization documentation](/dropins/user-auth/initialization/) for details.
 - **`commerce-companies-enabled`** - Boolean flag to enable or disable Commerce B2B company features within the storefront. This flag controls company-specific features such as company management, company structure, and company-related blocks.
@@ -474,9 +461,9 @@ This enables the customer role permissions API when B2B features are enabled in 
 
 ## Configuration Examples
 
-The following examples show real `config.json` files from different Adobe Commerce environments. These examples demonstrate the actual structure and values used in production environments.
+The following examples are based on live `config.json` files from Adobe Commerce demo storefronts. Replace their values with your own environment's settings.
 
-<Tabs>
+<Tabs syncKey="commerce-backend">
 
 <TabItem label="Adobe Commerce (PaaS)">
 
@@ -501,8 +488,6 @@ This example shows the configuration for an Adobe Commerce PaaS environment, whi
         }
       },
       "analytics": {
-        "aep-ims-org-id": null,
-        "aep-datastream-id": null,
         "base-currency-code": "USD",
         "environment": "Production",
         "environment-id": "f38a0de0-764b-41fa-bd2c-5bc2f3c7b39a",
@@ -541,11 +526,43 @@ This example shows the configuration for an Adobe Commerce PaaS environment, whi
 ```
 </TabItem>
 
+<TabItem label="Adobe Commerce as a Cloud Service (Merchandising Services)">
+
+This example is based on the configuration of an Adobe Commerce as a Cloud Service storefront that uses Merchandising Services. It uses the same GraphQL URL for `commerce-endpoint` and `commerce-core-endpoint`, sets `adobe-commerce-optimizer` to `true`, and uses `AC-*` catalog headers. Replace the placeholders with values for your environment, and add the [analytics](#analytics) values for your environment.
+
+```json title="Adobe Commerce as a Cloud Service with Merchandising Services config.json" showLineNumbers
+{
+  "public": {
+    "default": {
+      "commerce-core-endpoint": "{{COMMERCE_GRAPHQL_ENDPOINT}}",
+      "commerce-endpoint": "{{COMMERCE_GRAPHQL_ENDPOINT}}",
+      "adobe-commerce-optimizer": true,
+      "headers": {
+        "all": {
+          "Store": "default"
+        },
+        "cs": {
+          "AC-View-ID": "{{CATALOG_VIEW_ID}}",
+          "AC-Price-Book-ID": "{{PRICE_BOOK_ID}}"
+        }
+      },
+      "plugins": {
+        "picker": {
+          "rootCategory": "{{ROOT_CATEGORY_ID}}"
+        }
+      }
+    }
+  }
+}
+```
+
+</TabItem>
+
 <TabItem label="Adobe Commerce as a Cloud Service (Storefront Services)">
 
-This Adobe Commerce as a Cloud Service example uses Storefront Services and `Magento-*` catalog headers. It uses one GraphQL URL for catalog and core operations. Omit `commerce-core-endpoint` only when the supplied endpoint supports both. For Merchandising Services, use the [Merchandising Services configuration](#merchandising-services-with-ccdm-context) and verify the catalog and core endpoints separately. This configuration is used on the <Link href="https://main--boilerplate-accs--adobe-commerce.aem.live/" text="storefront services demo site" />.
+This Adobe Commerce as a Cloud Service example uses Storefront Services and `Magento-*` catalog headers. It uses one GraphQL URL for catalog and core operations. Omit `commerce-core-endpoint` only when the supplied endpoint supports both. For Merchandising Services, use the [Merchandising Services configuration](#merchandising-services-with-ccdm-context). This configuration is used on the <Link href="https://main--boilerplate-accs--adobe-commerce.aem.live/" text="storefront services demo site" />.
 
-```json title="Adobe Commerce as a Cloud Service config.json" showLineNumbers
+```json title="Adobe Commerce as a Cloud Service with Storefront Services config.json" showLineNumbers
 {
   "public": {
     "default": {
@@ -589,28 +606,32 @@ This Adobe Commerce as a Cloud Service example uses Storefront Services and `Mag
 
 <TabItem label="Adobe Commerce Optimizer">
 
-This example shows the configuration for Adobe Commerce Optimizer, which uses different header naming conventions and includes ACO-specific settings. For Adobe Commerce Optimizer, set `commerce-endpoint` (Adobe Commerce Optimizer GraphQL URL for catalog) at a minimum. Set `commerce-core-endpoint` (your core endpoint—PaaS or your own Adobe Commerce hosted environment) to enable transactional or other core-related functionality. Include "adobe-commerce-optimizer": true. This example is from https://main--boilerplate-aco--adobe-commerce.aem.live/ and does not include a core endpoint.
+This example shows the configuration for Adobe Commerce Optimizer, which uses different header naming conventions and includes Adobe Commerce Optimizer-specific settings. For Adobe Commerce Optimizer, set `commerce-endpoint` (Adobe Commerce Optimizer GraphQL URL for catalog) at a minimum. Set `commerce-core-endpoint` (your core endpoint—PaaS or your own Adobe Commerce hosted environment) to enable transactional or other core-related functionality. Include "adobe-commerce-optimizer": true. This example is based on the <Link href="https://main--boilerplate-aco--adobe-commerce.aem.live/" text="Adobe Commerce Optimizer demo site" /> configuration. Replace `{{COMMERCE_CORE_ENDPOINT}}` with your commerce platform's GraphQL URL, or remove it for a catalog-only setup.
 
-```json title="ACO config.json" showLineNumbers
+```json title="Adobe Commerce Optimizer config.json" showLineNumbers
 {
   "public": {
     "default": {
-      "adobe-commerce-optimizer": true,
-      "commerce-endpoint": "https://na1-sandbox.api.commerce.adobe.com/8idEEDDiVwjCEJAyB5kjfi/graphql",
+      "commerce-endpoint": "https://na1.api.commerce.adobe.com/WbqPAxMhK9b37TKrp8htRx/graphql",
+      "commerce-core-endpoint": "{{COMMERCE_CORE_ENDPOINT}}",
       "headers": {
+        "all": {
+          "Store": "default"
+        },
         "cs": {
-          "ac-view-id": "0d3eebf7-b5fb-4904-9ccf-f35fcc61862b",
-          "ac-price-book-id": "west_coast_inc"
+          "ac-view-id": "72495d51-6294-46fc-a9ca-b9ca5bdafc0a"
         }
       },
+      "adobe-commerce-optimizer": true,
       "analytics": {
-        "base-currency-code": "USD",
+        "environment-id": "WbqPAxMhK9b37TKrp8htRx",
         "environment": "Testing",
-        "environment-id": "8idEEDDiVwjCEJAyB5kjfi",
         "store-url": "https://main--boilerplate-aco--adobe-commerce.aem.live/",
+        "base-currency-code": "USD",
         "store-view-currency-code": "USD",
         "storefront-template": "Other",
-        "view-id": "0d3eebf7-b5fb-4904-9ccf-f35fcc61862b"
+        "view-id": "72495d51-6294-46fc-a9ca-b9ca5bdafc0a",
+        "locale": "en-US"
       },
       "plugins": {
         "picker": {
@@ -909,8 +930,6 @@ The helpers return resolved values synchronously after initialization, so these 
 
 `getHeaders('cs')` combines the common `headers.all` values with the catalog-specific `headers.cs` values. The scoped values take precedence when the same header appears in both. `getHeaders('all')` reads the common headers.
 
-For the [Merchandising Services with CCDM context](#merchandising-services-with-ccdm-context), `getConfigValue('headers.cs.AC-View-ID')` reads the configured catalog view ID. `getHeaders('cs')['AC-View-ID']` reads that header from the merged catalog headers. Both calls use the configuration selected for the current page.
-
 These helpers read configured headers, not every header that a running shopping feature adds. For example, customer context can change after sign-in.
 
 ### Access analytics and other configuration
@@ -923,7 +942,7 @@ The helper reads configuration; it does not send analytics events or enable a pl
 
 For custom Commerce requests, reuse the starter's configured clients in `scripts/commerce.js`: `CS_FETCH_GRAPHQL` for catalog requests and `CORE_FETCH_GRAPHQL` for core Commerce operations. They connect the resolved endpoint and headers to the running storefront's customer context.
 
-Use a query supported by the selected backend. Adobe Commerce Optimizer exposes the <Link href="https://developer.adobe.com/commerce/services/optimizer/merchandising-services/" text="Merchandising API" />; Adobe Commerce transactional operations use <Link href="https://developer.adobe.com/commerce/webapi/graphql/" text="core GraphQL" />. A query written for one API is not automatically valid for the other.
+Use a query supported by the selected backend. Adobe Commerce Optimizer and Adobe Commerce as a Cloud Service with Merchandising Services expose the <Link href="https://developer.adobe.com/commerce/services/optimizer/merchandising-services/" text="Merchandising API" />; Adobe Commerce transactional operations use <Link href="https://developer.adobe.com/commerce/webapi/graphql/" text="core GraphQL" />. A query written for one API is not automatically valid for the other, and Merchandising API catalog queries differ from Storefront Services catalog queries.
 
 For an Adobe Commerce core GraphQL connection, add this separate local development block to read the configured store's code and base currency. The `storeConfig` query is not an Adobe Commerce Optimizer merchandising query.
 
