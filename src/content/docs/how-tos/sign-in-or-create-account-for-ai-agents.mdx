@@ -10,45 +10,46 @@ import Aside from '@components/Aside.astro';
 import Link from '@components/Link.astro';
 import TableWrapper from '@components/TableWrapper.astro';
 
-AI agents that use the Commerce Storefront MCP server need the shopper's permission for account actions, such as checkout or viewing orders. Anonymous actions, such as product search, do not need it. The agent gets that permission through the OAuth 2.0 authorization code flow with PKCE: it sends the shopper to your storefront sign-in page, the shopper signs in, and the storefront hands an authorization code back to the agent. The agent never sees the shopper's password.
+Add an OAuth 2.0 authorization handoff to your storefront's sign-in and create-account blocks so AI agents can act on behalf of a signed-in shopper. This handoff works with storefronts built on the <Link href="https://github.com/hlxsites/aem-boilerplate-commerce" text="Adobe Commerce boilerplate" />.
 
-This how-to adds that handoff to the sign-in and create-account blocks of a storefront built on the <Link href="https://github.com/hlxsites/aem-boilerplate-commerce" text="Adobe Commerce boilerplate" />.
+AI agents that use the Commerce Storefront MCP server need the shopper's permission for account actions, such as checkout or viewing orders. Anonymous actions, such as product search, do not need that permission.
+
+The agent uses the OAuth 2.0 authorization code flow with Proof Key for Code Exchange (PKCE). It sends the shopper to your storefront sign-in page. After the shopper signs in, the storefront returns an authorization code to the agent without sharing the shopper's password.
 
 <Aside type="note" title="Early access">
   The handoff is not part of the boilerplate `main` branch yet. Copy the files from the
-  [agentcom-2491 branch](https://github.com/hlxsites/aem-boilerplate-commerce/tree/agentcom-2491),
-  which holds the reference implementation from [pull request
-  #1537](https://github.com/hlxsites/aem-boilerplate-commerce/pull/1537), as described below.
+  <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/tree/agentcom-2491" text="agentcom-2491 branch" />,
+  which holds the reference implementation from <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/pull/1537" text="pull request #1537" />, as described below.
 </Aside>
 
 ## What you'll edit or create
 
-- `scripts/oauth-authorize.js` (copy)
-- `scripts/commerce.js`
-- `blocks/commerce-login/commerce-login.js`
-- `blocks/commerce-create-account/commerce-create-account.js`
-- `placeholders/auth.json` (optional)
+- Copy `scripts/oauth-authorize.js`
+- Edit `scripts/commerce.js`
+- Edit `blocks/commerce-login/commerce-login.js`
+- Edit `blocks/commerce-create-account/commerce-create-account.js`
+- Edit `placeholders/auth.json` (optional)
 
 ## Prerequisites
 
-- Adobe Commerce with the Storefront MCP extension, which includes the OAuth 2.0 server. On Adobe Commerce as a Cloud Service (ACCS) it is available by default. On Adobe Commerce on cloud infrastructure or on-premises, install the `adobe-commerce/module-storefront-mcp-enablement` Composer package.
+- Adobe Commerce with the Storefront MCP extension, which includes the OAuth 2.0 server. On Adobe Commerce as a Cloud Service, it is available by default. On Adobe Commerce on cloud infrastructure or on-premises, install the `adobe-commerce/module-storefront-mcp-enablement` Composer package.
 - A storefront that signs shoppers in with the [user authentication drop-in](/dropins/user-auth/) through the `commerce-login` and `commerce-create-account` blocks.
 
 ## How it works
 
-<Steps>
+When an agent starts an authorization request:
 
-1. The agent sends the shopper to the Commerce authorization endpoint with the OAuth 2.0 parameters. On ACCS, the authorization endpoint is your sign-in page. On other deployments, it is `/oauth2ac/authorize`, which forwards the parameters to your sign-in page.
+1. The agent sends the shopper to the Commerce authorization endpoint with the OAuth 2.0 parameters. On Adobe Commerce as a Cloud Service, this endpoint is your sign-in page. On other deployments, it is `/oauth2ac/authorize`, which forwards the parameters to your sign-in page.
 2. If the shopper is not signed in, the `commerce-login` block shows the usual sign-in form. If the shopper is already signed in, this step is skipped.
 3. The block calls the `issueOauthAuthorizationCode` GraphQL mutation with the customer token and the URL parameters.
 4. Commerce validates the client, the redirect URI, the scopes, and PKCE, and then returns a `redirect_url` that carries `code`, `state`, and `iss`.
 5. The block redirects the browser to `redirect_url`. The agent exchanges the code for tokens at the Commerce token endpoint.
 
-</Steps>
+If the shopper has no account, the sign-in form links to the create-account page. The pending request stays in the same browser tab. After sign-up, the `commerce-create-account` block signs the shopper in and continues from step 3.
 
-If the shopper has no account, the sign-in form links to the create-account page and the request is kept for that tab. The `commerce-create-account` block signs the new shopper in after sign-up and continues from step 3. If your store requires email confirmation, the block shows that the account was created with a link to sign in, and the flow continues after the shopper signs in from the same tab.
+If email confirmation is required, the block shows the email confirmation form. If automatic sign-in fails, it shows an account-created message with a sign-in link. In both cases, the pending request stays in the tab, so authorization continues when the shopper signs in from that tab before the request expires.
 
-Without the OAuth 2.0 parameters, both blocks behave exactly as before.
+When there is no OAuth 2.0 request in the URL or stored for the tab, both blocks keep their existing behavior.
 
 The sign-in page receives these parameters:
 
@@ -57,7 +58,7 @@ The sign-in page receives these parameters:
 | Parameter               | Required | Description                                                  |
 | ----------------------- | -------- | ------------------------------------------------------------ |
 | `response_type`         | Yes      | Must be `code`.                                              |
-| `client_id`             | Yes      | OAuth 2.0 client registered in the Commerce Admin.           |
+| `client_id`             | Yes      | ID of the OAuth 2.0 client registered in the Commerce Admin. |
 | `redirect_uri`          | Yes      | Must exactly match a redirect URI registered for the client. |
 | `code_challenge`        | Yes      | PKCE challenge.                                              |
 | `code_challenge_method` | Yes      | Must be `S256`.                                              |
@@ -66,30 +67,44 @@ The sign-in page receives these parameters:
 
 </TableWrapper>
 
-## Step-by-step
+## Configure the authorization handoff
+
+Register the agent's OAuth 2.0 client and configure the storefront URLs before connecting the handlers to your storefront blocks.
 
 ### Configure Commerce
+
+<Aside type="caution">
+  This version does not show a consent screen. Registering a client in the Commerce Admin pre-approves
+  it for your shoppers, so register only clients that you trust.
+</Aside>
 
 <Steps>
 
 1. In the Commerce Admin, go to **System** > **Agentic Commerce** > **OAuth 2.0 Clients** and register the agent's client with the exact redirect URIs that it uses.
-2. Go to **Stores** > **Configuration** > **Adobe Services** > **Storefront MCP**. In the **Storefront** section, check **Storefront URL** (your storefront home page) and **Sign-in URL** (your sign-in page, for example `https://<your-storefront>/customer/login`). Both fields take absolute `https` URLs. When a field is empty, the Admin prefills a suggestion; save the page to keep it.
+1. Go to **Stores** > **Configuration** > **Adobe Services** > **Storefront MCP**.
+1. In the **Storefront** section, check **Storefront URL** and **Sign-in URL**.
+
+   Set **Storefront URL** to your storefront home page and **Sign-in URL** to your sign-in page, such as `https://<your-storefront>/customer/login`. Replace `<your-storefront>` with your storefront hostname. Both fields require absolute HTTPS URLs. The Admin suggests a value for an empty field.
+
+1. Save the configuration to keep the URLs.
 
 </Steps>
 
 ### Add the handoff to your storefront
 
+Call each OAuth handler before the block's existing code so it can handle the authorization request first.
+
 <Steps>
 
 1. Copy <Link href="https://github.com/hlxsites/aem-boilerplate-commerce/blob/agentcom-2491/scripts/oauth-authorize.js" text="scripts/oauth-authorize.js" /> into your project.
 
-2. In `scripts/commerce.js`, export the create-account path if it is missing:
+1. In `scripts/commerce.js`, add the create-account path export after the existing `CUSTOMER_PATH` definition if the export is missing:
 
    ```js title="scripts/commerce.js"
    export const CUSTOMER_CREATE_PATH = `${CUSTOMER_PATH}/create`;
    ```
 
-3. In `blocks/commerce-login/commerce-login.js`, import the handler and call it first in `decorate`:
+1. In `blocks/commerce-login/commerce-login.js`, import `handleOauth` and call it at the start of `decorate`:
 
    ```js title="blocks/commerce-login/commerce-login.js" ins={1,4-6}
    import { handleOauth } from '../../scripts/oauth-authorize.js';
@@ -102,7 +117,9 @@ The sign-in page receives these parameters:
    }
    ```
 
-4. To let shoppers create an account during the flow, do the same in `blocks/commerce-create-account/commerce-create-account.js` with `handleOauthSignUp`:
+    Keep the block's existing code after this check. When `handleOauth` returns `true`, it has handled the OAuth request, so `return` skips the regular sign-in behavior.
+
+1. In `blocks/commerce-create-account/commerce-create-account.js`, import `handleOauthSignUp` and call it at the start of `decorate` so shoppers can create an account during authorization:
 
    ```js title="blocks/commerce-create-account/commerce-create-account.js" ins={1,4-6}
    import { handleOauthSignUp } from '../../scripts/oauth-authorize.js';
@@ -115,7 +132,9 @@ The sign-in page receives these parameters:
    }
    ```
 
-5. Optionally, add these keys to `placeholders/auth.json` to change the messages:
+    Keep the block's existing code after this check, as in the sign-in block.
+
+1. Optionally, add these keys to `placeholders/auth.json` to change the messages:
 
    <TableWrapper>
 
@@ -130,28 +149,40 @@ The sign-in page receives these parameters:
 
 </Steps>
 
-The sign-in block keeps the pending request in `sessionStorage` under `oauth_authorization_request` for 10 minutes, so a shopper can go from sign-in to create account in the same tab without losing it. The entry holds no secret: the PKCE `code_verifier` stays with the agent, and Commerce validates the request again when it issues the code. If the new account needs email confirmation, no code is issued until the shopper signs in from the same tab.
+The sign-in block stores the pending request in `sessionStorage` under `oauth_authorization_request` with a 10-minute expiry. This lets a shopper move from sign-in to account creation in the same tab without losing the request.
 
-### Validate
+The entry holds no secret. The PKCE `code_verifier` stays with the agent, and Commerce validates the request again when it issues the code. If the new account needs email confirmation, Commerce issues no code until the shopper signs in from the same tab.
+
+### Verify the handoff
+
+Test both the regular sign-in flow and the OAuth handoff for existing and new accounts.
 
 <Steps>
 
-1. Open your sign-in page without parameters and sign in. The block behaves as before.
-2. Open the sign-in page with a valid request, for example:
+1. Open your sign-in page without parameters in a tab with no pending OAuth request.
+
+    Sign in to confirm that the block behaves as before.
+
+1. Open the sign-in page with a valid OAuth request, using this URL as a template:
 
    ```text
    https://<your-storefront>/customer/login?response_type=code&client_id=<client-id>&redirect_uri=<registered-uri>&code_challenge=<challenge>&code_challenge_method=S256&state=xyz
    ```
 
-   After sign-in, the browser is redirected to the redirect URI with `code`, `state=xyz`, and `iss`.
+    Replace `<your-storefront>` with your storefront hostname and `<client-id>` with the registered client's ID. Use the client's registered redirect URI for `<registered-uri>` and its PKCE challenge for `<challenge>`. URL-encode the query parameter values.
 
-3. Open the same URL while signed in. The redirect happens without the form.
-4. Open the same URL while signed out, follow the create-account link, and register a new shopper. After sign-up, the browser is redirected to the redirect URI with `code`, `state=xyz`, and `iss`.
-5. Change `redirect_uri` to an unregistered value. The block shows an error and does not redirect.
+    Sign in to confirm that the browser redirects to the registered URI with `code`, `state=xyz`, and `iss`.
+
+1. Open the same URL while signed in.
+
+    Confirm that the browser redirects without showing the sign-in form.
+
+1. Open the same URL while signed out.
+
+    Follow the create-account link and register a new shopper. After sign-up, the browser redirects to the registered URI with `code`, `state=xyz`, and `iss`. If email confirmation is required, confirm the account, then open your sign-in page in the original tab and sign in. If automatic sign-in fails, use the sign-in link that the block shows.
+
+1. Change `redirect_uri` to an unregistered value.
+
+    Confirm that the block shows an error and does not redirect.
 
 </Steps>
-
-<Aside type="caution">
-  No consent screen is shown in this version: registering a client in the Commerce Admin preapproves
-  it for your shoppers. Register only clients that you trust.
-</Aside>
