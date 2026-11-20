@@ -1,0 +1,148 @@
+---
+title: Ratings and Reviews dictionary
+description: Customize and localize the labels and messages in the Ratings and Reviews drop-in, including the review form.
+sidebar:
+  label: Dictionary
+  order: 8
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import TableWrapper from '@components/TableWrapper.astro';
+
+The Ratings and Reviews dictionary contains labels and messages for the review list, page controls, and review form. These include the *Reviews* heading, status messages, and star labels for screen readers. Change dictionary values to translate the text or match your storefront's wording without changing drop-in code.
+
+## How to customize
+
+Choose where to maintain the text:
+
+- *Placeholders sheet*: The initializer from the [quick start](/dropins/ratings-reviews/quick-start/) loads `placeholders/ratings-reviews.json`. Add a row with a key such as `Review.title` in the `Key` column and your text in the `Value` column. See [Labels and placeholders](/how-tos/change-labels-and-placeholders/).
+- *Initializer code*: Pass `langDefinitions` to `initialize` with only the keys to change. The drop-in uses your values for those keys and keeps the defaults for the rest.
+
+For code-based customization, update the initializer created in the quick start. This example changes the review heading, author label, and date format:
+
+```js title="scripts/initializers/ratings-reviews.js"
+import { initializers } from '@dropins/tools/initializer.js';
+import { initialize, setEndpoint } from '@dropins/storefront-ratings-reviews/api.js';
+import { initializeDropin } from './index.js';
+import { CORE_FETCH_GRAPHQL } from '../commerce.js';
+
+await initializeDropin(async () => {
+  // Configure Commerce GraphQL before initialization loads the review settings.
+  setEndpoint(CORE_FETCH_GRAPHQL);
+
+  return initializers.mountImmediately(initialize, {
+    langDefinitions: {
+      default: {
+        Review: {
+          title: 'Customer reviews',
+          // {{nickname}} is replaced with the reviewer's name.
+          author: 'Reviewed by {{nickname}}',
+          // Formats review dates for British English.
+          dateLocale: 'en-GB',
+        },
+      },
+    },
+  });
+})();
+```
+
+- `Review.title` changes the heading to *Customer reviews* when the `Review` container has no `totalCount` value.
+- `Review.author` keeps `{{nickname}}` as a placeholder for the reviewer's name. Change the surrounding text without changing the placeholder.
+- `Review.dateLocale` uses `en-GB` to format review dates for British English. It does not translate other labels.
+
+For multiple languages, see [Dictionaries](/dropins/all/dictionaries/).
+
+## Default keys and values
+
+The drop-in provides these default English (`en_US`) values:
+
+```json title="en_US.json"
+{
+  "Pagination": {
+    "label": "Review pagination",
+    "loading": "Loading review pages...",
+    "outOfRange": "This review page is no longer available.",
+    "firstPage": "Return to the first page"
+  },
+  "Review": {
+    "title": "Reviews",
+    "oneReview": "1 review",
+    "reviews": "{{count}} reviews",
+    "author": "By {{nickname}}",
+    "unrated": "Not rated",
+    "dateLocale": "en-US",
+    "loading": "Loading reviews...",
+    "empty": "No reviews on this page.",
+    "unavailable": "Reviews are unavailable.",
+    "error": "Unable to load reviews.",
+    "retry": "Try again"
+  },
+  "StarRatingInput": {
+    "starLabel": "{{count}} out of {{max}} stars"
+  },
+  "WriteReview": {
+    "loadError": "We couldn't load the review form. Close this window and try again.",
+    "ratingLabel": "Give your rating",
+    "ratingRequired": "Select a rating.",
+    "title": "Title *",
+    "description": "Description *",
+    "nickname": "Name *",
+    "required": "This field is required.",
+    "submit": "Submit",
+    "submitting": "Submitting",
+    "submitErrorHeading": "We couldn't submit your review.",
+    "submitErrorFallback": "Please try again.",
+    "ratingUnavailable": "This rating isn't available for this product.",
+    "successHeading": "Thanks for your review!",
+    "successDescription": "Your review was submitted and is pending moderation. It will appear once approved.",
+    "signInHeading": "Sign in to write a review",
+    "signInDescription": "Only signed-in customers can write reviews.",
+    "signIn": "Sign in"
+  },
+  "Rating": {
+    "label": "{{rating}} out of 5 stars",
+    "symbolLabel": "{{rating}} out of 5",
+    "valueLabel": "{{rating}} out of 5",
+    "compactCount": "({{count}})",
+    "zeroReviews": "No reviews",
+    "oneReview": "1 review",
+    "reviews": "{{count}} reviews"
+  }
+}
+```
+
+## Key reference
+
+Each key identifies a value in the dictionary. For example, `Review.author` refers to the `author` value in the `Review` group.
+
+<TableWrapper nowrap={[0]}>
+
+| Key | Where it appears |
+| --- | --- |
+| `Review.title` | Review list heading when `totalCount` is not set. |
+| `Review.oneReview`, `Review.reviews` | Review list heading when `totalCount` is set. |
+| `Review.author` | Reviewer name in each row. `{{nickname}}` is the reviewer's name. |
+| `Review.unrated` | Text for a review that has no rating votes. |
+| `Review.dateLocale` | Language and region used to format review dates, such as `en-US` or `fr-FR`. This value is not displayed as text. |
+| `Review.loading` | Screen reader message while reviews load. |
+| `Review.empty`, `Review.unavailable`, `Review.error` | Status messages for the empty, unavailable, and error states. |
+| `Review.retry` | Button that requests the page again after an error. |
+| `Pagination.label` | Accessible name of the page navigation. |
+| `Pagination.loading` | Screen reader message while the first page loads. |
+| `Pagination.outOfRange`, `Pagination.firstPage` | Message and button when the requested page no longer exists. |
+| `Rating.label` | Screen reader label for the stars in a review row, for example, *4 out of 5 stars*. |
+| `StarRatingInput.starLabel` | Screen reader label for each star in the review form, for example, *4 out of 5 stars*. |
+| `WriteReview.ratingLabel` | Label for the row of stars when the store has one rating category. With several categories, each row shows its category name. |
+| `WriteReview.title`, `WriteReview.description`, `WriteReview.nickname` | Form field labels. The defaults end with ` *` to mark required fields. |
+| `WriteReview.ratingRequired`, `WriteReview.required` | Messages for a missing rating and an empty field. |
+| `WriteReview.submit`, `WriteReview.submitting` | Submit button text before and during submission. |
+| `WriteReview.submitErrorHeading`, `WriteReview.submitErrorFallback`, `WriteReview.ratingUnavailable` | Heading and messages when a submission fails. |
+| `WriteReview.loadError` | Message when the rating categories cannot load. |
+| `WriteReview.successHeading`, `WriteReview.successDescription` | Heading and message after a successful submission. |
+| `WriteReview.signInHeading`, `WriteReview.signInDescription`, `WriteReview.signIn` | Sign-in prompt for signed-out shoppers when guests cannot write reviews. |
+
+</TableWrapper>
+
+<Aside type="note" title="Average ratings on catalog pages">
+Average ratings on product pages, product listing cards, and recommendation cards use the SDK `StarRating` component. Customize its labels with `Dropin.StarRating` keys rather than the `Rating` keys listed here.
+</Aside>

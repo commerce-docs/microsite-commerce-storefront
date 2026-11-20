@@ -1,0 +1,294 @@
+---
+title: Ratings and Reviews slots
+description: Customize the Ratings and Reviews review list, page controls, and review form with slots.
+sidebar:
+  label: Slots
+  order: 6
+tableOfContents:
+  minHeadingLevel: 2
+  maxHeadingLevel: 3
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import TableWrapper from '@components/TableWrapper.astro';
+
+Slots let you replace or extend parts of a container without changing the drop-in source. Each slot is a callback that receives a context object with data and methods for updating the content. Use `appendChild` to add content, `replaceWith` to replace it, and `onChange` to respond to context updates. For shared slot methods, see [Extend a drop-in](/dropins/all/extending/).
+
+<TableWrapper nowrap={[0]}>
+
+| Container | Slots |
+|-----------|-------|
+| [`Review`](#review-slots) | `Header`, `Status`, `Loading`, `ReviewItem`, `Footer` |
+| [`Pagination`](#pagination-slots) | `Pagination`, `Loading` |
+| [`WriteReview`](#writereview-slots) | `ProductSummary`, `SignInPrompt`, `SuccessMessage` |
+
+</TableWrapper>
+
+<Aside type="caution" title="Render shopper text as text">
+Review names, titles, and text are stored exactly as shoppers typed them. In custom markup, set them with `textContent`. Never pass them to `innerHTML`, which allows cross-site scripting (XSS).
+</Aside>
+
+Use the examples in the Product Reviews block from the [quick start](/dropins/ratings-reviews/quick-start/). Keep its initializer, mount elements, and first `getProductReviews` call. The review list examples use `'product-reviews'` as their scope. Pass that same scope to the request, `Review`, and `Pagination`.
+
+## Review slots
+
+Every `Review` slot receives the current request and list state through `ReviewSlotContext`:
+
+```typescript
+interface ReviewProps {
+  slots?: {
+    Header?: SlotProps<ReviewSlotContext & { title: string }>;
+    Status?: SlotProps<ReviewSlotContext & { message: string }>;
+    Loading?: SlotProps<ReviewSlotContext>;
+    ReviewItem?: SlotProps<ReviewSlotContext & { review: ProductReviewModel; index: number }>;
+    Footer?: SlotProps<ReviewSlotContext>;
+  };
+}
+
+interface ReviewSlotContext {
+  // SKU of the current request. Undefined until the first request starts.
+  sku?: string;
+  state: 'loading' | 'ready' | 'empty' | 'unavailable' | 'error';
+  // The totalCount prop, when set.
+  totalCount?: number;
+  // The loaded page. Null while a request loads, after it fails, and when unavailable.
+  page: ProductReviewsModel | null;
+  // Requests the current page again.
+  retry: () => void;
+}
+```
+
+Every `Review` slot receives the `ReviewSlotContext` fields. Some slots receive extra fields:
+
+<TableWrapper nowrap={[0]}>
+
+| Slot | Default content | When it renders | Extra context |
+| --- | --- | --- | --- |
+| `Header` | The heading and its divider | Always | `title`: the heading text from the dictionary |
+| `Status` | The loading, empty, unavailable, or error message | Every state except `ready` | `message`: the status text from the dictionary |
+| `Loading` | Placeholder rows | `loading` state | None |
+| `ReviewItem` | One review row | Once per review in the `ready` state | `review`: the [`ProductReviewModel`](/dropins/ratings-reviews/functions/#productreviewmodel). `index`: the row position on the current page, starting at zero. |
+| `Footer` | None | Always | None |
+
+</TableWrapper>
+
+No `Review` slot renders when product reviews are turned off for the store.
+
+- *Row markup*: The `ReviewItem` slot stays inside its list item, and the container keeps the dividers between rows.
+- *Row position*: `index` identifies a position on the current page, not a review ID. The `reviews` query does not return review IDs.
+
+### ReviewItem slot
+
+Replace each review row with custom markup. This example also shows scores for each rating category when the initializer adds `ratingsBreakdown` through a [model transformer](/dropins/ratings-reviews/initialization/#customize-data-models).
+
+```js title="blocks/product-reviews/product-reviews.js"
+import { render as provider } from '@dropins/storefront-ratings-reviews/render.js';
+import { Review } from '@dropins/storefront-ratings-reviews/containers/Review.js';
+
+await provider.render(Review, {
+  scope: 'product-reviews',
+  slots: {
+    ReviewItem: (ctx) => {
+      const article = document.createElement('article');
+      const heading = document.createElement('h3');
+      const author = document.createElement('p');
+      const text = document.createElement('p');
+      // textContent renders shopper text safely as plain text.
+      heading.textContent = ctx.review.summary;
+      author.textContent = ctx.review.nickname;
+      text.textContent = ctx.review.text;
+      article.append(heading, author, text);
+
+      // ratingsBreakdown exists only if your initializer adds it through a model transformer.
+      (ctx.review.ratingsBreakdown ?? []).forEach(({ name, value }) => {
+        const score = document.createElement('p');
+        score.textContent = `${name}: ${value}`;
+        article.append(score);
+      });
+
+      // Replaces the default row, including its stars and date.
+      ctx.replaceWith(article);
+    },
+  },
+})(document.querySelector('.product-reviews__list'));
+```
+
+- *Shopper text*: `textContent` displays the reviewer's name, title, and text as plain text.
+- *Category scores*: `ratingsBreakdown` is available only if the initializer adds it through a model transformer.
+- *Default content*: `ctx.replaceWith(article)` replaces the default row, including its stars and date. To keep the default row and add content, use `ctx.appendChild(element)` instead.
+
+### Footer slot
+
+`Header` and `Footer` stay mounted while the list changes. Insert elements once, then update their content in `ctx.onChange`. This example adds a note with the current page number:
+
+```js title="blocks/product-reviews/product-reviews.js"
+import { render as provider } from '@dropins/storefront-ratings-reviews/render.js';
+import { Review } from '@dropins/storefront-ratings-reviews/containers/Review.js';
+
+await provider.render(Review, {
+  scope: 'product-reviews',
+  slots: {
+    Footer: (ctx) => {
+      const note = document.createElement('p');
+      // Updates the text only. Do not call appendChild or other insertion methods inside onChange.
+      const update = ({ page }) => {
+        note.textContent = page ? `Page ${page.pageInfo.currentPage} of ${page.pageInfo.totalPages}` : '';
+      };
+      update(ctx);
+      ctx.appendChild(note);
+      ctx.onChange(update);
+    },
+  },
+})(document.querySelector('.product-reviews__list'));
+```
+
+- `update(ctx)` sets the initial text, and `ctx.appendChild(note)` inserts the note.
+- `ctx.onChange(update)` updates the existing note when the context changes. It does not insert another element.
+
+## Pagination slots
+
+Customize the page controls or the placeholder shown while the first page loads:
+
+```typescript
+interface PaginationProps {
+  slots?: {
+    Pagination?: SlotProps<PaginationSlotContext>;
+    Loading?: SlotProps<PaginationSlotContext>;
+  };
+}
+
+interface PaginationSlotContext {
+  // Page information for the current product and page size, or null before the first page loads.
+  pageInfo: { currentPage: number; pageSize: number; totalPages: number } | null;
+  // True while a page request is in progress.
+  loading: boolean;
+  // The disabled prop.
+  disabled: boolean;
+  // Requests a page. Ignores invalid pages, the current page, and calls while loading or disabled.
+  onPageChange: (page: number) => void;
+}
+```
+
+<TableWrapper nowrap={[0]}>
+
+| Slot | Default content | When it renders |
+| --- | --- | --- |
+| `Pagination` | The SDK page controls | When the product has more than one page and the current page exists |
+| `Loading` | One placeholder row | While the first page of a product loads |
+
+</TableWrapper>
+
+### Pagination slot
+
+This example replaces the numbered controls with **Previous** and **Next** buttons:
+
+```js title="blocks/product-reviews/product-reviews.js"
+import { render as provider } from '@dropins/storefront-ratings-reviews/render.js';
+import { Pagination } from '@dropins/storefront-ratings-reviews/containers/Pagination.js';
+
+await provider.render(Pagination, {
+  scope: 'product-reviews',
+  slots: {
+    Pagination: (ctx) => {
+      const wrapper = document.createElement('div');
+      const previous = document.createElement('button');
+      const status = document.createElement('span');
+      const next = document.createElement('button');
+      previous.type = 'button';
+      next.type = 'button';
+      previous.textContent = 'Previous';
+      next.textContent = 'Next';
+      wrapper.append(previous, status, next);
+
+      // Keeps the latest context, because page information changes after every request.
+      let current = ctx;
+      const update = (context) => {
+        current = context;
+        const { currentPage, totalPages } = context.pageInfo;
+        status.textContent = `Page ${currentPage} of ${totalPages}`;
+        // Native disabled state keeps the buttons accessible.
+        previous.disabled = context.loading || context.disabled || currentPage <= 1;
+        next.disabled = context.loading || context.disabled || currentPage >= totalPages;
+      };
+
+      // onPageChange requests the page through getProductReviews.
+      previous.addEventListener('click', () => current.onPageChange(current.pageInfo.currentPage - 1));
+      next.addEventListener('click', () => current.onPageChange(current.pageInfo.currentPage + 1));
+
+      update(ctx);
+      ctx.replaceWith(wrapper);
+      ctx.onChange(update);
+    },
+  },
+})(document.querySelector('.product-reviews__pagination'));
+```
+
+- *Page changes*: `onPageChange` requests the selected page. The stored `current` context keeps the click handlers connected to the latest page information.
+- *Labels*: Replace the example's English labels with localized text and identify the current page for assistive technology.
+- *Loading and recovery*: The container disables native form controls in its control group while a page loads. It also shows the recovery message when the requested page no longer exists.
+
+If focus moves to the page body during loading, the container restores it to the initiating control when possible. Otherwise, it focuses the navigation group. Test keyboard navigation after each page change.
+
+## WriteReview slots
+
+Customize the product summary, sign-in prompt, or submission confirmation. Every slot receives the product SKU and form state:
+
+```typescript
+interface WriteReviewProps {
+  slots?: {
+    ProductSummary?: SlotProps<WriteReviewSlotContext>;
+    SignInPrompt?: SlotProps<WriteReviewSlotContext>;
+    SuccessMessage?: SlotProps<WriteReviewSlotContext & { review: CreatedProductReviewModel }>;
+  };
+}
+
+interface WriteReviewSlotContext {
+  // SKU of the product being reviewed.
+  sku: string;
+  state: 'ready' | 'error' | 'success' | 'signIn';
+}
+```
+
+<TableWrapper nowrap={[0]}>
+
+| Slot | Default content | When it renders | Extra context |
+| --- | --- | --- | --- |
+| `ProductSummary` | The product image and name | `ready` and `error` states, when you set `productName` or `productImage` | None |
+| `SignInPrompt` | The sign-in message and **Sign in** button | `signIn` state | None |
+| `SuccessMessage` | Message that the review is waiting for approval | `success` state | `review`: the [`CreatedProductReviewModel`](/dropins/ratings-reviews/functions/#createdproductreviewmodel) |
+
+</TableWrapper>
+
+By default, the rating rows appear beside the product information. When you use the `ProductSummary` slot, the rating rows move below your custom summary.
+
+### SuccessMessage slot
+
+This example keeps the default message and adds the title the shopper submitted:
+
+```js title="blocks/product-reviews/product-reviews.js"
+import { render as provider } from '@dropins/storefront-ratings-reviews/render.js';
+import { WriteReview } from '@dropins/storefront-ratings-reviews/containers/WriteReview.js';
+import { checkIsAuthenticated } from '../../scripts/commerce.js';
+
+await provider.render(WriteReview, {
+  sku: 'YOUR-PRODUCT-SKU',
+  isAuthenticated: checkIsAuthenticated(),
+  slots: {
+    SuccessMessage: (ctx) => {
+      const note = document.createElement('p');
+      // textContent renders the shopper's title as plain text.
+      note.textContent = `Your review "${ctx.review.summary}" is waiting for approval.`;
+      ctx.appendChild(note);
+    },
+  },
+})(document.querySelector('.product-reviews__modal-content'));
+```
+
+Replace `YOUR-PRODUCT-SKU` with the product's SKU.
+
+- `ctx.appendChild(note)` keeps the default success message and adds the review title below it.
+- `textContent` displays the shopper's title as plain text, even if it contains HTML characters.
+
+<Aside type="tip" title="Slot best practice">
+Insert content once when the slot runs. In `onChange`, update existing elements rather than calling insertion methods such as `appendChild`. See [Slots best practices](/dropins/all/slots/#best-practice-for-dynamic-slot-content).
+</Aside>
