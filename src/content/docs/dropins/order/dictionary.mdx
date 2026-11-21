@@ -41,11 +41,112 @@ You only need to include the keys you want to change. For multi-language support
 
 ## Default keys and values
 
+### Invoice labels
+
+Invoice UI strings use `Order.OrderInvoices` and `Order.InvoiceDetails`. Customize list headings, item counts, navigation labels, download-button text, column labels, totals, and error messages through the existing `langDefinitions` configuration.
+
+```javascript
+const invoiceLabels = {
+  Order: {
+    OrderInvoices: {
+      title: 'Order invoices',
+      emptyState: 'No invoices for this order.',
+    },
+    InvoiceDetails: {
+      backToOrderDetails: 'Back to your order',
+      downloadPdf: 'Download invoice',
+      pdf: {
+        soldTo: 'Bill to:',
+        grandTotal: 'Total due:',
+      },
+    },
+  },
+};
+```
+
+Merge these overrides into the locale entry in `langDefinitions`. The `pdf` entries change the built-in PDF labels; the other entries change the storefront interface. PDF label overrides require a package release containing the localization update and are not available in `5.0.0-alpha-20261110114801`. See [PDF labels](/dropins/order/containers/invoice-details/#pdf-labels).
+
+Include the desired punctuation in PDF label values; the renderer does not append colons. For example, French can use `soldTo: 'Facturer \u00e0\u00a0:'` to include a non-breaking space before the colon. Set `telephone: ''` to display the telephone number without a prefix or leading space. Table headings `subtotal` and `tax` are independent of totals labels `totalsSubtotal` and `totalsTax`.
+
+This punctuation behavior and the new totals keys require a release newer than `5.0.0-alpha-20261116150116`. When updating existing PDF label overrides, include their punctuation and use the new totals keys for totals-specific text.
+
+The invoice status value comes from the backend; overriding the `status` label changes the field heading, not the returned status text.
+
 Below are the default English (`en_US`) strings provided by the **Order** drop-in:
 
 ```json title="en_US.json"
 {
   "Order": {
+    "OrderInvoices": {
+      "emptyState": "No invoices.",
+      "title": "Invoices",
+      "invoiceNumber": "Invoice #",
+      "itemsCount": {
+        "singular": "{{count}} item",
+        "plural": "{{count}} items"
+      },
+      "loadError": {
+        "heading": "Unable to load invoices",
+        "description": "Please try again later."
+      }
+    },
+    "InvoiceDetails": {
+      "backToOrderDetails": "Back to Order Details",
+      "downloadPdf": "Download PDF",
+      "invoiceNumberLabel": "Invoice number",
+      "orderNumber": "Order number",
+      "orderDate": "Order date",
+      "paymentMethod": "Payment method",
+      "status": "Status",
+      "billingAddress": "Billing address",
+      "shippingAddress": "Shipping address",
+      "pdf": {
+        "invoiceNumber": "Invoice #",
+        "status": "Status:",
+        "orderNumber": "Order #",
+        "orderDate": "Order Date:",
+        "soldTo": "Sold to:",
+        "shipTo": "Ship to:",
+        "telephone": "T:",
+        "paymentMethod": "Payment Method:",
+        "shippingMethod": "Shipping Method:",
+        "totalShippingCharges": "Total Shipping Charges",
+        "products": "Products",
+        "sku": "SKU",
+        "price": "Price",
+        "quantity": "Qty",
+        "tax": "Tax",
+        "subtotal": "Subtotal",
+        "totalsSubtotal": "Subtotal:",
+        "totalsTax": "Tax:",
+        "discounts": "Discounts:",
+        "shipping": "Shipping & Handling:",
+        "grandTotal": "Grand Total:"
+      },
+      "items": {
+        "productName": "Product Name",
+        "sku": "SKU",
+        "price": "Unit price",
+        "qtyInvoiced": "Qty Invoiced",
+        "tax": "Tax",
+        "subtotal": "Subtotal"
+      },
+      "totals": {
+        "subtotal": "Subtotal",
+        "discounts": "Discounts",
+        "tax": "Tax",
+        "shipping": "Shipping & Handling",
+        "grandTotal": "Total"
+      },
+      "notFound": {
+        "heading": "Invoice not found",
+        "description": "We couldn't find this invoice, or it doesn't belong to your account."
+      },
+      "loadError": {
+        "heading": "Unable to load invoice",
+        "description": "Please try again later."
+      }
+    },
     "CreateReturn": {
       "headerText": "Return items",
       "downloadableCount": "Files",
@@ -418,4 +519,3 @@ Below are the default English (`en_US`) strings provided by the **Order** drop-i
   }
 }
 ```
-
