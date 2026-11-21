@@ -120,9 +120,6 @@ function ensureMermaidInitialized(): void {
       noteBorderColor: '#e0c36c',
     },
     themeCSS: MERMAID_THEME_CSS,
-    flowchart: {
-      subGraphTitleMargin: { top: 12, bottom: 4 },
-    },
     securityLevel: 'strict',
     fontFamily: MERMAID_FONT_FAMILY,
   });

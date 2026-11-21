@@ -29,7 +29,11 @@ async function mountPendingMermaidDiagrams() {
   }
 }
 
-mountPendingMermaidDiagrams();
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', mountPendingMermaidDiagrams, { once: true });
+} else {
+  mountPendingMermaidDiagrams();
+}
 
 // Re-run on every Astro client navigation so freshly-swapped pages get their diagrams mounted.
 document.addEventListener('astro:page-load', mountPendingMermaidDiagrams);
