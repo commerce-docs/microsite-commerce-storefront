@@ -1,0 +1,39 @@
+diff --git a/dist/index.js b/dist/index.js
+index d0bf395dc6d928a492016158083fcb82e6563e82..0e78018e22b009974a95566ec4cc66a7719af056 100755
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -5,7 +5,6 @@ import { CallToolRequestSchema, ListToolsRequestSchema, ListResourcesRequestSche
+ import { execFile } from "node:child_process";
+ import { promisify } from "node:util";
+ import { z } from "zod";
+-import { zodToJsonSchema } from "zod-to-json-schema";
+ import { BINARY_NAME, PACKAGE_NAME, PRODUCT_NAME, SERVER_NAME, VERSION, } from "./common/version.js";
+ import { getResourceHandlers } from "./resources/handlers.js";
+ import * as telemetry from "./common/telemetry.js";
+@@ -78,7 +77,16 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
+         tools: toolRegistry.map((t) => ({
+             name: t.name,
+             description: t.description,
+-            inputSchema: zodToJsonSchema(t.schema),
++            inputSchema: z.toJSONSchema(t.schema, {
++                io: "input",
++                target: "draft-07",
++                // Match zod-to-json-schema, which closed every object schema.
++                override: ({ jsonSchema }) => {
++                    if (jsonSchema.type === "object" && jsonSchema.additionalProperties === undefined) {
++                        jsonSchema.additionalProperties = false;
++                    }
++                },
++            }),
+         })),
+     };
+ });
+@@ -101,7 +109,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
+         const errorMsg = error instanceof Error ? error.message : "Unknown error occurred";
+         telemetry.record(toolName, (request.params.arguments ?? {}), null, Date.now() - start, errorMsg);
+         if (error instanceof z.ZodError) {
+-            const fieldErrors = error.errors.map((e) => `${e.path.join(".")}: ${e.message}`);
++            const fieldErrors = error.issues.map((e) => `${e.path.join(".")}: ${e.message}`);
+             throw new Error(`Invalid input: ${fieldErrors.join("; ")}`);
+         }
+         process.stderr.write(`Unexpected error: ${error instanceof Error ? error.stack : error}\n`);
