@@ -1,0 +1,109 @@
+---
+title: Commerce Customer Reviews
+description: Add approved product review history, read-only review details, and a recent reviews summary to My Account.
+sidebar:
+  label: Customer Reviews
+---
+
+import TableWrapper from '@components/TableWrapper.astro';
+import { Aside, Steps } from '@astrojs/starlight/components';
+
+The Commerce Customer Reviews block lets signed-in shoppers find their approved product reviews in My Account. Use the full view for review history and an optional compact view for recent reviews on the account landing page.
+
+This block uses the User Account drop-in's [ProductReviews container](/dropins/user-account/containers/product-reviews/). It works without the Ratings and Reviews drop-in. To display public reviews or a submission form on product pages, use the separate [Product Reviews block](/merchants/blocks/product-reviews/).
+
+## Before you start
+
+- *Enable reviews*: Product reviews must be enabled for the store. The block reads the Account `getStoreConfig` result, `productReviewsEnabled`.
+- *Check backend support*: The Commerce endpoint must support `customer.reviews(filter: { status: [APPROVED] })`. The filter excludes pending and rejected reviews before pagination.
+- *Use an account session*: Guests are redirected to the localized customer login page. The block uses the existing Account initializer and customer session.
+
+<Aside type="note" title="Approved history only">
+If the backend does not support the approval filter, loading fails and the shopper sees an error. The block never retries with an unfiltered review history.
+</Aside>
+
+## Add the review history page
+
+Create the dedicated page first so that the sidebar and optional summary have a destination.
+
+<Steps>
+
+1. Create a customer page at `/customer/reviews` using your existing account page layout.
+
+1. Add a **Commerce Customer Reviews** block with these rows:
+
+   <TableWrapper>
+
+   | Commerce Customer Reviews | |
+   | --- | --- |
+   | Page size | 10 |
+   | Minified view | false |
+   | Reviews page | /customer/reviews |
+
+   </TableWrapper>
+
+1. Set the page title to **My Product Reviews** in the page metadata.
+
+1. Add a **My Product Reviews** entry linked to `/customer/reviews` in `/customer/sidebar-fragment`. Follow the existing [account sidebar structure](/dropins/user-account/sidebar/#configurations).
+
+1. Merge the [Account product review labels](/dropins/user-account/dictionary/#product-review-history) into the existing Account placeholders sheet. Keep the other Account labels.
+
+1. Preview the page while signed in as a shopper with approved reviews.
+
+</Steps>
+
+The full view shows review dates, product names, ratings, and review summaries. **See Details** opens a read-only review on the same page. **Back to My Product Reviews** returns to the list and restores focus to the selected review's action. No separate details page is needed.
+
+## Add a recent reviews summary
+
+Add a second **Commerce Customer Reviews** block to the account landing page:
+
+<TableWrapper>
+
+| Commerce Customer Reviews | |
+| --- | --- |
+| Minified view | true |
+| Page size | 3 |
+| Reviews page | /customer/reviews |
+
+</TableWrapper>
+
+The summary shows recent approved reviews with product names, ratings, summaries, and dates. **View all reviews** opens the full history page. The summary has no page controls or **See Details** actions. It is not inserted automatically: author this second block where you want it to appear.
+
+## Configuration
+
+<TableWrapper nowrap={[0]}>
+
+| Row | Default | Description |
+| --- | --- | --- |
+| Page size | `10` in full view; `3` in minified view | Initial number of reviews to load. Enter a whole number from `1` to `50`. An invalid value prevents the block from loading. |
+| Minified view | `false` | Set to `true` for the recent reviews summary. Only the value `true` enables this mode. |
+| Reviews page | `/customer/reviews` | Destination for **View all reviews** in the summary. Root-relative paths use the storefront's localized root. Absolute HTTP or HTTPS URLs are used unchanged. |
+
+</TableWrapper>
+
+These rows become the block keys `page-size`, `minified-view`, and `reviews-page`. They configure the existing block; no additional drop-in installation is required.
+
+In full view, shoppers can choose a page size of 10, 20, 50, or the configured initial size. Changing the page size returns to page 1. Page navigation appears when there is more than one page. If a previously selected page becomes empty, **Return to the first page** provides a way back.
+
+## Availability and navigation
+
+- *Reviews disabled*: The block shows the translated unavailable message without loading review history. The account sidebar hides an authored entry whose link ends in `/customer/reviews`, with an optional trailing slash. Other sidebar entries remain visible.
+- *Authored navigation*: The block does not create the reviews page or insert its sidebar entry. If you choose a different page path, update the summary destination and sidebar link. Automatic sidebar hiding matches the default `/customer/reviews` path only.
+- *Sign-out or account changes*: The block updates the container's authentication context, clears the previous shopper's review data and selected details, and redirects signed-out shoppers to login.
+- *Missing product*: The review remains visible when its product is unavailable. Product names link to the product page only when the block can build a product URL.
+- *Loading errors*: The view shows an error with **Try again**, not a successful empty history. No pending or rejected reviews are used as a fallback.
+
+## Check the result
+
+- Confirm that approved reviews appear and pending or rejected reviews do not.
+- Open a review, return to the list, and try the full view's page controls.
+- Confirm that **View all reviews** opens the intended localized history page from the summary.
+- Test an account without approved reviews and a signed-out visit.
+- Disable product reviews and confirm that the view is unavailable and the default reviews sidebar entry is hidden.
+
+## Related topics
+
+- [ProductReviews container](/dropins/user-account/containers/product-reviews/): Customize rendering, routing, and slots.
+- [Customer review API](/dropins/user-account/functions/#getcustomerreviews): Load review history in a custom view.
+- [Account sidebar block](/merchants/blocks/commerce-account-sidebar/): Configure account navigation.

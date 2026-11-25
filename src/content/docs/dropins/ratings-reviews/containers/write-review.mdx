@@ -1,0 +1,108 @@
+---
+title: WriteReview container
+description: Let shoppers submit a product review with star ratings, a title, a description, and a name, and show a pending-moderation message after they submit.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+import OptionsTable from '@components/OptionsTable.astro';
+import TableWrapper from '@components/TableWrapper.astro';
+
+The `WriteReview` container lets shoppers submit a product review. The form includes a star rating for each rating category and fields for a title, description, and name. After submission, it shows a message that the review is waiting for moderation. Reviews appear in the review list only after approval in the Admin.
+
+The container renders the form, but your storefront controls where it appears. For example, a **Write review** button can open it in a modal. To add the button and modal to the Product Reviews block, see [Add a Write review button](/dropins/ratings-reviews/quick-start/#add-a-write-review-button).
+
+## Before you use it
+
+- *Review availability*: Render the form and the button that opens it only when `config.getConfig().isProductReviewsEnabled` is `true`. The container does not check this setting.
+- *Rating categories*: Set up active rating categories for the form. Each category appears as a star row. If no categories load, the form shows an error instead. See [Commerce backend](/dropins/ratings-reviews/#commerce-backend).
+- *Guest reviews*: When **Allow Guests to Write Reviews** is off, signed-out shoppers see a sign-in prompt instead of the form.
+
+## Configurations
+
+Use these options to configure `WriteReview`:
+
+<OptionsTable
+  compact
+  options={[
+    ['Option', 'Type', 'Req?', 'Description'],
+    ['sku', 'string', 'Yes', 'SKU of the product to review.'],
+    ['isAuthenticated', 'boolean', 'Yes', 'Whether the shopper is signed in. When `false` and guests cannot write reviews, the container shows a sign-in prompt.'],
+    ['productName', 'string', 'No', 'Product name shown at the top of the form.'],
+    ['productImage', '{ src: string; alt?: string }', 'No', 'Product image shown next to the name. When you omit `alt`, the image uses `productName`.'],
+    ['routeSignIn', 'function', 'No', 'Returns the URL of your sign-in page. The sign-in prompt shows a **Sign in** button only when you set this option.'],
+    ['scope', 'string', 'No', 'Event scope for the [`reviews/review-submitted`](/dropins/ratings-reviews/events/#reviewsreview-submitted) event.'],
+    ['onSuccess', 'function', 'No', 'Callback that receives the created review after a successful submission.'],
+    ['onError', 'function', 'No', 'Callback that receives the error when a submission fails.'],
+    ['slots', 'object', 'No', 'Replaces or extends the product summary, sign-in prompt, and success message. See [WriteReview slots](/dropins/ratings-reviews/slots/#writereview-slots).'],
+  ]}
+/>
+
+The container also accepts standard `div` attributes, such as `className`, and applies them to its wrapper.
+
+## States
+
+The wrapper's `data-state` attribute identifies the current state. Use it to [style the container with CSS](/dropins/ratings-reviews/styles/#write-review-classes).
+
+<TableWrapper nowrap={[0]}>
+
+| State | When | What shoppers see |
+| --- | --- | --- |
+| `ready` | The shopper can write reviews and the rating categories loaded | The form. |
+| `error` | The rating categories failed to load, or none are available | The product summary, if provided, and *We couldn't load the review form. Close this window and try again.* |
+| `signIn` | The shopper is signed out and guests cannot write reviews | *Sign in to write a review*, followed by *Only signed-in customers can write reviews.* A **Sign in** button appears when `routeSignIn` is set. |
+| `success` | The review was submitted | *Thanks for your review!* and *Your review was submitted and is pending moderation. It will appear once approved.* |
+
+</TableWrapper>
+
+## How the form works
+
+- *Rating categories*: Before the form appears, the container loads the categories with [`getRatingsMetadata`](/dropins/ratings-reviews/functions/#getratingsmetadata). The `render` call waits for this request to finish. Open the modal before calling `render` so it appears while the categories load. The container skips this request when the shopper must sign in.
+- *Star rows*: With one rating category, the star row is labeled *Give your rating*. With several categories, each row shows the category name.
+- *Fields*: The Title field supplies the review `summary`, Description supplies `text`, and Name supplies `nickname`. The form has no email field.
+- *Required input*: Every star row and field is required. Text that contains only spaces counts as empty. Missing ratings show *Select a rating.* and empty fields show *This field is required.* Focus moves to the first problem, starting with the star rows.
+- *Submitting*: The form disables the inputs and submit button, and the button reads *Submitting*. It ignores further submissions until the first one finishes.
+- *Errors*: Submission errors appear under *We couldn't submit your review.* The form shows the error message, or *Please try again.* if the error has no message. The shopper's input stays in the form. If a selected star has no matching value for its rating category, the message is *This rating isn't available for this product.*
+- *Success*: The form shows the pending-moderation message, publishes [`reviews/review-submitted`](/dropins/ratings-reviews/events/#reviewsreview-submitted), and calls `onSuccess`. The message stays until your storefront removes the form, for example when the shopper closes the modal. The review list does not change because new reviews wait for approval.
+
+## reCAPTCHA
+
+The form supports reCAPTCHA protection for the Adobe Commerce Product Review form type.
+
+- *Enable protection*: In the Admin's **Google reCAPTCHA Storefront** settings, set **Enable for Product Review** to the configured reCAPTCHA type. All enabled forms must use the same type, either v3 or Enterprise.
+- *Storefront setup*: Your storefront's `scripts/initializers/index.js` already configures the reCAPTCHA library. No extra setup is needed for this form.
+- *Badge*: The form contains a badge container with the ID `createProductReview`. It loads reCAPTCHA the first time a shopper focuses the form. When the badge position is **Inline**, the badge appears inside the form.
+- *Tokens*: Each submission requests a fresh token. If the library returns a token, the request sends it in the `X-ReCaptcha` header.
+
+For details about the library, see [reCAPTCHA integration](/dropins/user-auth/recaptcha/).
+
+## Example
+
+After completing the [Ratings and Reviews quick start](/dropins/ratings-reviews/quick-start/), use this example to open the form in a modal. It uses your storefront's modal block and sign-in helpers:
+
+```js title="blocks/product-reviews/product-reviews.js"
+import { render as provider } from '@dropins/storefront-ratings-reviews/render.js';
+import { WriteReview } from '@dropins/storefront-ratings-reviews/containers/WriteReview.js';
+import { CUSTOMER_LOGIN_PATH, checkIsAuthenticated, rootLink } from '../../scripts/commerce.js';
+import createModal from '../modal/modal.js';
+
+async function openWriteReview(sku) {
+  const content = document.createElement('div');
+  const modal = await createModal([content]);
+  // Opens the modal first, because the form loads rating categories before it appears.
+  modal.showModal();
+  await provider.render(WriteReview, {
+    sku,
+    isAuthenticated: checkIsAuthenticated(),
+    routeSignIn: () => rootLink(CUSTOMER_LOGIN_PATH),
+  })(content);
+}
+```
+
+Call `openWriteReview(sku)` from a button that appears only when reviews are turned on. Pass the SKU of the product the shopper is reviewing.
+
+- The modal opens before the form loads, so shoppers see it while the rating categories load.
+- Each call creates a new modal, so the form starts empty every time it opens.
+
+<Aside type="note" title="Show the product in the form">
+Pass `productName` and `productImage` to show which product the shopper is reviewing. The quick start reads them from the product page. See [Add a Write review button](/dropins/ratings-reviews/quick-start/#add-a-write-review-button).
+</Aside>

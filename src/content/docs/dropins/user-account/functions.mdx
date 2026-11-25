@@ -31,11 +31,12 @@ The User Account drop-in provides API functions that enable you to programmatica
 | [`getCustomerAddress`](#getcustomeraddress) | Returns an array of addresses associated with the current customer. |
 | [`getCustomerCompanyContext`](#getcustomercompanycontext) | Determines whether the customer has a company context. |
 | [`getCustomerPaymentTokens`](#getcustomerpaymenttokens) | Retrieves stored payment tokens for the logged-in customer via the `customerPaymentTokens query`. |
+| [`getCustomerReviews`](#getcustomerreviews) | Loads one page of the signed-in shopper's approved review history. |
 | [`getCustomerRolePermissions`](#getcustomerrolepermissions) | Retrieves and resolves the customer's company address role permissions. |
 | [`deletePaymentToken`](#deletepaymenttoken) | Removes a stored payment token using the `deletePaymentToken mutation`. |
 | [`getOrderHistoryList`](#getorderhistorylist) | Retrieves a list of customer orders asynchronously using the customer query. |
 | [`getRegions`](#getregions) | Calls the country query to retrieve a list of states or provinces for a specific country. |
-| [`getStoreConfig`](#getstoreconfig) | Calls the `storeConfig` query to retrieve password requirements and the seller-assisted buying feature flag and consent checkbox settings. |
+| [`getStoreConfig`](#getstoreconfig) | Retrieves password requirements, product review availability, and seller-assisted buying settings. |
 | [`removeCustomerAddress`](#removecustomeraddress) | Removes an address associated with the current customer. |
 | [`setDefaultCompanyAddress`](#setdefaultcompanyaddress) | Sets a company address as the default by ID. |
 | [`updateCompanyAddress`](#updatecompanyaddress) | Updates a company address by ID. |
@@ -337,6 +338,51 @@ Does not emit any drop-in events. To populate the `PaymentMethods` list from cli
 
 Returns [`StoredPaymentMethodDisplay[]`](#storedpaymentmethoddisplay).
 
+## getCustomerReviews
+
+Loads one page of the signed-in shopper's approved product reviews through the Account GraphQL client. Use this function for a custom review history view. The [ProductReviews container](/dropins/user-account/containers/product-reviews/) already loads its own data.
+
+The function accepts an optional options object:
+
+<TableWrapper nowrap={[0, 1]}>
+
+| Option | Type | Req? | Description |
+| --- | --- | --- | --- |
+| `pageSize` | `number` | No | Number of reviews per page. Defaults to `10`. Must be a positive safe integer. |
+| `currentPage` | `number` | No | Page to request, starting at `1`. Defaults to `1`. Must be a positive safe integer. |
+| `signal` | `AbortSignal` | No | Cancels an outstanding request through an `AbortController`. |
+
+</TableWrapper>
+
+### Example
+
+After the shopper signs in, load the existing Account initializer before calling the API:
+
+```js title="blocks/your-review-history/your-review-history.js"
+import { getCustomerReviews } from '@dropins/storefront-account/api.js';
+import '../../scripts/initializers/account.js';
+
+export async function loadYourReviewHistory(signal) {
+  return getCustomerReviews({ pageSize: 10, currentPage: 1, signal });
+}
+```
+
+`loadYourReviewHistory` is an example function for a custom block, not a drop-in API. Pass an `AbortController` signal when the view needs to cancel loading. The caller receives a rejected promise on failure, so it can show an error instead of an empty history.
+
+### Returns and behavior
+
+Returns a `Promise<CustomerReviewsModel>` with review `items` and `pageInfo`.
+
+- *Approved reviews only*: Every request uses `customer.reviews(filter: { status: [APPROVED] })`. The status filter is fixed, not a caller option. Pending and rejected reviews are excluded before pagination.
+- *Backend requirement*: The endpoint must support the status filter. An unsupported filter rejects the request. The function does not retry without filtering.
+- *Fresh requests*: Requests use `cache: 'no-store'`. No customer review cache is maintained by this function.
+- *Invalid input*: An invalid `pageSize` or `currentPage` rejects with a `RangeError` before a request is sent.
+- *Failed response*: GraphQL errors, network failures, a missing customer review result, or malformed review and page data reject the promise rather than returning an empty history.
+- *Events*: Failures handled by the Account client use the shared [`error` event](/dropins/user-account/events/). A request canceled through its signal is rethrown without that event. This function does not publish the public `reviews/*` events.
+- *Customization*: `CUSTOMER_REVIEW_FRAGMENT` is exported from `@dropins/storefront-account/fragments.js` for review field customization. Approval filtering and pagination remain in the query.
+
+See [CustomerReviewsModel](#customerreviewsmodel) for the returned fields.
+
 ## getCustomerRolePermissions
 
 The `getCustomerRolePermissions` function retrieves and resolves the customer's role permissions for company address management.
@@ -438,6 +484,8 @@ Returns `RegionTransform[] | []`. See [`RegionTransform`](#regiontransform).
 ## getStoreConfig
 
 The `getStoreConfig` function calls the <Link href="https://developer.adobe.com/commerce/webapi/graphql/schema/store/queries/store-config" text="storeConfig" /> query to retrieve details about password requirements. The response also includes the seller-assisted buying fields that control whether the feature is active and customize the consent checkbox shown to customers.
+
+The returned `productReviewsEnabled` boolean controls merchant review availability. It is normalized from `storeConfig.product_reviews_enabled` and defaults to `false` when that field is omitted. Invalid flag values reject the request. This setting does not replace the approved-review filter used by [`getCustomerReviews`](#getcustomerreviews).
 
 ```ts
 const getStoreConfig = async (): Promise<StoreConfigModel>
@@ -730,6 +778,57 @@ interface RegionTransform {
 }
 ```
 
+### CustomerReviewsModel
+
+The `CustomerReviewsModel` object is returned by [`getCustomerReviews`](#getcustomerreviews). It contains one page of approved customer reviews and page information:
+
+```ts
+type CustomerReviewsModel = {
+  items: CustomerReviewModel[];
+  pageInfo: { currentPage: number; pageSize: number; totalPages: number };
+};
+```
+
+`currentPage` starts at `1`. `totalPages` can be `0` for an empty history. These values describe approved reviews only, not pending or rejected reviews.
+
+### CustomerReviewModel
+
+Each item describes one review written by the signed-in shopper:
+
+```ts
+type CustomerReviewModel = {
+  nickname: string;
+  summary: string;
+  text: string;
+  createdAt: string;
+  createdDate: string | null;
+  rating: number | null;
+  ratingsBreakdown: { name: string; value: number }[];
+  product?: CustomerReviewProductModel | null;
+};
+```
+
+- *Rating*: `average_rating` is divided by 20 to produce a value from `0` to `5`. A review with an average of `0` and no rating votes has `rating: null`.
+- *Rating categories*: `ratingsBreakdown` contains numeric scores for each valid category, such as Quality. These are the shopper's individual ratings, not a product-wide average.
+- *Date*: `createdAt` preserves the API timestamp. `createdDate` formats its calendar day in UTC using the shared formatter's default locale, `en-US`. Invalid calendar dates produce `null`, and the UI uses the translated *Date unavailable* label.
+- *Overrides*: A `CustomerReviewModel` transformer can change the timestamp before its display date is calculated. An explicit `createdDate` override, including `null`, is preserved. See [User Account initialization](/dropins/user-account/initialization/).
+- *Product*: Missing product data does not remove the review. The product reference can be `null`.
+
+### CustomerReviewProductModel
+
+Product information supplies the review's name, optional image, and routing data:
+
+```ts
+type CustomerReviewProductModel = {
+  sku: string;
+  name: string;
+  urlKey: string | null;
+  thumbnail: { url: string; label: string } | null;
+};
+```
+
+The storefront builds product links through `routeProduct`. A product without a URL key can keep its name without a link.
+
 ### StoreConfigModel
 
 The `StoreConfigModel` object is returned by the following functions: [`getStoreConfig`](#getstoreconfig).
@@ -740,18 +839,20 @@ interface StoreConfigModel {
   minLength: number;
   requiredCharacterClasses: number;
   storeCode: string;
+  productReviewsEnabled: boolean;
   shoppingAssistanceEnabled: boolean;
   shoppingAssistanceCheckboxTitle: string;
   shoppingAssistanceCheckboxTooltip: string;
 }
 ```
 
-The seller-assisted buying fields:
+The review and seller-assisted buying fields:
 
 <TableWrapper nowrap={[0, 1]}>
 
 | Field | Type | Description |
 | --- | --- | --- |
+| `productReviewsEnabled` | `boolean` | Whether merchant product reviews are enabled. Defaults to `false` when omitted by the backend. Pass this value to `ProductReviews.enabled`. |
 | `shoppingAssistanceEnabled` | `boolean` | `true` when seller-assisted buying is enabled at the store level. Controlled by the **Enable Extension** setting in the Admin. The seller-assisted buying containers use this value to show or hide feature content. |
 | `shoppingAssistanceCheckboxTitle` | `string` | Label for the consent checkbox. Set by the **Title for Login as Customer opt-in checkbox** field in the Admin. Falls back to the dictionary value when not configured. |
 | `shoppingAssistanceCheckboxTooltip` | `string` | Tooltip text for the consent checkbox. Set by the **Login as Customer checkbox tooltip** field in the Admin. Falls back to the dictionary value when not configured. |
