@@ -21,13 +21,14 @@ class DiagramElement {
   removeAttribute() { this.pending = false; }
 }
 
-async function setup() {
-  const state = { elements: [], imports: 0, mounts: [], errors: [], failImport: false };
+async function setup({ elements = [], readyState = 'complete' } = {}) {
+  const state = { elements, imports: 0, mounts: [], errors: [], failImport: false };
   const handlers = new Map();
   const context = vm.createContext({
     HTMLElement: DiagramElement,
     console: { error: (...args) => state.errors.push(args) },
     document: {
+      readyState,
       querySelectorAll: () => state.elements.filter((element) => element.pending),
       addEventListener: (event, callback) => handlers.set(event, callback),
     },
@@ -47,8 +48,66 @@ async function setup() {
   });
   await loader.link(() => { });
   await loader.evaluate();
-  return { state, navigate: () => handlers.get('astro:page-load')() };
+  return {
+    state,
+    navigate: () => handlers.get('astro:page-load')(),
+    domReady: () => handlers.get('DOMContentLoaded')(),
+  };
 }
+
+test('production bundling preserves the diagram bootstrap', async () => {
+  const { build } = await import('vite');
+  const entry = '\0diagram-bootstrap-test';
+  const renderer = '\0diagram-renderer-test';
+  const result = await build({
+    configFile: false,
+    logLevel: 'silent',
+    plugins: [{
+      name: 'diagram-bootstrap-test',
+      resolveId(id) {
+        if (id === entry || id === renderer) return id;
+        if (id === './mermaid-diagram.client') return renderer;
+      },
+      load(id) {
+        if (id === entry) {
+          return `void import(${JSON.stringify(new URL('../src/components/diagram/mermaid-global-mount.js', import.meta.url).pathname)});`;
+        }
+        if (id === renderer) return 'export function attachMermaidDiagramLifecycle() {}';
+      },
+    }],
+    build: {
+      write: false,
+      minify: false,
+      rolldownOptions: { input: entry },
+    },
+  });
+  const outputs = Array.isArray(result) ? result : [result];
+  const code = outputs.flatMap(output => output.output)
+    .filter(output => output.type === 'chunk')
+    .map(output => output.code)
+    .join('\n');
+  assert.match(code, /data-pending-mermaid/);
+  assert.match(code, /DOMContentLoaded/);
+  assert.match(code, /astro:page-load/);
+});
+
+test('initial mounts wait for document parsing to finish', async () => {
+  const diagram = new DiagramElement('initial-page');
+  const { state, domReady, navigate } = await setup({ elements: [diagram], readyState: 'loading' });
+  assert.equal(state.imports, 0);
+  await domReady();
+  assert.deepEqual(state.mounts, ['initial-page']);
+  await navigate();
+  assert.deepEqual(state.mounts, ['initial-page']);
+});
+
+test('initial mounts run immediately when the document is already parsed', async () => {
+  const diagram = new DiagramElement('parsed-page');
+  const { state, navigate } = await setup({ elements: [diagram] });
+  assert.equal(state.imports, 1);
+  await navigate();
+  assert.deepEqual(state.mounts, ['parsed-page']);
+});
 
 test('pages without eligible diagrams do not import Mermaid', async () => {
   const { state, navigate } = await setup();

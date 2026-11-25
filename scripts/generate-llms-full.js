@@ -133,16 +133,8 @@ const OUTPUT_SMALL = join(projectRoot, 'public/llms-small.txt');
 const OUTPUT_LLMSTXT = join(projectRoot, 'public/llms.txt');
 const OUTPUT_LLMS_TXT_DIR = join(projectRoot, 'public/_llms-txt');
 
-const MERCHANT_HOW_TO_PATHS = new Set([
-  'merchants/edge-delivery-services/content-migration',
-  'merchants/quick-start/content-localization',
-  'merchants/content-customizations/personalization',
-  'merchants/content-customizations/product-recommendations',
-  'merchants/content-customizations/terms-and-conditions',
-]);
-
 /**
- * Thematic bundles (paths relative to src/content/docs, no extension).
+ * Thematic bundles (published URL paths without leading slash; index pages end in `/index`).
  * Filters are mutually exclusive except where noted; together they cover all doc pages.
  */
 const LLMS_TXT_BUNDLES = [
@@ -168,13 +160,13 @@ const LLMS_TXT_BUNDLES = [
     slug: 'boilerplate',
     label: 'Boilerplate',
     blurb: 'Boilerplate setup, configuration, blocks reference, customization, Universal Editor, and updates',
-    filter: p => p.startsWith('boilerplate/')
+    filter: p => p.startsWith('boilerplate/') || p.startsWith('blocks/')
   },
   {
     slug: 'how-tos',
     label: 'How-tos',
     blurb: 'Step-by-step storefront tasks for authors and developers',
-    filter: p => p.startsWith('how-tos/') || p.includes('/how-tos/') || MERCHANT_HOW_TO_PATHS.has(p)
+    filter: p => p.startsWith('how-tos/') || p.includes('/how-tos/')
   },
   {
     slug: 'licensing',
@@ -287,7 +279,7 @@ const LLMS_TXT_BUNDLES = [
     slug: 'merchants-authoring',
     label: 'Merchants and authoring',
     blurb: 'Quick start, content, localization, storefront builder, and content customizations (excluding block reference pages)',
-    filter: p => p.startsWith('merchants/') && !p.startsWith('merchants/blocks/') && !MERCHANT_HOW_TO_PATHS.has(p)
+    filter: p => p.startsWith('merchants/') && !p.startsWith('merchants/blocks/')
   },
   {
     slug: 'sdk-reference',
@@ -872,6 +864,11 @@ function processFile(filePath, relativePath) {
   }
 }
 
+function readFrontmatterField(content, field) {
+  const frontmatter = content.match(/^---\r?\n([\s\S]*?)\r?\n---/)?.[1] ?? '';
+  return frontmatter.match(new RegExp(`^${field}:\\s*['"]?([^'"\\r\\n]*?)['"]?\\s*$`, 'm'))?.[1];
+}
+
 function getAllDocsFiles(dir, baseDir = dir, fileList = []) {
   const files = readdirSync(dir);
 
@@ -884,8 +881,13 @@ function getAllDocsFiles(dir, baseDir = dir, fileList = []) {
         getAllDocsFiles(filePath, baseDir, fileList);
       }
     } else if (file.endsWith('.mdx') || file.endsWith('.md')) {
+      const content = readFileSync(filePath, 'utf-8');
+      if (readFrontmatterField(content, 'draft') === 'true') return;
       const relativePath = filePath.replace(baseDir + '/', '').replace(/\.mdx?$/, '');
-      fileList.push({ path: filePath, relativePath });
+      // Moved pages keep their published slug, which bundles and sidebar order use.
+      const slug = readFrontmatterField(content, 'slug')?.replace(/^\/+|\/+$/g, '');
+      const routePath = slug ? (relativePath.endsWith('/index') ? `${slug}/index` : slug) : relativePath;
+      fileList.push({ path: filePath, relativePath, routePath });
     }
   });
 
@@ -927,8 +929,8 @@ function sortFiles(files) {
   const sidebarOrder = getSidebarOrder();
 
   return files.sort((a, b) => {
-    const sectionA = sidebarOrder.find(section => a.relativePath.startsWith(section)) || '';
-    const sectionB = sidebarOrder.find(section => b.relativePath.startsWith(section)) || '';
+    const sectionA = sidebarOrder.find(section => a.routePath.startsWith(section)) || '';
+    const sectionB = sidebarOrder.find(section => b.routePath.startsWith(section)) || '';
 
     const orderA = sidebarOrder.indexOf(sectionA);
     const orderB = sidebarOrder.indexOf(sectionB);
@@ -937,7 +939,7 @@ function sortFiles(files) {
       return (orderA === -1 ? Infinity : orderA) - (orderB === -1 ? Infinity : orderB);
     }
 
-    return a.relativePath.localeCompare(b.relativePath);
+    return a.routePath.localeCompare(b.routePath);
   });
 }
 
@@ -1001,7 +1003,7 @@ ${thematic}
 const COVERAGE_EXCLUSIONS = ['videos/', 'resources/', 'playgrounds/'];
 
 function validateCoverage(allFiles) {
-  const paths = allFiles.map(f => f.relativePath);
+  const paths = allFiles.map(f => f.routePath);
   const uncovered = paths.filter(
     p => !LLMS_TXT_BUNDLES.some(b => b.filter(p)) && !COVERAGE_EXCLUSIONS.some(e => p.startsWith(e))
   );
@@ -1087,7 +1089,7 @@ function generate() {
   );
 
   for (const bundle of LLMS_TXT_BUNDLES) {
-    const files = sortedAll.filter(f => bundle.filter(f.relativePath));
+    const files = sortedAll.filter(f => bundle.filter(f.routePath));
     const outPath = join(OUTPUT_LLMS_TXT_DIR, `${bundle.slug}.txt`);
     writeBundle(
       outPath,
