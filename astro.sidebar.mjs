@@ -184,7 +184,7 @@ export function generateSidebar() {
             {
               label: 'Troubleshooting',
               collapsed: true,
-              autogenerate: { directory: '/troubleshooting/' },
+              items: [{ autogenerate: { directory: '/troubleshooting/' } }],
             },
           ],
         },
@@ -608,7 +608,6 @@ export function generateSidebar() {
                 { label: 'Add stored payment methods to My Account', link: '/how-tos/payment-services-my-account/' },
                 { label: 'Customize the address form layout', link: '/how-tos/customize-layout/' },
                 { label: 'Display an additional wishlist', link: '/how-tos/render-additional-wishlist/' },
-                { label: 'Sign in or create an account for AI agents', link: '/how-tos/sign-in-or-create-account-for-ai-agents/' },
                 { label: 'Validate a saved address', link: '/how-tos/validate-address/' },
               ],
             },

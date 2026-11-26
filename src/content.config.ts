@@ -24,7 +24,8 @@ const prerequisiteSchema = zod
 
 const heroSchema = zod
   .object({
-    subtitle: zod.string(),
+    subtitle: zod.string().optional(),
+    tagline: zod.string().optional(),
     actions: zod
       .object({
         variant: zod

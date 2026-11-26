@@ -302,7 +302,8 @@ async function config() {
           resolveId(source, importer) {
             if (
               source === '@astrojs/starlight/components' &&
-              importer?.split('?')[0].endsWith('/starlight-sidebar-topics/components/Topics.astro')
+              importer &&
+              /\/starlight-sidebar-topics\/(?:dist\/)?components\/Topics\.astro$/.test(importer.split('?')[0])
             ) {
               return path.resolve('./src/components/overrides/SidebarTopicComponents.ts');
             }
@@ -351,9 +352,15 @@ async function config() {
         },
       ],
       build: {
-        chunkSizeWarningLimit: 1000, // Increase limit to 1MB to reduce noise
-        rollupOptions: {
+        // Mermaid's lazily loaded ELK layout chunk is ~1.4 MB and loads only for `layout: elk` diagrams.
+        chunkSizeWarningLimit: 1500,
+        rolldownOptions: {
           onwarn(warning, warn) {
+            // react-compiler-runtime's "use no memo" hint has no effect in bundled output.
+            if (warning.code === 'MODULE_LEVEL_DIRECTIVE' &&
+              `${warning.id ?? ''}${warning.message ?? ''}`.includes('react-compiler-runtime')) {
+              return;
+            }
             // Suppress warnings about unused imports from expressive-code packages
             if (warning.code === 'UNUSED_EXTERNAL_IMPORT' &&
               warning.source &&
