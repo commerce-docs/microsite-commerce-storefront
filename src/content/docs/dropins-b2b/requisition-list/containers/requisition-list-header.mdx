@@ -16,15 +16,16 @@ The `RequisitionListHeader` container provides the following configuration optio
 
 <TableWrapper nowrap={[0]}>
 
-| Parameter | Type | Req? | Description |
-|---|---|---|---|
-| `requisitionList` | `RequisitionList` | Yes | Provides the requisition list data object containing name, description, and metadata. Required to display the list information in the header. Contains all list details needed for rendering the header section. |
-| `routeRequisitionListGrid` | `function` | No | Generates the URL for navigating back to the requisition list grid view. Returns a URL string or performs navigation. Use to implement breadcrumb navigation, back buttons, or integrate with your application's routing system. |
-| `onUpdate` | `function` | No | Callback function to handle requisition list updates when the name or description changes. Use to refresh the parent component or show success notifications. |
-| `onAlert` | `function` | No | Callback function to handle alert notifications when alerts are displayed. |
-| `enrichConfigurableProducts` | `function` | No | Enriches the configurable products contained in requisition list items. Takes an array of items and returns the same array with configured product data attached. |
-| `currentCustomerEmail` | `string` | No | Email address of the currently authenticated customer. When provided, this user is excluded from the list of selectable share recipients inside the share modal. |
-| `routeSharedRequisitionList` | `(relativeUrl: string) => string` | No | Called with the relative share URL to format the final share link. The URL is built as `/<storefront_path>?requisition_id=<token>`. For company lists, it uses `requisition_list_share_storefront_path` (default: `customer/requisition-list-sharing`), and sharing requires `requisition_list_sharing_enabled` to be `true`. For public lists, it uses `requisition_list_public_share_storefront_path`, and sharing requires `requisition_list_public_sharing_enabled` to be `true`. Use this callback to prepend the domain or change the path. By default, the relative URL is used as-is. Example: `(url) => window.location.origin + url` for an absolute URL. |
+| Parameter                    | Type                              | Req? | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| ---------------------------- | --------------------------------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `requisitionList`            | `RequisitionList`                 | Yes  | Provides the requisition list data object containing name, description, and metadata. Required to display the list information in the header. Contains all list details needed for rendering the header section.                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `routeRequisitionListGrid`   | `function`                        | No   | Generates the URL for navigating back to the requisition list grid view. Returns a URL string or performs navigation. Use to implement breadcrumb navigation, back buttons, or integrate with your application's routing system.                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `onUpdate`                   | `function`                        | No   | Callback function to handle requisition list updates when the name or description changes. Use to refresh the parent component or show success notifications.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `onAlert`                    | `function`                        | No   | Callback function to handle alert notifications when alerts are displayed.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `enrichConfigurableProducts` | `function`                        | No   | Enriches the configurable products contained in requisition list items. Takes an array of items and returns the same array with configured product data attached.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `getProductData`             | `function`                        | No   | Supplies supplemental catalog products for printing. Receives an array of stored SKUs and an optional loading context. Use the same adapter as the list view. Does not affect CSV export.                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `currentCustomerEmail`       | `string`                          | No   | Email address of the currently authenticated customer. When provided, this user is excluded from the list of selectable share recipients inside the share modal.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `routeSharedRequisitionList` | `(relativeUrl: string) => string` | No   | Called with the relative share URL to format the final share link. The URL is built as `/<storefront_path>?requisition_id=<token>`. For company lists, it uses `requisition_list_share_storefront_path` (default: `customer/requisition-list-sharing`), and sharing requires `requisition_list_sharing_enabled` to be `true`. For public lists, it uses `requisition_list_public_share_storefront_path`, and sharing requires `requisition_list_public_sharing_enabled` to be `true`. Use this callback to prepend the domain or change the path. By default, the relative URL is used as-is. Example: `(url) => window.location.origin + url` for an absolute URL. |
 
 </TableWrapper>
 
@@ -41,7 +42,7 @@ import { render as provider } from '@dropins/storefront-requisition-list/render.
 import { RequisitionListHeader } from '@dropins/storefront-requisition-list/containers/RequisitionListHeader.js';
 
 await provider.render(RequisitionListHeader, {
-  requisitionList: undefined, // Auto-populated from drop-in state, or provide explicitly
+  requisitionList,
   routeRequisitionListGrid: () => '/customer/requisition-lists',
   onUpdate: (update) => console.log('Update', update),
   currentCustomerEmail: 'current.user@example.com',
@@ -58,4 +59,147 @@ When `requisition_list_public_sharing_enabled` is `true` in the store configurat
 - Adds the **Make this requisition list public** checkbox to the rename modal.
 
 When the setting is `false`, none of these controls appear.
+
 </Aside>
+
+## Export and print
+
+<Aside type="note" title="Preview feature">
+  The behavior below describes `2.1.0-preview-20261126103129-7696915`, not a stable release
+  announcement. Validate the preview with your storefront before release.
+</Aside>
+
+The owner-view header shows **Export** and **Print** when `items_count` is greater
+than zero. These actions are not provided by the recipient-facing shared-list
+containers. Each action loads every list page, regardless of the current page
+or selection. Loading does not replace the on-screen list or change quantities.
+The action label stays unchanged while the action is busy, with inline status
+feedback. Repeated clicks on an active action do not start another operation.
+
+### CSV export
+
+Select **Export** to download a file named from the list name, with unsafe
+filename characters replaced. An empty or unusable name falls back to
+`requisition-list.csv`.
+
+The CSV uses UTF-8 without a byte-order mark, comma-separated fields, CRLF line
+endings, and the fixed header `sku,qty`. It contains one row for each retrieved
+list line, in query order. Repeated SKUs remain separate rows, and zero
+quantities are retained.
+
+```csv
+sku,qty
+office-paper,2
+office-paper,0
+```
+
+Export uses the stored line SKU, not a newly resolved variant SKU. Product names,
+options, images, prices, and subtotals are excluded. This is a SKU-and-quantity
+interchange file, matching Magento Luma's export columns, not a pricing report.
+CSV headers are not translated.
+
+Fields containing commas, quotes, whitespace, or line breaks are quoted, and
+embedded quotes are doubled. Following Magento's export behavior, values
+starting with `=`, `+`, or `-` receive a leading space.
+
+<Aside type="caution" title="Opening CSV files in spreadsheets">
+  The leading-space rule is only a partial formula mitigation. Values beginning with `@` or
+  whitespace are not additionally prefixed, and CSV quoting alone does not prevent formula
+  interpretation. Treat exported data as untrusted and import SKU columns as text when opening files
+  in spreadsheet software.
+</Aside>
+
+### Printed content and pricing
+
+Select **Print** to prepare the full list and open the browser print dialog.
+The print layout includes the list name and optional description, item count,
+numbered rows, product names, images or placeholders, SKUs, selected options,
+stock status, quantities, prices, and subtotals. A resolved configured SKU takes
+precedence over the stored SKU; an empty configured SKU falls back to the stored
+SKU.
+
+Print uses the same price renderer, currency formatting, discount presentation,
+and quantity-based subtotal rules as the screen. It reloads data before printing,
+so amounts can differ from a screen page that has not been refreshed.
+
+<Aside type="caution" title="Interim pricing limitations">
+  Shared rendering does not establish authoritative pricing or Luma monetary parity. Bundle prices
+  use the first selected value in each option, multiplied by its selection quantity. Custom-option
+  charges are not added. Falsy configured amounts can fall back to parent amounts, and missing
+  amounts can display as zero. In particular, a configured zero can fall back to a nonzero parent
+  amount. These are existing screen rules, not new pricing guarantees.
+</Aside>
+
+An inline warning appears when supplemental product or configurable data could
+not be resolved. Printing can continue with that warning. A load without
+warnings does not prove that the pricing limitations above are resolved.
+
+The browser controls paper size, margins, printer selection, PDF destinations,
+and browser-generated headers and footers. The drop-in does not create a PDF
+directly or report whether the buyer printed or cancelled.
+
+### Loading, cancellation, and recovery
+
+Both actions reject incomplete full-list retrieval rather than download or print
+a partial list as successful. Errors include failed queries, missing pages,
+changed page or item counts, and a retrieved row count different from
+`items_count`. Deleted or disabled products can prevent complete retrieval;
+these actions do not recover backend-omitted lines. Count checks do not provide
+a consistent snapshot when concurrent changes preserve the counts.
+
+Print waits for images using one five-second budget after the layout mounts.
+Failed or timed-out images become text placeholders. This budget does not limit
+list fetching.
+
+Temporary print content is removed after the browser reports print completion
+or exit from print media, on preparation failure, or when the list changes or the
+container unmounts. Changing lists or unmounting cancels pending loading and
+discards late results.
+
+If print completion remains pending for 60 seconds after full-list loading,
+**Reset print operation** becomes available. Close the native dialog before
+selecting reset. Reset explicitly cancels and cleans up the operation; the delay
+never automatically removes print content, retries, or reports success. Browsers
+do not reliably confirm whether the native dialog has closed.
+
+### Host print styles
+
+The drop-in mounts `.requisition-list-print-root` directly under `document.body`,
+outside the normal list view, and adds `requisition-list-printing` to the body
+during printing. It hides its own normal controls in print media. Your storefront
+must hide unrelated host content without hiding the body or print root.
+
+For a host whose header, main, and footer are direct body children:
+
+```css
+@media print {
+  body.requisition-list-printing > header,
+  body.requisition-list-printing > main,
+  body.requisition-list-printing > footer {
+    display: none;
+  }
+}
+```
+
+Adapt these selectors for custom host structures. Ordinary browser printing
+outside **Print** does not retrieve the full list.
+
+Before release, validate long lists, repeated table headings, oversized rows,
+image placeholders, dialog cancellation, recovery and retry, and PDF and
+screen-reader accessibility across your supported browsers. Automated lifecycle
+tests do not establish native print or PDF acceptance.
+
+### Catalog adapters and localization
+
+`RequisitionListView` passes its `getProductData` and
+`enrichConfigurableProducts` adapters to the header for full-list printing. When
+rendering the header separately, supply the same adapters to keep product and
+price context aligned. Adapters must return only prices authorized for the
+current customer, store, and currency. Existing one-argument adapters remain
+supported; an optional second argument supplies cancellation and warning context.
+An API that ignores cancellation can continue its request, but its late result
+is discarded.
+
+See [Full-list loading](/dropins-b2b/requisition-list/functions/#loadrequisitionlistdata)
+for adapter behavior and [Dictionary](/dropins-b2b/requisition-list/dictionary/#export-and-print-keys)
+for translated labels, statuses, warnings, recovery instructions, and print text.
